@@ -51,12 +51,12 @@ endif ()
 #############
 ## Catkin ##
 #############
-## catkin specific configuration
+# catkin specific configuration
 # declare things to be passed to dependent projects
 # supereight_ros_node and tests
 catkin_package(
         INCLUDE_DIRS include
-        LIBRARIES ${PROJECT_NAME}
+        LIBRARIES ${catkin_LIBRARIES}
         CATKIN_DEPENDS
         roscpp
         rosbag
@@ -84,7 +84,7 @@ include_directories(
 )
 
 
-add_executable(supereight_ros_node
+add_executable(supereight_ros
         src/supereight_ros_node.cpp
         )
 
@@ -112,13 +112,24 @@ elseif(NOT MAP_OM AND NOT MAP_SDF)
 endif(MAP_OM)
 
 
-target_compile_definitions(supereight_ros_node PUBLIC ${field_type})
+target_compile_definitions(supereight_ros PUBLIC ${field_type})
 
-target_link_libraries(supereight_ros_node
+target_link_libraries(supereight_ros
         se-denseslam-ofusion
         se-denseslam-sdf
         lodepng
         ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
+
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/supereight_ros/
+        DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}/supereight_ros/
+        FILES_MATCHING PATTERN "*.h*"
+        )
+
 
 #############
 ## Testing ##
