@@ -12,6 +12,8 @@ message(WARNING "CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 option(WITH_OPENMP "Compile with OpenMP" ON)
 find_package(Eigen3 REQUIRED)
 find_package(supereight REQUIRED)
+
+find_package(PCL REQUIRED)
 ## find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
         cv_bridge
@@ -23,6 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
         message_generation
         visualization_msgs
         geometry_msgs
+        image_geometry
         )
 
 add_message_files(FILES
@@ -81,6 +84,7 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${SUPEREIGHT_INCLUDE_DIR}
         ${EIGEN3_INCLUDE_DIR}
+        ${PCL_INCLUDE_DIRS}
 )
 
 

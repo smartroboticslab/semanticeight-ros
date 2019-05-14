@@ -32,14 +32,26 @@
 #include <time.h>
 
 #include <cv_bridge/cv_bridge.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/core.hpp>
+
 #include <geometry_msgs/TransformStamped.h>
 #include <message_filters/subscriber.h>
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
+
+#include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>
+#include <image_geometry/pinhole_camera_model.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/image_encodings.h>
 #include <visualization_msgs/MarkerArray.h>
 
+#include <pcl/conversions.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/filter.h>
+#include <opencv2/opencv.hpp>
 //#include <mav_visualization/helpers.h>
 
 // supereight package
@@ -123,6 +135,15 @@ class SupereightNode {
    */
   void imageCallback(const sensor_msgs::ImageConstPtr &image_msg);
 
+
+  void Pointcloud2DepthCallback(const sensor_msgs::PointCloud2::ConstPtr& pointcloud);
+
+/**
+ * @brief reads camera info
+ * @param camInfoIn
+ */
+
+  void camInfoCallback(const sensor_msgs::CameraInfoConstPtr& camInfoIn);
   /**
    * @brief adds pose from ground truth file or recorded pose to pose buffer
    * @param pose_msg
@@ -233,10 +254,17 @@ class SupereightNode {
   double res_;
   int occupied_voxels_sum_;
 
+  // simulation camera reader
+  sensor_msgs::CameraInfo CamInfo;
+  image_geometry::PinholeCameraModel CamModel;
+  bool cam_info_ready_ = false;
+
   // Subscriber
   ros::Subscriber image_sub_;
   ros::Subscriber pose_sub_;
   ros::Subscriber image_pose_sub_;
+  ros::Subscriber pcl_sub_;
+  ros::Subscriber cam_info_sub_;
 
   // Publisher
   ros::Publisher image_pose_pub_;

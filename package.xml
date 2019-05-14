@@ -29,8 +29,9 @@
   <depend>visualization_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>geometry_msgs</depend>
-
   <depend>std_msgs</depend>
+  <depend>image_geometry</depend>
+
   <exec_depend>message_runtime</exec_depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>

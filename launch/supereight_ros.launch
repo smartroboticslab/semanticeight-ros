@@ -4,19 +4,25 @@
   <!-- File names of setting files. -->
   <arg name="supereight_ros_config_file"
        default="/home/anna/exploration_ws/src/supereight_ros/data/config.yaml" />
+  <arg name="depth_image_topic"
+       default="/firefly/vi_sensor/camera_depth/depth/disparity"/>
+  <arg name="pointcloud_topic" default="/firefly/vi_sensor/camera_depth/depth/points"/>
+  <arg name="pose_topic" default="/firefly/ground_gruth/transform"/>
 
   <!-- Launch ptp_ros node -->
   <node pkg="supereight_ros" name="supereight"
-        type="supereight_ros_node" clear_params="true" output="screen">
-    <!-- valgrind -v -track-origins=yes -leak-check=full-->
-    <!-- Include rosparam yaml files -->
+        type="supereight_ros" clear_params="true" output="screen" >
+    <!-- valgrind -v -track-origins=yes -leak-check=fulaunch-prefix="gdb -ex run -args"->
+    <!- Include rosparam yaml files -->
     <rosparam command="load" file="$(arg supereight_ros_config_file)" />
 
+    <remap from="/camera/pointcloud" to="$(arg pointcloud_topic)"/>
+
     <!-- for other launch files remap camera image topic to this image topic-->
-    <param name="image_topic_name"
-           value="/camera/aligned_depth_to_color/image_raw"/>
+    <remap from="/camera/aligned_depth_to_color/image_raw"
+           to="$(arg depth_image_topic)"/>
     <!-- for other launch files remap pose estimation topic to this pose
     topic-->
-    <param name="pose_topic_name" value="/vicon/d435/d435"/>
+    <remap from="/vicon/d435/d435" to="$(arg pose_topic)"/>
   </node>
 </launch>

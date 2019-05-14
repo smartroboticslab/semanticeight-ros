@@ -9,7 +9,7 @@
 
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
-
+#include <se/lodepng.h>
 //#include <se/default_parameters.h>
 #include <supereight_ros/supereight_ros.hpp>
 namespace se {
@@ -43,15 +43,20 @@ const int default_coloured_voxels = false;
 const int default_multi_resolution = false;
 const bool default_bayesian = false;
 
-template <typename T>
+template<typename T>
 void SupereightNode<T>::setupRos() {
   // Subscriber
   image_sub_ = nh_.subscribe("/camera/aligned_depth_to_color/image_raw", 100,
                              &SupereightNode::imageCallback, this);
+  pcl_sub_ = nh_.subscribe("/camera/pointcloud", 100,
+                           &SupereightNode::Pointcloud2DepthCallback, this);
   pose_sub_ = nh_.subscribe("/vicon/d435/d435", 100,
                             &SupereightNode::poseCallback, this);
   image_pose_sub_ =
       nh_.subscribe("/image_pose", 300, &SupereightNode::fusionCallback, this);
+  cam_info_sub_ = nh_.subscribe("/image_info", 2,
+                                &SupereightNode::camInfoCallback, this);
+
   // Publisher
   image_pose_pub_ =
       nh_.advertise<supereight_ros::ImagePose>("/image_pose", 1000);
@@ -67,7 +72,7 @@ void SupereightNode<T>::setupRos() {
 }
 
 // Read config.yaml into Configuration class
-template <typename T>
+template<typename T>
 void SupereightNode<T>::setSupereightConfig(const ros::NodeHandle &nh_private) {
   nh_private.param<int>("compute_size_ratio",
                         supereight_config_.compute_size_ratio,
@@ -197,7 +202,7 @@ void SupereightNode<T>::setSupereightConfig(const ros::NodeHandle &nh_private) {
 };
 
 // print configuration to terminal
-template <typename T>
+template<typename T>
 void SupereightNode<T>::printSupereightConfig(const Configuration &config) {
   std::cout << "compute_size_ratio = " << config.compute_size_ratio
             << std::endl;
@@ -232,7 +237,7 @@ void SupereightNode<T>::printSupereightConfig(const Configuration &config) {
   std::cout << "bayesian = " << config.bayesian << std::endl;
 }
 
-template <typename T>
+template<typename T>
 void SupereightNode<T>::imageCallback(
     const sensor_msgs::ImageConstPtr &image_msg) {
   image_queue_.push_back(*image_msg);
@@ -241,12 +246,50 @@ void SupereightNode<T>::imageCallback(
   }
 }
 
-template <typename T>
+template<typename T>
+void SupereightNode<T>::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn) {
+  if (cam_info_ready_) return;
+  CamInfo = *camInfoIn;
+  CamModel.fromCameraInfo(camInfoIn);
+  cam_info_ready_ = true;
+  ROS_INFO("got camera model..");
+  std::cout << CamModel.cameraInfo() << std::endl;
+  std::cout << CamModel.fx() << "," << CamModel.fy() << std::endl;
+}
+
+template<typename T>
+void SupereightNode<T>::Pointcloud2DepthCallback(const
+                                                 sensor_msgs::PointCloud2::ConstPtr &pointcloud) {
+  int height = pointcloud->height;
+  if (height != image_size_.y()) {
+    std::cout << "image and pcl height not equal" << std::endl;
+  }
+  int width = pointcloud->width;
+//  std::cout <<"width "<< width << " height "<< height  << std::endl;
+  int x, y;
+
+  sensor_msgs::Image depth_image;
+  for (y = 0; y < pointcloud->height; y++) {
+    for (x = 0; x < pointcloud->width; x++) {
+      if (pointcloud->data[x + y * pointcloud->row_step] > 0) {
+//        int depth= pointcloud->data[]
+//        depth_image.data[x+y*image_size_.x()]=pointcloud->data[]
+//        std::cout << pointcloud->data[x+ y*pointcloud->row_step] << " ";
+      }
+//      std::cout <<std::endl;
+    }
+  }
+//  image_queue_.push_back(depth_image);
+//  if (image_queue_.size() == 1) {
+//    image_time_stamp_ = ros::Time(image_queue_.front().header.stamp).toNSec();
+//  }
+}
+template<typename T>
 void SupereightNode<T>::poseCallback(
     const geometry_msgs::TransformStamped::ConstPtr &pose_msg) {
   pose_buffer_.put(*pose_msg);
   while (image_queue_.size() > 0 &&
-         (ros::Time(pose_msg->header.stamp).toNSec() > image_time_stamp_)) {
+      (ros::Time(pose_msg->header.stamp).toNSec() > image_time_stamp_)) {
     supereight_ros::ImagePose image_pose_msg;
 
     image_pose_msg.image = image_queue_.front();
@@ -268,49 +311,65 @@ void SupereightNode<T>::poseCallback(
   }
 }
 
-template <typename T>
+template<typename T>
 void SupereightNode<T>::fusionCallback(
     const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
   bool integrated, raycasted;
-
+  ROS_INFO_STREAM("fusion call back");
   // Convert ROS message to cv image
-  cv_bridge::CvImagePtr bridge;
+  cv_bridge::CvImagePtr bridge = nullptr;
   try {
     bridge = cv_bridge::toCvCopy(image_pose_msg->image, "32FC1");
   } catch (cv_bridge::Exception &e) {
     std::cout << "Failed to transform depth image." << std::endl;
   }
-
-  for (int y = 0; y < image_size_.y(); y++) {
-    for (int x = 0; x < image_size_.x(); x++) {
-      input_depth_[x + image_size_.x() * y] = static_cast<uint16_t>(
-          bridge->image.at<float>(x + image_size_.x() * y));
-    }
+  // image input checks
+  if(image_size_.x()!= bridge->image.cols){
+    abort();
   }
+
+  if(image_size_.y()!= bridge->image.rows){
+    abort();
+  }
+  const float* imagepointer = (const float*) image_pose_msg->image.data.data();
+  for (int p = 0; p < image_size_.y()*image_size_.x(); p++) {
+      input_depth_[p] = static_cast<uint16_t>(1000* imagepointer[p]);
+  }
+  std::cout << bridge->image.at<float>(240, 320) << " cv : input depth" << input_depth_[320 + image_size_.x()*240] << std::endl;
+//  save image to png
+  lodepng_encode_file("/home/anna/image_file.png", (unsigned char *) input_depth_, image_size_.x(),
+          image_size_.y(), LCT_GREY, 16);
+
+  // convert opencv image
+
 
   Eigen::Matrix4d gt_pose =
       interpolatePose(image_pose_msg->pre_pose, image_pose_msg->post_pose,
                       ros::Time(image_pose_msg->image.header.stamp).toNSec());
 
   //-------- supereight access point ----------------
+//  ROS_INFO_STREAM("pose interpolated " << gt_pose.cast<float>() << " input depth" << *input_depth_);
   pipeline_->setPose(gt_pose.cast<float>());
 
   pipeline_->preprocessing(input_depth_, image_size_,
                            supereight_config_.bilateral_filter);
-
+  ROS_INFO_STREAM("preprocessed ");
   Eigen::Vector4f camera =
       supereight_config_.camera / (supereight_config_.compute_size_ratio);
-
+  bool tracked = pipeline_->tracking(camera, supereight_config_.icp_threshold, supereight_config_.tracking_rate, frame_);
   std::vector<Eigen::Vector3i> occupied_voxels;
   std::vector<Eigen::Vector3i> freed_voxels;
   std::vector<Eigen::Vector3i> updated_blocks;
+  if (tracked) {
+    pipeline_->integration(camera, supereight_config_.integration_rate,
+                           supereight_config_.mu, frame_, &updated_blocks);
 
-  integrated =
-      pipeline_->integration(camera, supereight_config_.integration_rate,
-                             supereight_config_.mu, frame_, &updated_blocks);
-  //  ROS_INFO_STREAM( "occupied_voxels = " << occupied_voxels.size() );
+  }
+  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
+
+  ROS_INFO_STREAM("occupied_voxels = " << occupied_voxels.size());
   //  ROS_INFO_STREAM( "freed_voxels = " << freed_voxels.size());
-  ROS_DEBUG_STREAM("updated voxels = " << updated_blocks.size());
+  ROS_INFO_STREAM("updated voxels = " << updated_blocks.size());
 
   // ------------- visualization ------------
 
@@ -323,7 +382,7 @@ void SupereightNode<T>::fusionCallback(
   frame_++;
 }
 
-template <typename T>
+template<typename T>
 void SupereightNode<T>::visualizeMapOFusion(
     std::vector<Eigen::Vector3i> updated_blocks) {
   // publish every N-th frame
@@ -355,9 +414,9 @@ void SupereightNode<T>::visualizeMapOFusion(
     for (const auto &occupied_voxel : occupied_voxels) {
       geometry_msgs::Point cube_center;
 
-      cube_center.x = ((double)occupied_voxel[0] + 0.5) * res_;
-      cube_center.y = ((double)occupied_voxel[1] + 0.5) * res_;
-      cube_center.z = ((double)occupied_voxel[2] + 0.5) * res_;
+      cube_center.x = ((double) occupied_voxel[0] + 0.5) * res_;
+      cube_center.y = ((double) occupied_voxel[1] + 0.5) * res_;
+      cube_center.z = ((double) occupied_voxel[2] + 0.5) * res_;
 
       map_marker_msg.points.push_back(cube_center);
     }
@@ -394,7 +453,7 @@ void SupereightNode<T>::visualizeMapOFusion(
 
     if (frame_ % N_frame_pub == 0) {
       for (const auto &updated_block : updated_blocks) {
-        int morten_code = (int)compute_morton(
+        int morten_code = (int) compute_morton(
             updated_block[0], updated_block[1], updated_block[2]);
 
         std::vector<Eigen::Vector3i> occupied_block_voxels =
@@ -433,9 +492,9 @@ void SupereightNode<T>::visualizeMapOFusion(
         for (const auto &occupied_voxel : voxel_block->second) {
           geometry_msgs::Point cube_center;
 
-          cube_center.x = ((double)occupied_voxel[0] + 0.5) * res_;
-          cube_center.y = ((double)occupied_voxel[1] + 0.5) * res_;
-          cube_center.z = ((double)occupied_voxel[2] + 0.5) * res_;
+          cube_center.x = ((double) occupied_voxel[0] + 0.5) * res_;
+          cube_center.y = ((double) occupied_voxel[1] + 0.5) * res_;
+          cube_center.z = ((double) occupied_voxel[2] + 0.5) * res_;
 
           voxel_block_marker_msg.points.push_back(cube_center);
         }
@@ -445,7 +504,7 @@ void SupereightNode<T>::visualizeMapOFusion(
   }
 };
 
-template <typename T>
+template<typename T>
 void SupereightNode<T>::visualizeMapSDF(
     std::vector<Eigen::Vector3i> occupied_voxels,
     std::vector<Eigen::Vector3i> freed_voxels,
@@ -477,9 +536,9 @@ void SupereightNode<T>::visualizeMapSDF(
     for (const auto &surface_voxel : surface_voxels) {
       geometry_msgs::Point cube_center;
 
-      cube_center.x = ((double)surface_voxel[0] + 0.5) * res_;
-      cube_center.y = ((double)surface_voxel[1] + 0.5) * res_;
-      cube_center.z = ((double)surface_voxel[2] + 0.5) * res_;
+      cube_center.x = ((double) surface_voxel[0] + 0.5) * res_;
+      cube_center.y = ((double) surface_voxel[1] + 0.5) * res_;
+      cube_center.z = ((double) surface_voxel[2] + 0.5) * res_;
 
       map_marker_msg.points.push_back(cube_center);
     }
@@ -567,23 +626,23 @@ void SupereightNode<T>::visualizeMapSDF(
 //  }
 };
 
-template <typename T>
+template<typename T>
 double SupereightNode<T>::calculateAlpha(int64_t pre_time_stamp,
                                          int64_t post_time_stamp,
                                          int64_t img_time_stamp) {
-  double alpha = (double)(img_time_stamp - pre_time_stamp) /
-                 (post_time_stamp - pre_time_stamp);
+  double alpha = (double) (img_time_stamp - pre_time_stamp) /
+      (post_time_stamp - pre_time_stamp);
   return alpha;
 }
 
-template <typename T>
+template<typename T>
 Eigen::Vector3d SupereightNode<T>::interpolateVector(
     const Eigen::Vector3d &pre_vector3D, const Eigen::Vector3d &post_vector3D,
     double alpha) {
   return pre_vector3D + alpha * (post_vector3D - pre_vector3D);
 }
 
-template <typename T>
+template<typename T>
 Eigen::Quaterniond SupereightNode<T>::interpolateOrientation(
     const Eigen::Quaterniond &pre_orientation,
     const Eigen::Quaterniond &post_orientation, double alpha) {
@@ -592,7 +651,7 @@ Eigen::Quaterniond SupereightNode<T>::interpolateOrientation(
   return int_orientation;
 }
 
-template <typename T>
+template<typename T>
 Eigen::Matrix4d SupereightNode<T>::interpolatePose(
     const geometry_msgs::TransformStamped &pre_transformation,
     const geometry_msgs::TransformStamped &post_transformation,
@@ -630,7 +689,7 @@ Eigen::Matrix4d SupereightNode<T>::interpolatePose(
 }
 
 /* Taken from https://github.com/ethz-asl/volumetric_mapping */
-template <typename T>
+template<typename T>
 std_msgs::ColorRGBA SupereightNode<T>::percentToColor(double h) {
   /* Helen's note: direct copy from OctomapProvider. */
   std_msgs::ColorRGBA color;
@@ -653,38 +712,31 @@ std_msgs::ColorRGBA SupereightNode<T>::percentToColor(double h) {
 
   switch (i) {
     case 6:
-    case 0:
-      color.r = v;
+    case 0:color.r = v;
       color.g = n;
       color.b = m;
       break;
-    case 1:
-      color.r = n;
+    case 1:color.r = n;
       color.g = v;
       color.b = m;
       break;
-    case 2:
-      color.r = m;
+    case 2:color.r = m;
       color.g = v;
       color.b = n;
       break;
-    case 3:
-      color.r = m;
+    case 3:color.r = m;
       color.g = n;
       color.b = v;
       break;
-    case 4:
-      color.r = n;
+    case 4:color.r = n;
       color.g = m;
       color.b = v;
       break;
-    case 5:
-      color.r = v;
+    case 5:color.r = v;
       color.g = m;
       color.b = n;
       break;
-    default:
-      color.r = 1;
+    default:color.r = 1;
       color.g = 0.5;
       color.b = 0.5;
       break;
