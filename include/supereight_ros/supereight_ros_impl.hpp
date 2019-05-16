@@ -48,19 +48,24 @@ void SupereightNode<T>::setupRos() {
   // Subscriber
   image_sub_ = nh_.subscribe("/camera/aligned_depth_to_color/image_raw", 100,
                              &SupereightNode::imageCallback, this);
-  pcl_sub_ = nh_.subscribe("/camera/pointcloud", 100,
-                           &SupereightNode::Pointcloud2DepthCallback, this);
   pose_sub_ = nh_.subscribe("/vicon/d435/d435", 100,
                             &SupereightNode::poseCallback, this);
   image_pose_sub_ =
-      nh_.subscribe("/image_pose", 300, &SupereightNode::fusionCallback, this);
-  cam_info_sub_ = nh_.subscribe("/image_info", 2,
+      nh_.subscribe("/image_pose", 100, &SupereightNode::fusionCallback, this);
+  cam_info_sub_ = nh_.subscribe("/camera/camera_info", 2,
                                 &SupereightNode::camInfoCallback, this);
+
 
   // Publisher
   image_pose_pub_ =
       nh_.advertise<supereight_ros::ImagePose>("/image_pose", 1000);
 
+  // TODO ifdef
+#ifdef WITH_RENDERING
+  depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
+  volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
+  track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
+#endif
   // Visualization
   map_marker_pub_ =
       nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
@@ -238,55 +243,47 @@ void SupereightNode<T>::printSupereightConfig(const Configuration &config) {
 }
 
 template<typename T>
-void SupereightNode<T>::imageCallback(
-    const sensor_msgs::ImageConstPtr &image_msg) {
+void SupereightNode<T>::imageCallback(const sensor_msgs::ImageConstPtr &image_msg) {
+
+//   allocate new depth image message
+  sensor_msgs::ImagePtr depth_image(new sensor_msgs::Image());
+  CreateImageMsg(image_msg, depth_image);
+
+  depth_image->data.resize(depth_image->height * depth_image->step, 0.0f);
+
+  if (image_msg->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {
+    float constant = CamModel.fx() * cam_baseline_; // [px]*[m]
+    ConvertDisp2Depth(image_msg, depth_image, constant);
+  } else {
+    ROS_ERROR("Disparity image has unsupported encoding [%s]", image_msg->encoding.c_str());
+    return;
+  }
+
   image_queue_.push_back(*image_msg);
   if (image_queue_.size() == 1) {
     image_time_stamp_ = ros::Time(image_queue_.front().header.stamp).toNSec();
   }
 }
 
+
+
 template<typename T>
 void SupereightNode<T>::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn) {
+//  ROS_INFO("cam info callback %i", cam_info_ready_);
   if (cam_info_ready_) return;
   CamInfo = *camInfoIn;
   CamModel.fromCameraInfo(camInfoIn);
+
   cam_info_ready_ = true;
   ROS_INFO("got camera model..");
-  std::cout << CamModel.cameraInfo() << std::endl;
-  std::cout << CamModel.fx() << "," << CamModel.fy() << std::endl;
+//  std::cout << CamModel.cameraInfo() << std::endl;
+//  std::cout << CamModel.fx() << "," << CamModel.fy() << std::endl;
 }
 
-template<typename T>
-void SupereightNode<T>::Pointcloud2DepthCallback(const
-                                                 sensor_msgs::PointCloud2::ConstPtr &pointcloud) {
-  int height = pointcloud->height;
-  if (height != image_size_.y()) {
-    std::cout << "image and pcl height not equal" << std::endl;
-  }
-  int width = pointcloud->width;
-//  std::cout <<"width "<< width << " height "<< height  << std::endl;
-  int x, y;
-
-  sensor_msgs::Image depth_image;
-  for (y = 0; y < pointcloud->height; y++) {
-    for (x = 0; x < pointcloud->width; x++) {
-      if (pointcloud->data[x + y * pointcloud->row_step] > 0) {
-//        int depth= pointcloud->data[]
-//        depth_image.data[x+y*image_size_.x()]=pointcloud->data[]
-//        std::cout << pointcloud->data[x+ y*pointcloud->row_step] << " ";
-      }
-//      std::cout <<std::endl;
-    }
-  }
-//  image_queue_.push_back(depth_image);
-//  if (image_queue_.size() == 1) {
-//    image_time_stamp_ = ros::Time(image_queue_.front().header.stamp).toNSec();
-//  }
-}
 template<typename T>
 void SupereightNode<T>::poseCallback(
     const geometry_msgs::TransformStamped::ConstPtr &pose_msg) {
+//  ROS_INFO("pose call back");
   pose_buffer_.put(*pose_msg);
   while (image_queue_.size() > 0 &&
       (ros::Time(pose_msg->header.stamp).toNSec() > image_time_stamp_)) {
@@ -314,64 +311,136 @@ void SupereightNode<T>::poseCallback(
 template<typename T>
 void SupereightNode<T>::fusionCallback(
     const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
-  bool integrated, raycasted;
+  bool integrated = false;
+  bool raycasted = false;
+  bool tracked = false;
+
+  std::chrono::time_point<std::chrono::steady_clock> timings[9];
   ROS_INFO_STREAM("fusion call back");
-  // Convert ROS message to cv image
-  cv_bridge::CvImagePtr bridge = nullptr;
-  try {
-    bridge = cv_bridge::toCvCopy(image_pose_msg->image, "32FC1");
-  } catch (cv_bridge::Exception &e) {
-    std::cout << "Failed to transform depth image." << std::endl;
-  }
-  // image input checks
-  if(image_size_.x()!= bridge->image.cols){
-    abort();
-  }
 
-  if(image_size_.y()!= bridge->image.rows){
-    abort();
+  timings[0] = std::chrono::steady_clock::now();
+  const float *imagepointer = (const float *) image_pose_msg->image.data.data();
+  for (int p = 0; p < image_size_.y() * image_size_.x(); p++) {
+    if (imagepointer[p] != imagepointer[p]) {
+      input_depth_[p] = 0;
+    } else {
+      input_depth_[p] = static_cast<uint16_t>( 1000 * imagepointer[p]);
+//      ROS_INFO("depth %i, %f", input_depth_[p], imagepointer[p]);
+    }
   }
-  const float* imagepointer = (const float*) image_pose_msg->image.data.data();
-  for (int p = 0; p < image_size_.y()*image_size_.x(); p++) {
-      input_depth_[p] = static_cast<uint16_t>(1000* imagepointer[p]);
-  }
-  std::cout << bridge->image.at<float>(240, 320) << " cv : input depth" << input_depth_[320 + image_size_.x()*240] << std::endl;
+//  std::cout << input_depth_[150 * 640 + 320] << std::endl;
 //  save image to png
-  lodepng_encode_file("/home/anna/image_file.png", (unsigned char *) input_depth_, image_size_.x(),
-          image_size_.y(), LCT_GREY, 16);
+//  lodepng_encode_file("/home/anna/image_file.png",
+//                      (unsigned char *) input_depth_,
+//                      image_size_.x(),
+//                      image_size_.y(),
+//                      LCT_GREY,
+//                      16);
 
-  // convert opencv image
-
-
+  timings[1] = std::chrono::steady_clock::now();
   Eigen::Matrix4d gt_pose =
       interpolatePose(image_pose_msg->pre_pose, image_pose_msg->post_pose,
                       ros::Time(image_pose_msg->image.header.stamp).toNSec());
 
   //-------- supereight access point ----------------
 //  ROS_INFO_STREAM("pose interpolated " << gt_pose.cast<float>() << " input depth" << *input_depth_);
-  pipeline_->setPose(gt_pose.cast<float>());
+  timings[2] = std::chrono::steady_clock::now();
 
   pipeline_->preprocessing(input_depth_, image_size_,
                            supereight_config_.bilateral_filter);
   ROS_INFO_STREAM("preprocessed ");
+  timings[3] = std::chrono::steady_clock::now();
+
   Eigen::Vector4f camera =
       supereight_config_.camera / (supereight_config_.compute_size_ratio);
-  bool tracked = pipeline_->tracking(camera, supereight_config_.icp_threshold, supereight_config_.tracking_rate, frame_);
+  if (supereight_config_.groundtruth_file == "") {
+    tracked = pipeline_->tracking(camera,
+                                  supereight_config_.icp_threshold,
+                                  supereight_config_.tracking_rate,
+                                  frame_);
+  } else {
+    pipeline_->setPose(gt_pose.cast<float>());
+  }
+
+  Eigen::Vector3f tmp = pipeline_->getPosition();
+  float3 pos = make_float3(tmp.x(), tmp.y(), tmp.z());
+  timings[4] = std::chrono::steady_clock::now();
+
+  // for visualization
   std::vector<Eigen::Vector3i> occupied_voxels;
   std::vector<Eigen::Vector3i> freed_voxels;
   std::vector<Eigen::Vector3i> updated_blocks;
-  if (tracked) {
-    pipeline_->integration(camera, supereight_config_.integration_rate,
-                           supereight_config_.mu, frame_, &updated_blocks);
 
+  // Integrate only if tracking was successful or it is one of the
+  // first 4 frames.
+  if (tracked || frame_ <= 3) {
+//    pipeline_->integration(camera,
+//                           supereight_config_.integration_rate,
+//                           supereight_config_.mu,
+//                           frame_,
+//                           &updated_blocks);
+    integrated = pipeline_->integration(camera,
+                                        supereight_config_.integration_rate,
+                                        supereight_config_.mu,
+                                        frame_,
+                                        &occupied_voxels,
+                                        &freed_voxels);
+  } else{
+    integrated = false;
   }
-  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
 
+  timings[5] = std::chrono::steady_clock::now();
+
+  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
+  timings[6] = std::chrono::steady_clock::now();
+
+  ROS_INFO("integrated %i, tracked %i ", integrated, tracked);
   ROS_INFO_STREAM("occupied_voxels = " << occupied_voxels.size());
   //  ROS_INFO_STREAM( "freed_voxels = " << freed_voxels.size());
   ROS_INFO_STREAM("updated voxels = " << updated_blocks.size());
 
-  // ------------- visualization ------------
+
+  // TODO add ifdefs to comment it out cmakelists add compile definitions
+#ifdef WITH_RENDERING
+  pipeline_->renderDepth((unsigned char *) depth_render_, pipeline_->getComputationResolution());
+  pipeline_->renderTrack((unsigned char *) track_render_, pipeline_->getComputationResolution());
+  pipeline_->renderVolume((unsigned char *) volume_render_,
+                          pipeline_->getComputationResolution(),
+                          frame_,
+                          supereight_config_.rendering_rate,
+                          camera,
+                          0.75 * supereight_config_.mu);
+
+// create image
+  sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
+  CreateImageMsg(image_pose_msg, depth_render_msg, computation_size_);
+  depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
+  depth_render_msg->is_bigendian = 0;
+  memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_, depth_render_msg->width
+      * depth_render_msg->height * sizeof(float));
+
+  sensor_msgs::ImagePtr track_render_msg(new sensor_msgs::Image());
+  CreateImageMsg(image_pose_msg, track_render_msg, computation_size_);
+  track_render_msg->encoding = "rgba8"; // rgba8 doesn't work
+  track_render_msg->is_bigendian = 0;
+  memcpy((void *) track_render_msg->data.data(), (void *) track_render_, track_render_msg->width
+      * track_render_msg->height * sizeof(float));
+
+  sensor_msgs::ImagePtr volume_render_msg(new sensor_msgs::Image());
+  CreateImageMsg(image_pose_msg, volume_render_msg, computation_size_);
+  volume_render_msg->encoding = "rgba8"; // rgba8 doesn't work
+  volume_render_msg->is_bigendian = 0;
+  memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_, volume_render_msg->width
+      * volume_render_msg->height * sizeof(float));
+
+  // publish to topic
+  depth_render_pub_.publish(*depth_render_msg);
+  track_render_pub_.publish(*track_render_msg);
+  volume_render_pub_.publish(*volume_render_msg);
+#endif
+  timings[7] = std::chrono::steady_clock::now();
+
+  // ------------- supereight map visualization ------------
 
   if (std::is_same<FieldType, OFusion>::value) {
     visualizeMapOFusion(updated_blocks);
@@ -379,6 +448,9 @@ void SupereightNode<T>::fusionCallback(
     visualizeMapSDF(occupied_voxels, freed_voxels, updated_blocks);
   }
 
+  timings[8] = std::chrono::steady_clock::now();
+  storeStats(frame_, timings, pos, tracked, integrated);
+//  Stats.print_all_data(std::cout, false);
   frame_++;
 }
 

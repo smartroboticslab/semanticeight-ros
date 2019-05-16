@@ -20,6 +20,7 @@ int main(int argc, char **argv) {
 
   ros::spin();
 
+  Stats.print_all_data(std::cout, false);
   // delete pipeline;
   return 0;
 }

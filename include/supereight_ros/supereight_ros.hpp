@@ -34,6 +34,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <geometry_msgs/TransformStamped.h>
 #include <message_filters/subscriber.h>
@@ -51,24 +52,23 @@
 #include <pcl/conversions.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/filter.h>
-#include <opencv2/opencv.hpp>
-//#include <mav_visualization/helpers.h>
+
 
 // supereight package
 #include <perfstats.h>
 #include <se/DenseSLAMSystem.h>
 #include <se/config.h>
-//#include <se/thirdparty/vector_types.h>
-//#include <se/interface.h>
 #include <se/node_iterator.hpp>
 #include <se/utils/morton_utils.hpp>
+
 // supereight_ros headers
 #include <supereight_ros/ImagePose.h>  //message
 #include <supereight_ros/CircularBuffer.hpp>
-
+#include <supereight_ros/supereight_utils.hpp>
+#include <supereight_ros/functions.hpp>
 namespace se {
 
-template <typename T>
+template<typename T>
 class SupereightNode {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -84,11 +84,20 @@ class SupereightNode {
     // Configure supereight_config with default values
     setSupereightConfig(nh_private);
 
-    input_depth_ = (uint16_t *)malloc(sizeof(uint16_t) * image_size_.x() *
-                                      image_size_.y());
+    input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * image_size_.x() *
+        image_size_.y());
     init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(
         supereight_config_.volume_size);
     computation_size_ = image_size_ / supereight_config_.compute_size_ratio;
+
+#ifdef WITH_RENDERING
+    depth_render_ =
+        (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
+    track_render_ =
+        (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
+    volume_render_ =
+        (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
+#endif
 
     pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(
         Eigen::Vector2i(computation_size_.x(), computation_size_.y()),
@@ -100,12 +109,19 @@ class SupereightNode {
     pipeline_->getMap(octree_);
     setupRos();
     ROS_INFO_STREAM("map publication mode block "
-                    << pub_block_based_ << ", map " << pub_map_update_);
-    res_ = (double)(pipeline_->getModelDimensions())[0] /
-           (double)(pipeline_->getModelResolution())[0];
+                        << pub_block_based_ << ", map " << pub_map_update_);
+    res_ = (double) (pipeline_->getModelDimensions())[0] /
+        (double) (pipeline_->getModelResolution())[0];
   }
 
-  virtual ~SupereightNode() {}
+  virtual ~SupereightNode() {
+    free(input_depth_);
+#ifdef WITH_RENDERING
+    free(depth_render_);
+    free(track_render_);
+    free(volume_render_);
+#endif
+  }
 
   /**
   * @brief sets configuration from YAML file to nodehandle
@@ -131,19 +147,18 @@ class SupereightNode {
 
   /**
    * @brief adds images to image queue
-   * @param image_msg
+   * @param old_image_msg
    */
   void imageCallback(const sensor_msgs::ImageConstPtr &image_msg);
 
-
-  void Pointcloud2DepthCallback(const sensor_msgs::PointCloud2::ConstPtr& pointcloud);
+  void Pointcloud2DepthCallback(const sensor_msgs::PointCloud2::ConstPtr &pointcloud);
 
 /**
  * @brief reads camera info
  * @param camInfoIn
  */
 
-  void camInfoCallback(const sensor_msgs::CameraInfoConstPtr& camInfoIn);
+  void camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn);
   /**
    * @brief adds pose from ground truth file or recorded pose to pose buffer
    * @param pose_msg
@@ -225,6 +240,8 @@ class SupereightNode {
       const geometry_msgs::TransformStamped &post_transformation,
       int64_t img_time_stamp);
 
+
+
   /* Taken from https://github.com/ethz-asl/volumetric_mapping */
   std_msgs::ColorRGBA percentToColor(double h);
 
@@ -249,25 +266,40 @@ class SupereightNode {
   Configuration supereight_config_;
   Eigen::Vector2i image_size_;
   int frame_;
+
   uint16_t *input_depth_ = nullptr;
+
+#ifdef WITH_RENDERING
+  uchar4 *depth_render_ = nullptr;
+  uchar4 *volume_render_ = nullptr;
+  uchar4 *track_render_ = nullptr;
+#endif
+
   Eigen::Vector2i computation_size_;
   double res_;
   int occupied_voxels_sum_;
+  float cam_baseline_ = 0.110f; // [m] from rotors_description/urdf/component_snippets.xacro vi_sensor
 
   // simulation camera reader
   sensor_msgs::CameraInfo CamInfo;
   image_geometry::PinholeCameraModel CamModel;
+
   bool cam_info_ready_ = false;
 
   // Subscriber
   ros::Subscriber image_sub_;
   ros::Subscriber pose_sub_;
   ros::Subscriber image_pose_sub_;
-  ros::Subscriber pcl_sub_;
   ros::Subscriber cam_info_sub_;
 
   // Publisher
   ros::Publisher image_pose_pub_;
+  // TODO ifdef
+#ifdef WITH_RENDERING
+  ros::Publisher depth_render_pub_;
+  ros::Publisher volume_render_pub_;
+  ros::Publisher track_render_pub_;
+#endif
 
   // Visualization
   ros::Publisher map_marker_pub_;
@@ -290,13 +322,14 @@ class SupereightNode {
 
   // block based visualization
   bool pub_map_update_ = true;
-  bool pub_block_based_marker_ = false;
+  bool pub_block_based_marker_ = true;
   bool pub_block_based_marker_array_ = false;
   bool pub_block_based_ =
       pub_block_based_marker_ || pub_block_based_marker_array_;
 };
 
 }  // namespace se
+
 
 #include "supereight_ros/supereight_ros_impl.hpp"
 #endif  // SUPEREIGHT_ROS_HPP

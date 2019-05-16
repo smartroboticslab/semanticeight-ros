@@ -6,9 +6,15 @@
        default="/home/anna/exploration_ws/src/supereight_ros/data/config.yaml" />
   <arg name="depth_image_topic"
        default="/firefly/vi_sensor/camera_depth/depth/disparity"/>
-  <arg name="pointcloud_topic" default="/firefly/vi_sensor/camera_depth/depth/points"/>
-  <arg name="pose_topic" default="/firefly/ground_gruth/transform"/>
+  <arg name="pose_topic" default="/firefly/vi_sensor/ground_truth/transform"/>
+  <arg name="camera_info_topic" default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>
 
+    <!--<arg name="depth_image_topic"-->
+       <!--default="/camera/aligned_depth_to_color/image_raw"/>-->
+
+  <!--<arg name="pointcloud_topic" default="/firefly/vi_sensor/camera_depth/depth/points"/>-->
+  <!--<arg name="pose_topic" default="/vicon/d435/d435"/>-->
+  <!--<arg name="camera_info_topic" default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>-->
   <!-- Launch ptp_ros node -->
   <node pkg="supereight_ros" name="supereight"
         type="supereight_ros" clear_params="true" output="screen" >
@@ -16,7 +22,7 @@
     <!- Include rosparam yaml files -->
     <rosparam command="load" file="$(arg supereight_ros_config_file)" />
 
-    <remap from="/camera/pointcloud" to="$(arg pointcloud_topic)"/>
+    <remap from="/camera/camera_info" to="$(arg camera_info_topic)"/>
 
     <!-- for other launch files remap camera image topic to this image topic-->
     <remap from="/camera/aligned_depth_to_color/image_raw"

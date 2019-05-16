@@ -9,10 +9,14 @@ add_definitions(-DEIGEN_MAX_ALIGN_BYTES=16)
 message(WARNING "CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 message(WARNING "CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DWITH_RENDERING")
+
 option(WITH_OPENMP "Compile with OpenMP" ON)
 find_package(Eigen3 REQUIRED)
 find_package(supereight REQUIRED)
 
+find_package(GLUT)
+find_package(OpenGL)
 find_package(PCL REQUIRED)
 ## find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -97,23 +101,23 @@ add_executable(supereight_ros
 #############################################
 ## Used for supereight package
 # Options for SE_FIELD_TYPE: OFusion, Sdf
-if(MAP_OM)
-    message("Compile supereight with OFusion" )
+if (MAP_OM)
+    message("Compile supereight with OFusion")
     set(CMAKE_CXX_FLAGS
             "${CMAKE_CXX_FLAGS} -DMAP_OM")
     set(field_type SE_FIELD_TYPE=OFusion)
 
-elseif(MAP_SDF)
-    message( "Compile supereight with SDF")
+elseif (MAP_SDF)
+    message("Compile supereight with SDF")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAP_SDF")
     set(field_type SE_FIELD_TYPE=SDF)
 
-elseif(NOT MAP_OM AND NOT MAP_SDF)
-    message( "Compile supereight with OFusion" )
+elseif (NOT MAP_OM AND NOT MAP_SDF)
+    message("Compile supereight with OFusion")
     set(CMAKE_CXX_FLAGS
             "${CMAKE_CXX_FLAGS} -DMAP_OM")
     set(field_type SE_FIELD_TYPE=OFusion)
-endif(MAP_OM)
+endif (MAP_OM)
 
 
 target_compile_definitions(supereight_ros PUBLIC ${field_type})
@@ -122,7 +126,9 @@ target_link_libraries(supereight_ros
         se-denseslam-ofusion
         se-denseslam-sdf
         lodepng
-        ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+        ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
+        ${GLUT_LIBRARIES}
+        ${OPENGL_LIBRARIES} GL)
 
 
 install(TARGETS ${PROJECT_NAME}

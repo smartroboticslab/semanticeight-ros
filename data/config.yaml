@@ -32,7 +32,7 @@ fps: 0
 
 blocking_read: false
 
-icp_threshold: 0.000001
+icp_threshold: 0.0001
 
 no_gui: false
 
