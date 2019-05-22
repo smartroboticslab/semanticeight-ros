@@ -3,6 +3,16 @@
 //
 
 /**
+ * Coordinate Frames Definition
+ * robot poses are in 'world frame'
+ * 'octree frame' is positioned on the lower corner of the volume, so that the whole volume is
+ * contained in the positive octant
+ * transform from 'map frame' to 'world frame' is defined arbritrarily.
+ * axes of the map and the octree frame are aligned at the origin of the 'map frame' in the
+ * octree coordinates is at the point of the volume encoded in init_pose
+ */
+
+/**
 * @brief
 * @param
 * @returns
@@ -21,8 +31,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 #include <getopt.h>
 #include <glog/logging.h>
@@ -36,17 +48,24 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
 
-#include <geometry_msgs/TransformStamped.h>
 #include <message_filters/subscriber.h>
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 
+#include <image_geometry/pinhole_camera_model.h>
+
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+
+#include <tf/transform_listener.h>
+#include "tf/LinearMath/Transform.h"
+
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>
-#include <image_geometry/pinhole_camera_model.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
+
 #include <visualization_msgs/MarkerArray.h>
 
 #include <pcl/conversions.h>
@@ -74,20 +93,21 @@ class SupereightNode {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
-      : nh_(nh),
-        nh_private_(nh_private),
-        pose_buffer_(500),
-        image_size_{640, 480},
-        frame_(0),
-        frame_id_("map"),
-        occupied_voxels_sum_(0) {
+      :
+      nh_(nh),
+      nh_private_(nh_private),
+      pose_buffer_(500),
+      image_size_{640, 480},
+      frame_(0),
+      frame_id_("map"),
+      enable_icp_tracking_(false),
+      use_tf_transforms_(true),
+      occupied_voxels_sum_(0) {
     // Configure supereight_config with default values
     setSupereightConfig(nh_private);
 
-    input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * image_size_.x() *
-        image_size_.y());
-    init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(
-        supereight_config_.volume_size);
+    input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * image_size_.x() * image_size_.y());
+    init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
     computation_size_ = image_size_ / supereight_config_.compute_size_ratio;
 
 #ifdef WITH_RENDERING
@@ -99,19 +119,23 @@ class SupereightNode {
         (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
 #endif
 
-    pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(
-        Eigen::Vector2i(computation_size_.x(), computation_size_.y()),
-        Eigen::Vector3i::Constant(
-            static_cast<int>(supereight_config_.volume_resolution.x())),
-        Eigen::Vector3f::Constant(supereight_config_.volume_size.x()),
-        init_pose_, supereight_config_.pyramid, supereight_config_));
+    pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(Eigen::Vector2i(
+        computation_size_.x(),
+        computation_size_.y()),
+                                                                     Eigen::Vector3i::Constant(
+                                                                         static_cast<int>(supereight_config_.volume_resolution.x())),
+                                                                     Eigen::Vector3f::Constant(
+                                                                         supereight_config_.volume_size.x()),
+                                                                     init_pose_,
+                                                                     supereight_config_.pyramid,
+                                                                     supereight_config_));
 
     pipeline_->getMap(octree_);
     setupRos();
-    ROS_INFO_STREAM("map publication mode block "
-                        << pub_block_based_ << ", map " << pub_map_update_);
-    res_ = (double) (pipeline_->getModelDimensions())[0] /
-        (double) (pipeline_->getModelResolution())[0];
+    ROS_INFO_STREAM(
+        "map publication mode block " << pub_block_based_ << ", map " << pub_map_update_);
+    res_ = (double) (pipeline_->getModelDimensions())[0]
+        / (double) (pipeline_->getModelResolution())[0];
   }
 
   virtual ~SupereightNode() {
@@ -138,6 +162,8 @@ class SupereightNode {
   // public variables
   Eigen::Vector3f init_pose_;
 
+  bool use_tf_transforms_;
+
  private:
   /**
  * @brief Sets up publishing and subscribing, should only be called from
@@ -150,8 +176,6 @@ class SupereightNode {
    * @param old_image_msg
    */
   void imageCallback(const sensor_msgs::ImageConstPtr &image_msg);
-
-  void Pointcloud2DepthCallback(const sensor_msgs::PointCloud2::ConstPtr &pointcloud);
 
 /**
  * @brief reads camera info
@@ -170,8 +194,7 @@ class SupereightNode {
    * pipeline
    * @param image_pose_msg
    */
-  void fusionCallback(
-      const supereight_ros::ImagePose::ConstPtr &image_pose_msg);
+  void fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg);
 
   /**
    * @brief loads the occpuancy map and publishs it to a ros topic
@@ -197,8 +220,7 @@ class SupereightNode {
    *
    * @return      Fraction
    */
-  double calculateAlpha(int64_t pre_time_stamp, int64_t post_time_stamp,
-                        int64_t img_time_stamp);
+  double calculateAlpha(int64_t pre_time_stamp, int64_t post_time_stamp, int64_t img_time_stamp);
 
   /**
    * @brief      Linear 3D interpolation
@@ -209,8 +231,8 @@ class SupereightNode {
    *
    * @return     Interpolated translation
    */
-  Eigen::Vector3d interpolateVector(const Eigen::Vector3d &pre_vector3D,
-                                    const Eigen::Vector3d &post_vector3D,
+  Eigen::Vector3f interpolateVector(const Eigen::Vector3f &pre_vector3D,
+                                    const Eigen::Vector3f &post_vector3D,
                                     double alpha);
 
   /**
@@ -222,9 +244,9 @@ class SupereightNode {
    *
    * @return     Interpolated orientation
    */
-  Eigen::Quaterniond interpolateOrientation(
-      const Eigen::Quaterniond &pre_orientation,
-      const Eigen::Quaterniond &post_orientation, double alpha);
+  Eigen::Quaternionf interpolateOrientation(const Eigen::Quaternionf &pre_orientation,
+                                            const Eigen::Quaternionf &post_orientation,
+                                            double alpha);
 
   /**
    * @brief      Interpolation for transformations
@@ -235,15 +257,17 @@ class SupereightNode {
    *
    * @return     Interpolated transformation
    */
-  Eigen::Matrix4d interpolatePose(
-      const geometry_msgs::TransformStamped &pre_transformation,
-      const geometry_msgs::TransformStamped &post_transformation,
-      int64_t img_time_stamp);
-
-
+  Eigen::Matrix4f interpolatePose(const geometry_msgs::TransformStamped &pre_transformation,
+                                  const geometry_msgs::TransformStamped &post_transformation,
+                                  int64_t img_time_stamp);
 
   /* Taken from https://github.com/ethz-asl/volumetric_mapping */
   std_msgs::ColorRGBA percentToColor(double h);
+
+  /**
+   * @brief set
+   */
+
 
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
@@ -278,7 +302,8 @@ class SupereightNode {
   Eigen::Vector2i computation_size_;
   double res_;
   int occupied_voxels_sum_;
-  float cam_baseline_ = 0.110f; // [m] from rotors_description/urdf/component_snippets.xacro vi_sensor
+  float
+      cam_baseline_ = 0.110f; // [m] from rotors_description/urdf/component_snippets.xacro vi_sensor
 
   // simulation camera reader
   sensor_msgs::CameraInfo CamInfo;
@@ -321,11 +346,31 @@ class SupereightNode {
   std::map<int, std::vector<Eigen::Vector3i>> voxel_block_map_;
 
   // block based visualization
-  bool pub_map_update_ = true;
+  bool pub_map_update_ = false;
   bool pub_block_based_marker_ = true;
   bool pub_block_based_marker_array_ = false;
-  bool pub_block_based_ =
-      pub_block_based_marker_ || pub_block_based_marker_array_;
+  bool pub_block_based_ = pub_block_based_marker_ || pub_block_based_marker_array_;
+
+  bool enable_icp_tracking_ ;
+  bool set_tf_octree_to_depth_cam_ = false;
+  // get latet transform to the planning frame and transform the pose
+  static tf::TransformListener tf_listener_;
+  tf::StampedTransform stf_octree_to_depth_cam_;//
+  geometry_msgs::TransformStamped::Ptr tfs_octree_to_map;
+
+
+  tf::StampedTransform stf_depth_cam_to_octree_;
+  geometry_msgs::TransformStamped::Ptr tfs_map_to_octree_;
+
+  Eigen::Matrix4f tf_map_from_octree_ = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_octree_from_map_ = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_octree_from_world_= Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_world_from_octree_= Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_map_from_world_= Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_world_from_map_= Eigen::Matrix4f::Identity();
+
+  std::ofstream myfile;
+
 };
 
 }  // namespace se

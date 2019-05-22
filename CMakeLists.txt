@@ -4,12 +4,12 @@ project(supereight_ros)
 add_compile_options(-std=c++14 -march=native)
 
 add_definitions(-DEIGEN_MAX_ALIGN_BYTES=16)
-
+add_definitions(-DWITH_RENDERING)
 
 message(WARNING "CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 message(WARNING "CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DWITH_RENDERING")
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DWITH_RENDERING")
 
 option(WITH_OPENMP "Compile with OpenMP" ON)
 find_package(Eigen3 REQUIRED)
@@ -30,6 +30,7 @@ find_package(catkin REQUIRED COMPONENTS
         visualization_msgs
         geometry_msgs
         image_geometry
+        tf
         )
 
 add_message_files(FILES
@@ -50,10 +51,10 @@ if (WITH_OPENMP)
     endif ()
 endif ()
 #
-#if (WITH_OPENMP AND OPENMP_FOUND)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-#    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-#endif ()
+if (WITH_OPENMP AND OPENMP_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif ()
 
 #############
 ## Catkin ##
@@ -71,7 +72,7 @@ catkin_package(
         std_msgs
         message_runtime
         cv_bridge
-
+        tf
 )
 
 #############
