@@ -62,9 +62,9 @@ void CreateImageMsg(const supereight_ros::ImagePose::ConstPtr &old_image_msg, se
 }
 
 /**
- * @brief converts the world pose to octree frame pose
- * @param input
- * @return
+ * @brief swaps the rotation axis to convert the world frame to octree frame
+ * @param[in] camera pose in world frame
+ * @return rotated pose
  */
 Eigen::Matrix4f SwapAxes_octree_world(const Eigen::Matrix4f &input){
   Eigen::Matrix4f output = input;

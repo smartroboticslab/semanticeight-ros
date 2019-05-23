@@ -265,9 +265,6 @@ class SupereightNode {
   /* Taken from https://github.com/ethz-asl/volumetric_mapping */
   std_msgs::ColorRGBA percentToColor(double h);
 
-  /**
-   * @brief set
-   */
 
 
   ros::NodeHandle nh_;
@@ -322,8 +319,8 @@ class SupereightNode {
   ros::Publisher image_pose_pub_;
   ros::Publisher supereight_pose_pub_;
   ros::Publisher gt_tf_pose_pub_;
-  // TODO ifdef
-#ifdef WITH_RENDERING
+
+  #ifdef WITH_RENDERING
   ros::Publisher depth_render_pub_;
   ros::Publisher volume_render_pub_;
   ros::Publisher track_render_pub_;
@@ -368,13 +365,12 @@ class SupereightNode {
   tf::StampedTransform stf_depth_cam_to_octree_;
   geometry_msgs::TransformStamped::Ptr tfs_map_to_octree_;
 
-  Eigen::Matrix4f tf_map_from_octree_ = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f tf_octree_from_map_ = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f tf_octree_from_world_ = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f tf_world_from_octree_ = Eigen::Matrix4f::Identity();
+
   Eigen::Matrix4f tf_map_from_world_ = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f tf_world_from_map_ = Eigen::Matrix4f::Identity();
 
+  Eigen::Vector3f init_position_octree_;
+  Eigen::Vector3f const_translation_;
   std::ofstream myfile;
 
 };
