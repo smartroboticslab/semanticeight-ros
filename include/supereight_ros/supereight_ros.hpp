@@ -52,6 +52,7 @@
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
+#include <eigen_conversions/eigen_msg.h>
 
 #include <image_geometry/pinhole_camera_model.h>
 
@@ -319,6 +320,8 @@ class SupereightNode {
 
   // Publisher
   ros::Publisher image_pose_pub_;
+  ros::Publisher supereight_pose_pub_;
+  ros::Publisher gt_tf_pose_pub_;
   // TODO ifdef
 #ifdef WITH_RENDERING
   ros::Publisher depth_render_pub_;
@@ -351,23 +354,26 @@ class SupereightNode {
   bool pub_block_based_marker_array_ = false;
   bool pub_block_based_ = pub_block_based_marker_ || pub_block_based_marker_array_;
 
-  bool enable_icp_tracking_ ;
-  bool set_tf_octree_to_depth_cam_ = false;
+  bool enable_icp_tracking_;
+
+  // transform pose
+  tf::TransformListener tf_listener_;
+  tf::StampedTransform gt_pose_transform_;
+
+  bool set_world_to_map_tf_ = false;
   // get latet transform to the planning frame and transform the pose
-  static tf::TransformListener tf_listener_;
   tf::StampedTransform stf_octree_to_depth_cam_;//
   geometry_msgs::TransformStamped::Ptr tfs_octree_to_map;
-
 
   tf::StampedTransform stf_depth_cam_to_octree_;
   geometry_msgs::TransformStamped::Ptr tfs_map_to_octree_;
 
   Eigen::Matrix4f tf_map_from_octree_ = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f tf_octree_from_map_ = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f tf_octree_from_world_= Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f tf_world_from_octree_= Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f tf_map_from_world_= Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f tf_world_from_map_= Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_octree_from_world_ = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_world_from_octree_ = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_map_from_world_ = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f tf_world_from_map_ = Eigen::Matrix4f::Identity();
 
   std::ofstream myfile;
 
