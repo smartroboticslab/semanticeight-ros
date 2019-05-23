@@ -31,6 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         image_geometry
         tf
+        eigen_conversions
         )
 
 add_message_files(FILES
@@ -73,6 +74,7 @@ catkin_package(
         message_runtime
         cv_bridge
         tf
+        eigen_conversions
 )
 
 #############

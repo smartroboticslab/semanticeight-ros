@@ -32,6 +32,7 @@
   <depend>std_msgs</depend>
   <depend>image_geometry</depend>
   <depend>tf</depend>
+  <depend>eigen_conversions</depend>
   <exec_depend>message_runtime</exec_depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
