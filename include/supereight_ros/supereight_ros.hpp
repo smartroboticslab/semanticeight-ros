@@ -309,7 +309,7 @@ class SupereightNode {
   // Visualization
   ros::Publisher map_marker_pub_;
   ros::Publisher block_based_marker_pub_;
-  ros::Publisher block_based_marker_array_pub_;
+  ros::Publisher boundary_marker_pub_;
 
   /**
   * buffer and quque for incoming data streams, in case the matching can't

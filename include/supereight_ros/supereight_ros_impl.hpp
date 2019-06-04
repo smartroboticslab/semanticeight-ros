@@ -12,6 +12,7 @@
 #include <se/lodepng.h>
 //#include <se/default_parameters.h>
 #include <supereight_ros/supereight_ros.hpp>
+
 namespace se {
 /**
 * for ROS param function
@@ -112,8 +113,8 @@ void SupereightNode<T>::setupRos() {
   // Visualization
   map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
   block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
-  block_based_marker_array_pub_ =
-      nh_.advertise<visualization_msgs::MarkerArray>("block_based_marker_array", 1);
+  boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
+
   std::string ns = ros::this_node::getName();
   bool read_from_launch = ros::param::get(ns + "/enable_icp_tracking_", enable_icp_tracking_);
   ros::param::get(ns + "/use_tf_transforms_", use_tf_transforms_);
@@ -249,8 +250,13 @@ void SupereightNode<T>::setSupereightConfig(const ros::NodeHandle &nh_private) {
   for (int i = 0; i < volume_size_vector.size(); i++) {
     init_position_octree_[i] = volume_size_vector[i] * initial_pos_factor_vector[i];
   }
-
-
+  bool supereight_visualization_block;
+  if (nh_private.getParam("block_based_map", supereight_visualization_block)) {
+    setSupereightVisualizationMapBased(supereight_visualization_block);
+    printf("map viz %i", supereight_visualization_block);
+  } else {
+    setSupereightVisualizationMapBased(true);
+  }
 };
 
 // print configuration to terminal
@@ -570,113 +576,114 @@ void SupereightNode<T>::visualizeMapOFusion(std::vector<Eigen::Vector3i> updated
   pipeline_->getMap(octree_);
   node_iterator<T> node_it(*octree_);
 
-  //
-  if (pub_map_update_) {
-    visualization_msgs::Marker map_marker_msg;
+  // set with stored morton code
+  std::unordered_set<uint64_t> surface_voxel_set;
+  std::unordered_set<uint64_t> frontier_voxel_set;
+  std::unordered_set<uint64_t> occlusion_voxel_set;
 
-    std::vector<Eigen::Vector3i> occupied_voxels = node_it.getOccupiedVoxels();
+  bool getExplorationArea = pipeline_->getExplorationCandidate(surface_voxel_set,
+                                                               frontier_voxel_set,
+                                                               occlusion_voxel_set);
+  if (!getExplorationArea) { ROS_ERROR("no exploration area received"); }
 
-    map_marker_msg.header.frame_id = frame_id_;
-    map_marker_msg.ns = frame_id_;
-    map_marker_msg.id = 0;
-    map_marker_msg.type = visualization_msgs::Marker::CUBE_LIST;
-    map_marker_msg.scale.x = res_;
-    map_marker_msg.scale.y = res_;
-    map_marker_msg.scale.z = res_;
-    map_marker_msg.action = visualization_msgs::Marker::ADD;
-    map_marker_msg.color.r = 1.0f;
-    map_marker_msg.color.g = 1.0f;
-    map_marker_msg.color.b = 0.0f;
-    map_marker_msg.color.a = 1.0;
+  visualization_msgs::Marker voxel_block_marker;
+  voxel_block_marker.header.frame_id = frame_id_;
+  voxel_block_marker.ns = frame_id_;
+  voxel_block_marker.type = visualization_msgs::Marker::CUBE_LIST;
+  voxel_block_marker.scale.x = res_;
+  voxel_block_marker.scale.y = res_;
+  voxel_block_marker.scale.z = res_;
+  voxel_block_marker.action = visualization_msgs::Marker::ADD;
+  voxel_block_marker.color.r = 0.0f;
+  voxel_block_marker.color.g = 0.0f;
+  voxel_block_marker.color.b = 1.0f;
+  voxel_block_marker.color.a = 1.0;
 
-    for (const auto &occupied_voxel : occupied_voxels) {
+  visualization_msgs::Marker voxel_block_marker_msg = voxel_block_marker;
+  voxel_block_marker_msg.id = 0;
+  voxel_block_marker_msg.ns = frame_id_;
+  voxel_block_marker_msg.color.r = 1.0f;
+  voxel_block_marker_msg.color.g = 0.0f;
+  voxel_block_marker_msg.color.b = 0.0f;
+  voxel_block_marker_msg.color.a = 1.0;
+
+  visualization_msgs::Marker surface_voxels_msg = voxel_block_marker;
+  surface_voxels_msg.id = 0;
+  surface_voxels_msg.ns = "surface";
+  surface_voxels_msg.lifetime = ros::Duration(3);
+  surface_voxels_msg.color.r = 1.0f;
+  surface_voxels_msg.color.g = 0.0f;
+  surface_voxels_msg.color.b = 1.0f;
+  surface_voxels_msg.color.a = 1.0;
+  visualization_msgs::Marker frontier_voxels_msg = voxel_block_marker;
+  frontier_voxels_msg.ns = "frontier";
+  frontier_voxels_msg.id = 0;
+  frontier_voxels_msg.lifetime = ros::Duration(10);
+  frontier_voxels_msg.color.r = 0.0f;
+  frontier_voxels_msg.color.g = 1.0f;
+  frontier_voxels_msg.color.b = 0.0f;
+  frontier_voxels_msg.color.a = 1.0;
+
+  visualization_msgs::Marker occlusion_voxels_msg = voxel_block_marker;
+  occlusion_voxels_msg.ns = "occluded surface";
+  occlusion_voxels_msg.id = 0;
+  occlusion_voxels_msg.lifetime = ros::Duration(10);
+  occlusion_voxels_msg.color.r = 1.0f;
+  occlusion_voxels_msg.color.g = 1.0f;
+  occlusion_voxels_msg.color.b = 0.0f;
+  occlusion_voxels_msg.color.a = 1.0;
+
+  // TODO recover id = mortoncode
+  if (frame_ % N_frame_pub == 0) {
+    for (const auto &updated_block : updated_blocks) {
+      int morton_code = (int) compute_morton(updated_block[0], updated_block[1], updated_block[2]);
+//      ROS_INFO("morton code updated %i ", morton_code );
+//      std::cout << "updated block " << updated_block << std::endl;
+      std::vector<Eigen::Vector3i>
+          occupied_block_voxels = node_it.getOccupiedVoxels(0.5, updated_block);
+//      std::cout << "size occp blocks " << occupied_block_voxels.size() << std::endl;
+      voxel_block_map_[morton_code] = occupied_block_voxels;
+    }
+
+    for (auto it = surface_voxel_set.begin(); it != surface_voxel_set.end(); ++it) {
+      std::cout << *it << std::endl;
+      Eigen::Vector3i surface_blocks = unpack_morton(*it);
+      std::cout << "surface block \n"<< surface_blocks << std::endl;
+      // TODO problem with getting occupied voxels
+      surface_voxel_map_[*it] = node_it.getOccupiedVoxels(0.5, surface_blocks); // morton code
+    }
+
+  }
+
+  for (auto voxel_block = voxel_block_map_.begin(); voxel_block != voxel_block_map_.end();
+       voxel_block++) {
+    for (const auto &occupied_voxel : voxel_block->second) {
       geometry_msgs::Point cube_center;
 
       cube_center.x = ((double) occupied_voxel[0] + 0.5) * res_;
       cube_center.y = ((double) occupied_voxel[1] + 0.5) * res_;
       cube_center.z = ((double) occupied_voxel[2] + 0.5) * res_;
 
-      map_marker_msg.points.push_back(cube_center);
-    }
-
-    if (frame_ % N_frame_pub == 0) {
-      map_marker_pub_.publish(map_marker_msg);
+      voxel_block_marker_msg.points.push_back(cube_center);
     }
   }
 
-  if (pub_block_based_) {
-    visualization_msgs::Marker voxel_block_marker;
-    voxel_block_marker.header.frame_id = frame_id_;
-    voxel_block_marker.ns = frame_id_;
-    voxel_block_marker.type = visualization_msgs::Marker::CUBE_LIST;
-    voxel_block_marker.scale.x = res_;
-    voxel_block_marker.scale.y = res_;
-    voxel_block_marker.scale.z = res_;
-    voxel_block_marker.action = visualization_msgs::Marker::ADD;
-    voxel_block_marker.color.r = 0.0f;
-    voxel_block_marker.color.g = 0.0f;
-    voxel_block_marker.color.b = 1.0f;
-    voxel_block_marker.color.a = 1.0;
+  for (auto voxel_block = surface_voxel_map_.begin(); voxel_block != surface_voxel_map_.end();
+       voxel_block++) {
+    for (const auto &surface_voxel : voxel_block->second) {
+      geometry_msgs::Point cube_center;
 
-    visualization_msgs::MarkerArray voxel_block_marker_array_msg;
-    visualization_msgs::Marker voxel_block_marker_msg = voxel_block_marker;
+      cube_center.x = ((double) surface_voxel[0] + 0.5) * res_;
+      cube_center.y = ((double) surface_voxel[1] + 0.5) * res_;
+      cube_center.z = ((double) surface_voxel[2] + 0.5) * res_;
 
-    if (pub_block_based_marker_) {
-      voxel_block_marker_msg.id = 0;
-      voxel_block_marker_msg.color.r = 1.0f;
-      voxel_block_marker_msg.color.g = 0.0f;
-      voxel_block_marker_msg.color.b = 0.0f;
-      voxel_block_marker_msg.color.a = 1.0;
-    }
-
-    if (frame_ % N_frame_pub == 0) {
-      for (const auto &updated_block : updated_blocks) {
-        int morten_code =
-            (int) compute_morton(updated_block[0], updated_block[1], updated_block[2]);
-
-        std::vector<Eigen::Vector3i>
-            occupied_block_voxels = node_it.getOccupiedVoxels(0.5, updated_block);
-
-        if (pub_block_based_marker_array_) {
-          voxel_block_marker.id = morten_code;
-          voxel_block_marker.points.clear();
-
-          for (const auto &occupied_voxel : occupied_block_voxels) {
-            geometry_msgs::Point cube_center;
-            cube_center.x = (static_cast<double>(occupied_voxel[0]) + 0.5) * res_;
-            cube_center.y = (static_cast<double>(occupied_voxel[1]) + 0.5) * res_;
-            cube_center.z = (static_cast<double>(occupied_voxel[2]) + 0.5) * res_;
-            voxel_block_marker.points.push_back(cube_center);
-          }
-          voxel_block_marker_array_msg.markers.push_back(voxel_block_marker);
-        }
-
-        if (pub_block_based_marker_) {
-          voxel_block_map_[morten_code] = occupied_block_voxels;
-        }
-      }
-
-      if (pub_block_based_marker_array_) {
-        block_based_marker_array_pub_.publish(voxel_block_marker_array_msg);
-      }
-    }
-
-    if (pub_block_based_marker_) {
-      for (auto voxel_block = voxel_block_map_.begin(); voxel_block != voxel_block_map_.end();
-           voxel_block++) {
-        for (const auto &occupied_voxel : voxel_block->second) {
-          geometry_msgs::Point cube_center;
-
-          cube_center.x = ((double) occupied_voxel[0] + 0.5) * res_;
-          cube_center.y = ((double) occupied_voxel[1] + 0.5) * res_;
-          cube_center.z = ((double) occupied_voxel[2] + 0.5) * res_;
-
-          voxel_block_marker_msg.points.push_back(cube_center);
-        }
-      }
-      block_based_marker_pub_.publish(voxel_block_marker_msg);
+      surface_voxels_msg.points.push_back(cube_center);
     }
   }
+
+//  boundary_marker_pub_.publish(surface_voxels_msg);
+
+  block_based_marker_pub_.publish(voxel_block_marker_msg);
 };
 
 template<typename T>
@@ -912,6 +919,21 @@ std_msgs::ColorRGBA SupereightNode<T>::percentToColor(double h) {
   }
 
   return color;
+}
+
+template<typename T>
+bool SupereightNode<T>::setTFMapfromWorld(const Eigen::Vector3f &translation,
+                                          const Eigen::Vector3f &init_position_octree,
+                                          Eigen::Vector3f &const_translation,
+                                          Eigen::Matrix4f &tf_matrix) {
+  const_translation = init_position_octree;
+  const_translation(0) -= translation(0);
+  const_translation(1) -= translation(2);
+  const_translation(2) -= translation(1);
+  // x- axis 90, z-axis 90
+  tf_matrix << 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  tf_matrix.block<3, 1>(0, 3) -= init_position_octree;
+  return true;
 }
 }  // namespace se
 
