@@ -44,15 +44,55 @@ const int default_multi_resolution = false;
 const bool default_bayesian = false;
 
 std::string sep = "\n----------------------------------------\n";
+template<typename T>
+SupereightNode<T>::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
+    :
+    nh_(nh),
+    nh_private_(nh_private),
+    pose_buffer_(500),
+    image_size_{640, 480},
+    frame_(0),
+    frame_id_("map"),
+    enable_icp_tracking_(false),
+    use_tf_transforms_(true),
+    occupied_voxels_sum_(0) {
+  // Configure supereight_config with default values
+  setSupereightConfig(nh_private);
 
+  input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * image_size_.x() * image_size_.y());
+  init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
+  computation_size_ = image_size_ / supereight_config_.compute_size_ratio;
+
+#ifdef WITH_RENDERING
+  depth_render_ =
+      (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
+  track_render_ =
+      (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
+  volume_render_ =
+      (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
+#endif
+
+  pipeline_ =
+      std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(Eigen::Vector2i(computation_size_.x(),
+                                                                           computation_size_.y()),
+                                                           Eigen::Vector3i::Constant(static_cast<int>(supereight_config_.volume_resolution.x())),
+                                                           Eigen::Vector3f::Constant(
+                                                               supereight_config_.volume_size.x()),
+                                                           init_pose_,
+                                                           supereight_config_.pyramid,
+                                                           supereight_config_));
+
+  pipeline_->getMap(octree_);
+  setupRos();
+  ROS_INFO_STREAM("map publication mode block " << pub_block_based_ << ", map " << pub_map_update_);
+  res_ =
+      (double) (pipeline_->getModelDimensions())[0] / (double) (pipeline_->getModelResolution())[0];
+}
 template<typename T>
 void SupereightNode<T>::setupRos() {
   // Subscriber
-  image_sub_ = nh_.subscribe("/camera/aligned_depth_to_color/image_raw",
-                             100,
-                             &SupereightNode::imageCallback,
-                             this);
-  pose_sub_ = nh_.subscribe("/vicon/d435/d435", 1000, &SupereightNode::poseCallback, this);
+  image_sub_ = nh_.subscribe("/camera/depth_image", 100, &SupereightNode::imageCallback, this);
+  pose_sub_ = nh_.subscribe("/pose", 1000, &SupereightNode::poseCallback, this);
   image_pose_sub_ =
       nh_.subscribe("/supereight/image_pose", 100, &SupereightNode::fusionCallback, this);
   cam_info_sub_ = nh_.subscribe("/camera/camera_info", 2, &SupereightNode::camInfoCallback, this);
@@ -249,13 +289,13 @@ void SupereightNode<T>::imageCallback(const sensor_msgs::ImageConstPtr &image_ms
 
 //   allocate new depth image message
   sensor_msgs::ImagePtr depth_image(new sensor_msgs::Image());
-  CreateImageMsg(image_msg, depth_image);
+  createImageMsg(image_msg, depth_image);
 
   depth_image->data.resize(depth_image->height * depth_image->step, 0.0f);
 
   if (image_msg->encoding == sensor_msgs::image_encodings::TYPE_32FC1) {
     float constant = CamModel.fx() * cam_baseline_; // [px]*[m]
-    ConvertDisp2Depth(image_msg, depth_image, constant);
+    convertDisp2Depth(image_msg, depth_image, constant);
   } else {
     ROS_ERROR("Disparity image has unsupported encoding [%s]", image_msg->encoding.c_str());
     return;
@@ -298,19 +338,22 @@ void SupereightNode<T>::poseCallback(const geometry_msgs::TransformStamped::Cons
   pose.block<3, 3>(0, 0) = rot_q.toRotationMatrix();
 
   // world frame to octree frame rotation transformation
-  pose = SwapAxes_octree_world(pose);
+  pose = swapAxes(pose);
 
   // initialize map from world transformation matrix
   if (!set_world_to_map_tf_) {
-    const_translation_ = init_position_octree_;
-    const_translation_(0) -= translation(0);
-    const_translation_(1) -= translation(2);
-    const_translation_(2) -= translation(1);
-    // x- axis 90, z-axis 90
-    tf_map_from_world_ << 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-    tf_map_from_world_.block<3, 1>(0, 3) -= init_position_octree_;
-    set_world_to_map_tf_ = true;
-    std::cout << "world to map tf \n" <<translation << " \n" << tf_map_from_world_ << sep;
+//    const_translation_ = init_position_octree_;
+//    const_translation_(0) -= translation(0);
+//    const_translation_(1) -= translation(2);
+//    const_translation_(2) -= translation(1);
+//    // x- axis 90, z-axis 90
+//    tf_map_from_world_ << 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+//    tf_map_from_world_.block<3, 1>(0, 3) -= init_position_octree_;
+    set_world_to_map_tf_ = setTFMapfromWorld(translation,
+                                             init_position_octree_,
+                                             const_translation_,
+                                             tf_map_from_world_);
+    std::cout << "world to map tf \n" << translation << " \n" << tf_map_from_world_ << sep;
   }
   // continuous transformation
   pose.block<3, 1>(0, 3) -= const_translation_;
@@ -354,9 +397,9 @@ void SupereightNode<T>::poseCallback(const geometry_msgs::TransformStamped::Cons
   geometry_msgs::PoseStamped gt_tf_pose_msg;
   gt_tf_pose_msg.header = pose_msg->header;
   gt_tf_pose_msg.header.frame_id = frame_id_;
-  gt_tf_pose_msg.pose.position.x = pose_tf_msg_.transform.translation.x+init_position_octree_(0);
-  gt_tf_pose_msg.pose.position.y = pose_tf_msg_.transform.translation.y+init_position_octree_(0);
-  gt_tf_pose_msg.pose.position.z = pose_tf_msg_.transform.translation.z+init_position_octree_(0);
+  gt_tf_pose_msg.pose.position.x = pose_tf_msg_.transform.translation.x + init_position_octree_(0);
+  gt_tf_pose_msg.pose.position.y = pose_tf_msg_.transform.translation.y + init_position_octree_(0);
+  gt_tf_pose_msg.pose.position.z = pose_tf_msg_.transform.translation.z + init_position_octree_(0);
   gt_tf_pose_msg.pose.orientation = pose_tf_msg_.transform.rotation;
   gt_tf_pose_pub_.publish(gt_tf_pose_msg);
 }
@@ -366,12 +409,11 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
   bool integrated = false;
   bool raycasted = false;
   bool tracked = false;
-
+// ROS_INFO("fusion callback");
   // creates file with poses
 //  myfile.open("/home/anna/Data/octree.txt", std::ofstream::app);
 
   std::chrono::time_point<std::chrono::steady_clock> timings[9];
-  ROS_INFO_STREAM("fusion call back");
 
   timings[0] = std::chrono::steady_clock::now();
   const float *imagepointer = (const float *) image_pose_msg->image.data.data();
@@ -403,7 +445,6 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
   timings[2] = std::chrono::steady_clock::now();
 
   pipeline_->preprocessing(input_depth_, image_size_, supereight_config_.bilateral_filter);
-  ROS_INFO_STREAM("preprocessed ");
   timings[3] = std::chrono::steady_clock::now();
 
   Eigen::Vector4f camera = supereight_config_.camera / (supereight_config_.compute_size_ratio);
@@ -425,7 +466,7 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
   geometry_msgs::PoseStamped supereight_pose;
   supereight_pose.header = image_pose_msg->image.header;
   supereight_pose.header.frame_id = frame_id_;
-  tf::pointEigenToMsg(tracked_pose.block<3,1>(0,3).cast<double>(), supereight_pose.pose.position);
+  tf::pointEigenToMsg(tracked_pose.block<3, 1>(0, 3).cast<double>(), supereight_pose.pose.position);
   Eigen::Quaternionf q_rot(tracked_pose.block<3, 3>(0, 0));
   tf::quaternionEigenToMsg(q_rot.cast<double>(), supereight_pose.pose.orientation);
 
@@ -454,7 +495,7 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 
   timings[5] = std::chrono::steady_clock::now();
 
-  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
+//  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
   timings[6] = std::chrono::steady_clock::now();
 
   ROS_INFO("integrated %i, tracked %i ", integrated, tracked);
@@ -476,21 +517,21 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 
 // create image
   sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
-  CreateImageMsg(image_pose_msg, depth_render_msg, computation_size_);
+  createImageMsg(image_pose_msg, depth_render_msg, computation_size_);
   depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
   depth_render_msg->is_bigendian = 0;
   memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_, depth_render_msg->width
       * depth_render_msg->height * sizeof(float));
 
   sensor_msgs::ImagePtr track_render_msg(new sensor_msgs::Image());
-  CreateImageMsg(image_pose_msg, track_render_msg, computation_size_);
+  createImageMsg(image_pose_msg, track_render_msg, computation_size_);
   track_render_msg->encoding = "rgba8"; // rgba8 doesn't work
   track_render_msg->is_bigendian = 0;
   memcpy((void *) track_render_msg->data.data(), (void *) track_render_, track_render_msg->width
       * track_render_msg->height * sizeof(float));
 
   sensor_msgs::ImagePtr volume_render_msg(new sensor_msgs::Image());
-  CreateImageMsg(image_pose_msg, volume_render_msg, computation_size_);
+  createImageMsg(image_pose_msg, volume_render_msg, computation_size_);
   volume_render_msg->encoding = "rgba8"; // rgba8 doesn't work
   volume_render_msg->is_bigendian = 0;
   memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_, volume_render_msg->width
@@ -515,7 +556,7 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 
   Eigen::Vector3f tmp = pipeline_->getPosition();
   float3 pos = make_float3(tmp.x(), tmp.y(), tmp.z());
-  storeStats(frame_, timings, pos, tracked, integrated);
+//  storeStats(frame_, timings, pos, tracked, integrated);
 
   frame_++;
 }

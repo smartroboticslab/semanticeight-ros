@@ -60,84 +60,37 @@
 #include <geometry_msgs/TransformStamped.h>
 
 #include <tf/transform_listener.h>
-#include "tf/LinearMath/Transform.h"
+#include <tf/LinearMath/Transform.h>
 
-#include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
 
 #include <visualization_msgs/MarkerArray.h>
 
-#include <pcl/conversions.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/filter.h>
 
 
 // supereight package
-#include <perfstats.h>
+
 #include <se/DenseSLAMSystem.h>
 #include <se/config.h>
 #include <se/node_iterator.hpp>
 #include <se/utils/morton_utils.hpp>
 
 // supereight_ros headers
-#include <supereight_ros/ImagePose.h>  //message
-#include <supereight_ros/CircularBuffer.hpp>
-#include <supereight_ros/supereight_utils.hpp>
-#include <supereight_ros/functions.hpp>
+#include "supereight_ros/ImagePose.h"  //message
+#include "supereight_ros/CircularBuffer.hpp"
+#include "supereight_ros/supereight_utils.hpp"
+#include "supereight_ros/functions.hpp"
 namespace se {
 
 template<typename T>
 class SupereightNode {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  typedef  std::shared_ptr<SupereightNode> Ptr;
 
-  SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
-      :
-      nh_(nh),
-      nh_private_(nh_private),
-      pose_buffer_(500),
-      image_size_{640, 480},
-      frame_(0),
-      frame_id_("map"),
-      enable_icp_tracking_(false),
-      use_tf_transforms_(true),
-      occupied_voxels_sum_(0) {
-    // Configure supereight_config with default values
-    setSupereightConfig(nh_private);
-
-    input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * image_size_.x() * image_size_.y());
-    init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
-    computation_size_ = image_size_ / supereight_config_.compute_size_ratio;
-
-#ifdef WITH_RENDERING
-    depth_render_ =
-        (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
-    track_render_ =
-        (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
-    volume_render_ =
-        (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
-#endif
-
-    pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(Eigen::Vector2i(
-        computation_size_.x(),
-        computation_size_.y()),
-                                                                     Eigen::Vector3i::Constant(
-                                                                         static_cast<int>(supereight_config_.volume_resolution.x())),
-                                                                     Eigen::Vector3f::Constant(
-                                                                         supereight_config_.volume_size.x()),
-                                                                     init_pose_,
-                                                                     supereight_config_.pyramid,
-                                                                     supereight_config_));
-
-    pipeline_->getMap(octree_);
-    setupRos();
-    ROS_INFO_STREAM(
-        "map publication mode block " << pub_block_based_ << ", map " << pub_map_update_);
-    res_ = (double) (pipeline_->getModelDimensions())[0]
-        / (double) (pipeline_->getModelResolution())[0];
-  }
+  SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private);
 
   virtual ~SupereightNode() {
     free(input_depth_);
@@ -155,11 +108,38 @@ class SupereightNode {
   void setSupereightConfig(const ros::NodeHandle &nh_private);
 
   /**
+   * @brief access for external packages
+   * @return pointer to supereight pipeline
+   */
+  std::shared_ptr<DenseSLAMSystem> getSupereightPipeline(){
+    return pipeline_;
+  }
+
+  /**
+   * set rviz visualization type
+   * @param pub_block_based fastest way, currently only for OFusion
+   */
+
+  void setSupereightVisualizationMapBased(const bool& pub_block_based)
+  {pub_block_based_ = pub_block_based;}
+
+  /**
    * @brif prints configuration parameters of the supereight denseSLAM pipeline
    * @param config
    */
   void printSupereightConfig(const Configuration &config);
-
+/**
+ * @brief set TF matrix supereight map from world
+ * @param[in] translation first pose from robot
+ * @param[in] init_position_octree: volume size vector * initial pos factor vector
+ * @param[out] const_translation: first pose intializet in the octree map
+ * @param[out] tf_matrix
+ * @return bool
+ */
+  bool setTFMapfromWorld(const Eigen::Vector3f &translation,
+                       const Eigen::Vector3f &init_position_octree,
+                       Eigen::Vector3f &const_translation,
+                       Eigen::Matrix4f &tf_matrix);
   // public variables
   Eigen::Vector3f init_pose_;
 
@@ -279,11 +259,11 @@ class SupereightNode {
   // get pipeline with map
   std::shared_ptr<DenseSLAMSystem> pipeline_ = nullptr;
 
-#ifdef MAP_OM
+//#ifdef MAP_OM
   std::shared_ptr<se::Octree<OFusion>> octree_ = nullptr;
-#elif MAP_SDF
-  std::shared_ptr<se::Octree<SDF>> octree_ = nullptr;
-#endif
+//#elif MAP_SDF
+//  std::shared_ptr<se::Octree<SDF>> octree_ = nullptr;
+//#endif
   // pipeline configuration
   Configuration supereight_config_;
   Eigen::Vector2i image_size_;
@@ -344,26 +324,26 @@ class SupereightNode {
 
   // voxel blockwise update for visualization
   std::map<int, std::vector<Eigen::Vector3i>> voxel_block_map_;
-
+  std::map<int, std::vector<Eigen::Vector3i>> surface_voxel_map_;
+  std::map<int, std::vector<Eigen::Vector3i>> frontier_voxel_map_;
+  std::map<int, std::vector<Eigen::Vector3i>> occlusion_voxel_map_;
   // block based visualization
   bool pub_map_update_ = false;
-  bool pub_block_based_marker_ = true;
-  bool pub_block_based_marker_array_ = false;
-  bool pub_block_based_ = pub_block_based_marker_ || pub_block_based_marker_array_;
+  bool pub_block_based_ = true;
 
   bool enable_icp_tracking_;
 
   // transform pose
-  tf::TransformListener tf_listener_;
-  tf::StampedTransform gt_pose_transform_;
+//  tf::TransformListener tf_listener_;
+//  tf::StampedTransform gt_pose_transform_;
 
   bool set_world_to_map_tf_ = false;
   // get latet transform to the planning frame and transform the pose
-  tf::StampedTransform stf_octree_to_depth_cam_;//
-  geometry_msgs::TransformStamped::Ptr tfs_octree_to_map;
-
-  tf::StampedTransform stf_depth_cam_to_octree_;
-  geometry_msgs::TransformStamped::Ptr tfs_map_to_octree_;
+//  tf::StampedTransform stf_octree_to_depth_cam_;//
+//  geometry_msgs::TransformStamped::Ptr tfs_octree_to_map;
+//
+//  tf::StampedTransform stf_depth_cam_to_octree_;
+//  geometry_msgs::TransformStamped::Ptr tfs_map_to_octree_;
 
 
   Eigen::Matrix4f tf_map_from_world_ = Eigen::Matrix4f::Identity();
