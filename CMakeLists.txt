@@ -8,16 +8,16 @@ add_definitions(-DWITH_RENDERING)
 
 message(WARNING "CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
 message(WARNING "CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE})
-
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DWITH_RENDERING")
+# ------------------------------------------------------------------------------
+# Prepare dependencies
+# ------------------------------------------------------------------------------
 
 option(WITH_OPENMP "Compile with OpenMP" ON)
 find_package(Eigen3 REQUIRED)
 find_package(supereight REQUIRED)
-
 find_package(GLUT)
 find_package(OpenGL)
-find_package(PCL REQUIRED)
+
 ## find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
         cv_bridge
@@ -34,7 +34,8 @@ find_package(catkin REQUIRED COMPONENTS
         eigen_conversions
         )
 
-add_message_files(FILES
+add_message_files(
+        FILES
         ImagePose.msg
         )
 
@@ -43,6 +44,7 @@ generate_messages(
         std_msgs
         geometry_msgs
         sensor_msgs
+        visualization_msgs
 )
 
 if (WITH_OPENMP)
@@ -57,9 +59,9 @@ if (WITH_OPENMP AND OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif ()
 
-#############
-## Catkin ##
-#############
+# ------------------------------------------------------------------------------
+# Catkin
+# ------------------------------------------------------------------------------
 # catkin specific configuration
 # declare things to be passed to dependent projects
 # supereight_ros_node and tests
@@ -77,9 +79,9 @@ catkin_package(
         eigen_conversions
 )
 
-#############
-## Build ##
-#############
+# ------------------------------------------------------------------------------
+# BUILD
+# ------------------------------------------------------------------------------
 
 
 ## Specify additional locations of header files
@@ -91,8 +93,8 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${SUPEREIGHT_INCLUDE_DIR}
         ${EIGEN3_INCLUDE_DIR}
-        ${PCL_INCLUDE_DIRS}
 )
+
 
 
 add_executable(supereight_ros
@@ -104,23 +106,23 @@ add_executable(supereight_ros
 #############################################
 ## Used for supereight package
 # Options for SE_FIELD_TYPE: OFusion, Sdf
-if (MAP_OM)
-    message("Compile supereight with OFusion")
-    set(CMAKE_CXX_FLAGS
-            "${CMAKE_CXX_FLAGS} -DMAP_OM")
+#if (MAP_OM)
+#    message("Compile supereight with OFusion")
+#    set(CMAKE_CXX_FLAGS
+#            "${CMAKE_CXX_FLAGS} -DMAP_OM")
+#    set(field_type SE_FIELD_TYPE=OFusion)
+#
+#elseif (MAP_SDF)
+#    message("Compile supereight with SDF")
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAP_SDF")
+#    set(field_type SE_FIELD_TYPE=SDF)
+#
+#elseif (NOT MAP_OM AND NOT MAP_SDF)
+#    message("Compile supereight with OFusion")
+#    set(CMAKE_CXX_FLAGS
+#            "${CMAKE_CXX_FLAGS} -DMAP_OM")
     set(field_type SE_FIELD_TYPE=OFusion)
-
-elseif (MAP_SDF)
-    message("Compile supereight with SDF")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DMAP_SDF")
-    set(field_type SE_FIELD_TYPE=SDF)
-
-elseif (NOT MAP_OM AND NOT MAP_SDF)
-    message("Compile supereight with OFusion")
-    set(CMAKE_CXX_FLAGS
-            "${CMAKE_CXX_FLAGS} -DMAP_OM")
-    set(field_type SE_FIELD_TYPE=OFusion)
-endif (MAP_OM)
+#endif (MAP_OM)
 
 
 target_compile_definitions(supereight_ros PUBLIC ${field_type})
@@ -133,7 +135,7 @@ target_link_libraries(supereight_ros
         ${GLUT_LIBRARIES}
         ${OPENGL_LIBRARIES} GL)
 
-
+add_dependencies(supereight_ros supereight_ros_generate_messages_cpp)
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
@@ -147,15 +149,15 @@ install(DIRECTORY include/supereight_ros/
 #############
 ## Testing ##
 #############
-
+# command : catkin run_tests
 # Add gtest based cpp test target and link libraries
 catkin_add_gtest(supereight_ros-test
         test/main.cpp
         test/test_example.cpp
+        test/test_supereight_ros.cpp
         )
 
 target_compile_definitions(supereight_ros-test PUBLIC ${field_type})
 target_link_libraries(supereight_ros-test
-        ${CMAKE_THREAD_LIBS_INIT}
-        ${catkin_LIBRARIES})
-
+        ${catkin_LIBRARIES} )
+add_dependencies(supereight_ros-test supereight_ros_generate_messages_cpp)

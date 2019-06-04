@@ -5,7 +5,8 @@
 
 #include <gtest/gtest.h>
 #include <string>
-#include "../include/supereight_ros/supereight_ros.hpp"
+#include <../include/supereight_ros/supereight_ros.hpp>
+
 using std::string;
 
 class StringTest : public ::testing::Test {
