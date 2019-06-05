@@ -21,7 +21,8 @@
     <!--<arg name="camera_info_topic" default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>-->
     <!-- Launch ptp_ros node -->
     <node pkg="supereight_ros" name="supereight"
-          type="supereight_ros" clear_params="true" output="screen">
+          type="supereight_ros" clear_params="true" output="screen"
+          launch-prefix="gdb -ex run -args">
         <!-- valgrind -v -track-origins=yes -leak-check=fulaunch-prefix="gdb -ex run -args"->
         <!- Include rosparam yaml files -->
         <rosparam command="load" file="$(arg supereight_ros_config_file)"/>
@@ -29,11 +30,10 @@
         <remap from="/camera/camera_info" to="$(arg camera_info_topic)"/>
 
         <!-- for other launch files remap camera image topic to this image topic-->
-        <remap from="/camera/aligned_depth_to_color/image_raw"
-               to="$(arg depth_image_topic)"/>
+        <remap from="/camera/depth_image" to="$(arg depth_image_topic)"/>
         <!-- for other launch files remap pose estimation topic to this pose
         topic-->
-        <remap from="/vicon/d435/d435" to="$(arg pose_topic)"/>
+        <remap from="/pose" to="$(arg pose_topic)"/>
         <param name="tf_frame" type="string" value="$(arg tf_frame)"/>
         <param name="body_frame" type="string" value="$(arg body_frame)"/>
         <param name="enable_icp_tracking_" type="bool" value="$(arg enable_icp_tracking_)"/>
