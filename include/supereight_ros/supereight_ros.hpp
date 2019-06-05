@@ -43,6 +43,8 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include <Eigen/StdVector>
+
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
@@ -82,7 +84,13 @@
 #include "supereight_ros/CircularBuffer.hpp"
 #include "supereight_ros/supereight_utils.hpp"
 #include "supereight_ros/functions.hpp"
+
+//typedef  std::vector<Eigen::Vector3i,Eigen::aligned_allocator<Eigen::Vector3i>>  vec3i;
+ typedef std::map<int, vec3i, std::less<int>, Eigen::aligned_allocator<std::pair<const int,
+     vec3i> > > map3i;
+
 namespace se {
+
 
 template<typename T>
 class SupereightNode {
@@ -181,16 +189,17 @@ class SupereightNode {
    * @brief loads the occpuancy map and publishs it to a ros topic
    * @param updated_blocks
    */
-  void visualizeMapOFusion(std::vector<Eigen::Vector3i> updated_blocks);
+  void visualizeMapOFusion(vec3i & updated_blocks,
+      vec3i& frontier_blocks);
 
   // TODO: change SDF visualization to be block based
   /**
    * @brief loads the SDF map and publishs it to a ros topic
    * @param updated_blocks
    */
-  void visualizeMapSDF(std::vector<Eigen::Vector3i> occupied_voxels,
-                       std::vector<Eigen::Vector3i> freed_voxels,
-                       std::vector<Eigen::Vector3i> updated_blocks);
+  void visualizeMapSDF(vec3i& occupied_voxels,
+                       vec3i& freed_voxels,
+                       vec3i& updated_blocks);
   /**
    * @brief       Calculates the fraction a given sample is located between the
    * closest pre and post sample
@@ -310,7 +319,7 @@ class SupereightNode {
   ros::Publisher map_marker_pub_;
   ros::Publisher block_based_marker_pub_;
   ros::Publisher boundary_marker_pub_;
-
+  ros::Publisher frontier_marker_pub_;
   /**
   * buffer and quque for incoming data streams, in case the matching can't
   * be immediately done.
@@ -323,10 +332,10 @@ class SupereightNode {
   uint64_t image_time_stamp_;
 
   // voxel blockwise update for visualization
-  std::map<int, std::vector<Eigen::Vector3i>> voxel_block_map_;
-  std::map<int, std::vector<Eigen::Vector3i>> surface_voxel_map_;
-  std::map<int, std::vector<Eigen::Vector3i>> frontier_voxel_map_;
-  std::map<int, std::vector<Eigen::Vector3i>> occlusion_voxel_map_;
+  map3i voxel_block_map_;
+  map3i surface_voxel_map_;
+  map3i frontier_voxel_map_;
+  map3i occlusion_voxel_map_;
   // block based visualization
   bool pub_map_update_ = false;
   bool pub_block_based_ = true;
