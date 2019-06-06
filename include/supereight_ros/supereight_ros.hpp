@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -86,17 +87,19 @@
 #include "supereight_ros/functions.hpp"
 
 //typedef  std::vector<Eigen::Vector3i,Eigen::aligned_allocator<Eigen::Vector3i>>  vec3i;
- typedef std::map<int, vec3i, std::less<int>, Eigen::aligned_allocator<std::pair<const int,
-     vec3i> > > map3i;
+typedef std::map<int,
+                 vec3i,
+                 std::less<int>,
+                 Eigen::aligned_allocator<std::pair<const int, vec3i> > > map3i;
 
 namespace se {
-
 
 template<typename T>
 class SupereightNode {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  typedef  std::shared_ptr<SupereightNode> Ptr;
+
+  typedef std::shared_ptr<SupereightNode> Ptr;
 
   SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private);
 
@@ -119,7 +122,7 @@ class SupereightNode {
    * @brief access for external packages
    * @return pointer to supereight pipeline
    */
-  std::shared_ptr<DenseSLAMSystem> getSupereightPipeline(){
+  std::shared_ptr<DenseSLAMSystem> getSupereightPipeline() {
     return pipeline_;
   }
 
@@ -128,8 +131,9 @@ class SupereightNode {
    * @param pub_block_based fastest way, currently only for OFusion
    */
 
-  void setSupereightVisualizationMapBased(const bool& pub_block_based)
-  {pub_block_based_ = pub_block_based;}
+  void setSupereightVisualizationMapBased(const bool &pub_block_based) {
+    pub_block_based_ = pub_block_based;
+  }
 
   /**
    * @brif prints configuration parameters of the supereight denseSLAM pipeline
@@ -145,9 +149,9 @@ class SupereightNode {
  * @return bool
  */
   bool setTFMapfromWorld(const Eigen::Vector3f &translation,
-                       const Eigen::Vector3f &init_position_octree,
-                       Eigen::Vector3f &const_translation,
-                       Eigen::Matrix4f &tf_matrix);
+                         const Eigen::Vector3f &init_position_octree,
+                         Eigen::Vector3f &const_translation,
+                         Eigen::Matrix4f &tf_matrix);
   // public variables
   Eigen::Vector3f init_pose_;
 
@@ -189,17 +193,14 @@ class SupereightNode {
    * @brief loads the occpuancy map and publishs it to a ros topic
    * @param updated_blocks
    */
-  void visualizeMapOFusion(vec3i & updated_blocks,
-      vec3i& frontier_blocks);
+  void visualizeMapOFusion(vec3i &updated_blocks, vec3i &frontier_blocks);
 
   // TODO: change SDF visualization to be block based
   /**
    * @brief loads the SDF map and publishs it to a ros topic
    * @param updated_blocks
    */
-  void visualizeMapSDF(vec3i& occupied_voxels,
-                       vec3i& freed_voxels,
-                       vec3i& updated_blocks);
+  void visualizeMapSDF(vec3i &occupied_voxels, vec3i &freed_voxels, vec3i &updated_blocks);
   /**
    * @brief       Calculates the fraction a given sample is located between the
    * closest pre and post sample
@@ -254,8 +255,6 @@ class SupereightNode {
   /* Taken from https://github.com/ethz-asl/volumetric_mapping */
   std_msgs::ColorRGBA percentToColor(double h);
 
-
-
   ros::NodeHandle nh_;
   ros::NodeHandle nh_private_;
 
@@ -309,7 +308,7 @@ class SupereightNode {
   ros::Publisher supereight_pose_pub_;
   ros::Publisher gt_tf_pose_pub_;
 
-  #ifdef WITH_RENDERING
+#ifdef WITH_RENDERING
   ros::Publisher depth_render_pub_;
   ros::Publisher volume_render_pub_;
   ros::Publisher track_render_pub_;

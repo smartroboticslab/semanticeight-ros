@@ -1,3 +1,5 @@
+
+
 //
 // Created by anna on 12/04/19.
 //
@@ -6,7 +8,7 @@
 #define SUPEREIGHT_SUPEREIGHT_ROS_IMPL_HPP
 
 #include <iostream>
-
+#include <memory>
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 #include <se/lodepng.h>
@@ -85,7 +87,7 @@ SupereightNode<T>::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHand
 
   pipeline_->getMap(octree_);
   setupRos();
-  ROS_INFO_STREAM("map publication mode block " << pub_block_based_ << ", map " << pub_map_update_);
+//  ROS_INFO_STREAM("map publication mode block " << pub_block_based_ << ", map " << pub_map_update_);
   res_ =
       (double) (pipeline_->getModelDimensions())[0] / (double) (pipeline_->getModelResolution())[0];
 }
@@ -251,12 +253,12 @@ void SupereightNode<T>::setSupereightConfig(const ros::NodeHandle &nh_private) {
   for (int i = 0; i < volume_size_vector.size(); i++) {
     init_position_octree_[i] = volume_size_vector[i] * initial_pos_factor_vector[i];
   }
-  bool supereight_visualization_block;
+  bool supereight_visualization_block = true;
   if (nh_private.getParam("block_based_map", supereight_visualization_block)) {
     setSupereightVisualizationMapBased(supereight_visualization_block);
     printf("map viz %i", supereight_visualization_block);
   } else {
-    setSupereightVisualizationMapBased(true);
+    setSupereightVisualizationMapBased(supereight_visualization_block);
   }
 };
 
@@ -497,7 +499,7 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
                                         supereight_config_.integration_rate,
                                         supereight_config_.mu,
                                         frame_,
-                                        updated_blocks, frontier_blocks);
+                                        &updated_blocks, &frontier_blocks);
 
   } else {
     integrated = false;
@@ -507,11 +509,11 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 
   timings[5] = std::chrono::steady_clock::now();
 
-//  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
+  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
   timings[6] = std::chrono::steady_clock::now();
 
   ROS_INFO("integrated %i, tracked %i ", integrated, tracked);
-  ROS_INFO_STREAM("occupied_voxels = " << occupied_voxels.size());
+//  ROS_INFO_STREAM("occupied_voxels = " << occupied_voxels.size());
   //  ROS_INFO_STREAM( "freed_voxels = " << freed_voxels.size());
   ROS_INFO_STREAM("updated voxels  = " << updated_blocks.size());
 
@@ -585,14 +587,15 @@ void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
   node_iterator<T> node_it(*octree_);
 
   // set with stored morton code
-  std::unordered_set<uint64_t> surface_voxel_set;
-  std::unordered_set<uint64_t> frontier_voxel_set;
-  std::unordered_set<uint64_t> occlusion_voxel_set;
+//  std::unordered_set<uint64_t> surface_voxel_set;
+//  std::unordered_set<uint64_t> frontier_voxel_set;
+//  std::unordered_set<uint64_t> occlusion_voxel_set;
+//
+//  bool getExplorationArea = pipeline_->getExplorationCandidate(surface_voxel_set,
+//                                                               frontier_voxel_set,
+//                                                               occlusion_voxel_set);
+//  if (!getExplorationArea) { ROS_ERROR("no exploration area received"); }
 
-  bool getExplorationArea = pipeline_->getExplorationCandidate(surface_voxel_set,
-                                                               frontier_voxel_set,
-                                                               occlusion_voxel_set);
-  if (!getExplorationArea) { ROS_ERROR("no exploration area received"); }
 
   visualization_msgs::Marker voxel_block_marker;
   voxel_block_marker.header.frame_id = frame_id_;
@@ -670,7 +673,7 @@ void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
   /**
    * SURFACE
    */
-    for (auto it = surface_voxel_set.begin(); it != surface_voxel_set.end(); ++it) {
+/*    for (auto it = surface_voxel_set.begin(); it != surface_voxel_set.end(); ++it) {
 //      std::cout << *it << std::endl;
       Eigen::Vector3i surface_blocks = unpack_morton(*it);
 //      std::cout << "surface block \n"<< surface_blocks << std::endl;
@@ -679,7 +682,7 @@ void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
 //      if(frontier_voxel_set.find(*it)!=frontier_voxel_set.end()){
 //        ROS_INFO("%i also in frontier ", *it);
 //      }// morton code
-    }
+    }*/
 
 //    for(auto it = frontier_voxel_set.begin(); it!= frontier_voxel_set.end(); ++it){
 //      Eigen::Vector3i frontier_blocks = unpack_morton(*it);
@@ -701,7 +704,7 @@ void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
     }
   }
 
-  for (auto voxel_block = surface_voxel_map_.begin(); voxel_block != surface_voxel_map_.end();
+/*  for (auto voxel_block = surface_voxel_map_.begin(); voxel_block != surface_voxel_map_.end();
        voxel_block++) {
     for (const auto &surface_voxel : voxel_block->second) {
       geometry_msgs::Point cube_center;
@@ -712,7 +715,7 @@ void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
 
       surface_voxels_msg.points.push_back(cube_center);
     }
-  }
+  }*/
   for (auto voxel_block = frontier_voxel_map_.begin(); voxel_block != frontier_voxel_map_.end();
        voxel_block++) {
     for (const auto &frontier_voxel : voxel_block->second) {
@@ -725,7 +728,7 @@ void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
       frontier_voxels_msg.points.push_back(cube_center);
     }
   }
-  boundary_marker_pub_.publish(surface_voxels_msg);
+//  boundary_marker_pub_.publish(surface_voxels_msg);
   frontier_marker_pub_.publish(frontier_voxels_msg);
   block_based_marker_pub_.publish(voxel_block_marker_msg);
 };
