@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(supereight_ros)
 
 # Eigen all instructions that are supported by the CPU are enabled
-add_compile_options(-std=c++14 )
+add_compile_options(-std=c++14 -march=native)
 
 add_definitions(-DEIGEN_MAX_ALIGN_BYTES=16)
 #add_definitions(-DEIGEN_DONT_VECTORIZE)
