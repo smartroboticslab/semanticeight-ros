@@ -22,7 +22,8 @@
     <!-- Launch ptp_ros node -->
     <node pkg="supereight_ros" name="supereight"
           type="supereight_ros" clear_params="true" output="screen"
-          launch-prefix="gdb -ex run --args">
+          launch-prefix="valgrind --track-origins=yes --leak-check=full --read-var-info=yes --leak-check=full
+          --leak-resolution=high">
         <!-- valgrind -v -track-origins=yes -leak-check=fulaunch-prefix="gdb -ex run -args"->
         <!- Include rosparam yaml files -->
         <rosparam command="load" file="$(arg supereight_ros_config_file)"/>
@@ -30,7 +31,8 @@
         <remap from="/camera/camera_info" to="$(arg camera_info_topic)"/>
 
         <!-- for other launch files remap camera image topic to this image topic-->
-        <remap from="/camera/depth_image" to="$(arg depth_image_topic)"/>
+        <remap from="/camera/depth_image"
+               to="$(arg depth_image_topic)"/>
         <!-- for other launch files remap pose estimation topic to this pose
         topic-->
         <remap from="/pose" to="$(arg pose_topic)"/>
