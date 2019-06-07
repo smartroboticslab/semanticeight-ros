@@ -485,15 +485,15 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
   timings[4] = std::chrono::steady_clock::now();
 
   // for visualization
-//  vec3i occupied_voxels(0);
-//  vec3i freed_voxels(0);
-//  vec3i updated_blocks(0);
-//  vec3i frontier_blocks(0);
+  vec3i occupied_voxels(0);
+  vec3i freed_voxels(0);
+  vec3i updated_blocks(0);
+  vec3i frontier_blocks(0);
 
-  std::vector<Eigen::Vector3i> occupied_voxels;
-  std::vector<Eigen::Vector3i> freed_voxels;
-  std::vector<Eigen::Vector3i> updated_blocks;
-  std::vector<Eigen::Vector3i> frontier_blocks;
+//  std::vector<Eigen::Vector3i> occupied_voxels;
+//  std::vector<Eigen::Vector3i> freed_voxels;
+//  std::vector<Eigen::Vector3i> updated_blocks;
+//  std::vector<Eigen::Vector3i> frontier_blocks;
 //  std::cout<< "sizes of frontier blocks  " << frontier_blocks.size() << " freed " << freed_voxels
 //      .size() << " updated " << updated_blocks.size() << std::endl;
 
@@ -518,7 +518,7 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
   timings[6] = std::chrono::steady_clock::now();
 
   ROS_INFO("integrated %i, tracked %i ", integrated, tracked);
-  ROS_INFO_STREAM("occupied_voxels = " << occupied_voxels.size());
+//  ROS_INFO_STREAM("occupied_voxels = " << occupied_voxels.size());
   //  ROS_INFO_STREAM( "freed_voxels = " << freed_voxels.size());
   ROS_INFO_STREAM("updated voxels  = " << updated_blocks.size());
 
@@ -582,10 +582,10 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 }
 
 template<typename T>
-//void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
-//    vec3i& frontier_blocks) {
-void SupereightNode<T>::visualizeMapOFusion(std::vector<Eigen::Vector3i>& updated_blocks,
-                                            std::vector<Eigen::Vector3i>& frontier_blocks) {
+void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
+    vec3i& frontier_blocks) {
+//void SupereightNode<T>::visualizeMapOFusion(std::vector<Eigen::Vector3i>& updated_blocks,
+//                                            std::vector<Eigen::Vector3i>& frontier_blocks) {
   // publish every N-th frame
   int N_frame_pub = 1;
 
@@ -741,12 +741,12 @@ void SupereightNode<T>::visualizeMapOFusion(std::vector<Eigen::Vector3i>& update
 };
 
 template<typename T>
-//void SupereightNode<T>::visualizeMapSDF(vec3i& occupied_voxels,
-//                                        vec3i& freed_voxels,
-//                                        vec3i& updated_blocks) {
-void SupereightNode<T>::visualizeMapSDF(std::vector<Eigen::Vector3i>& occupied_voxels,
-                                        std::vector<Eigen::Vector3i>& freed_voxels,
-                                        std::vector<Eigen::Vector3i>& updated_blocks) {
+void SupereightNode<T>::visualizeMapSDF(vec3i& occupied_voxels,
+                                        vec3i& freed_voxels,
+                                        vec3i& updated_blocks) {
+//void SupereightNode<T>::visualizeMapSDF(std::vector<Eigen::Vector3i>& occupied_voxels,
+//                                        std::vector<Eigen::Vector3i>& freed_voxels,
+//                                        std::vector<Eigen::Vector3i>& updated_blocks) {
   // publish every N-th frame
   int N_frame_pub = 1;
 

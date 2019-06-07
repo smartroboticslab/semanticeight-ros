@@ -193,16 +193,16 @@ class SupereightNode {
    * @brief loads the occpuancy map and publishs it to a ros topic
    * @param updated_blocks
    */
-  void visualizeMapOFusion(std::vector<Eigen::Vector3i> &updated_blocks, std::vector<Eigen::Vector3i> &frontier_blocks);
-//  void visualizeMapOFusion(vec3i &updated_blocks, vec3i &frontier_blocks);
+//  void visualizeMapOFusion(std::vector<Eigen::Vector3i> &updated_blocks, std::vector<Eigen::Vector3i> &frontier_blocks);
+  void visualizeMapOFusion(vec3i &updated_blocks, vec3i &frontier_blocks);
 
   // TODO: change SDF visualization to be block based
   /**
    * @brief loads the SDF map and publishs it to a ros topic
    * @param updated_blocks
    */
-//  void visualizeMapSDF(vec3i &occupied_voxels, vec3i &freed_voxels, vec3i &updated_blocks);
-  void visualizeMapSDF(std::vector<Eigen::Vector3i> &occupied_voxels, std::vector<Eigen::Vector3i> &freed_voxels, std::vector<Eigen::Vector3i> &updated_blocks);
+  void visualizeMapSDF(vec3i &occupied_voxels, vec3i &freed_voxels, vec3i &updated_blocks);
+//  void visualizeMapSDF(std::vector<Eigen::Vector3i> &occupied_voxels, std::vector<Eigen::Vector3i> &freed_voxels, std::vector<Eigen::Vector3i> &updated_blocks);
   /**
    * @brief       Calculates the fraction a given sample is located between the
    * closest pre and post sample
