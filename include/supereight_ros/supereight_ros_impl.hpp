@@ -595,10 +595,11 @@ void SupereightNode<T>::visualizeMapOFusion(vec3i& updated_blocks,
 
   // set with stored morton code
   std::set<uint64_t> surface_voxel_set;
-//  std::unordered_set<uint64_t> frontier_voxel_set;
-//  std::unordered_set<uint64_t> occlusion_voxel_set;
-//
-  bool getExplorationArea = pipeline_->getExplorationCandidate(surface_voxel_set);
+//  std::set<uint64_t> frontier_voxel_set;
+  std::set<uint64_t> occlusion_voxel_set;
+
+  bool getExplorationArea = pipeline_->getExplorationCandidate(surface_voxel_set,
+      occlusion_voxel_set);
 //                                                               frontier_voxel_set,
 //                                                               occlusion_voxel_set);
   if (!getExplorationArea) { ROS_ERROR("no exploration area received"); }
