@@ -26,9 +26,14 @@ void convertDisp2Depth(const sensor_msgs::ImageConstPtr &disp_msg,
   for (int v = 0; v < (int) disp_msg->height; ++v) {
     for (int u = 0; u < (int) disp_msg->width; ++u) {
       float disp = disp_row[u];
-      if (std::isfinite(disp)) {
-        *depth_data = constant / disp; //[px][ m]/[px]
+      float depth_temp = constant /disp;
+      if (std::isfinite(disp)&& depth_temp <= 10 ) {
+        *depth_data = depth_temp; //[px][ m]/[px]
+
+      }else{
+        *depth_data = 0;
       }
+//      std::cout << constant/disp << " ";
       ++depth_data;
     }
     disp_row += row_step;
