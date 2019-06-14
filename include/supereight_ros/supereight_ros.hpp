@@ -72,7 +72,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include <set>
-
+#include <map>
 // supereight package
 
 #include <se/DenseSLAMSystem.h>
@@ -90,7 +90,7 @@
 typedef std::map<int,
                  vec3i,
                  std::less<int>,
-                 Eigen::aligned_allocator<std::pair<const int, vec3i> > > map3i;
+                 Eigen::aligned_allocator<std::pair<const int, vec3i> > > mapvec3i;
 
 namespace se {
 
@@ -194,7 +194,9 @@ class SupereightNode {
    * @param updated_blocks
    */
 //  void visualizeMapOFusion(std::vector<Eigen::Vector3i> &updated_blocks, std::vector<Eigen::Vector3i> &frontier_blocks);
-  void visualizeMapOFusion(vec3i &updated_blocks, vec3i &frontier_blocks);
+  void visualizeMapOFusion(vec3i &updated_blocks,
+                           vec3i &frontier_blocks,
+                           map3i &frontier_blocks_map);
 
   // TODO: change SDF visualization to be block based
   /**
@@ -309,6 +311,7 @@ class SupereightNode {
   ros::Publisher image_pose_pub_;
   ros::Publisher supereight_pose_pub_;
   ros::Publisher gt_tf_pose_pub_;
+  ros::Publisher image_pub_;
 
 #ifdef WITH_RENDERING
   ros::Publisher depth_render_pub_;
@@ -321,6 +324,8 @@ class SupereightNode {
   ros::Publisher block_based_marker_pub_;
   ros::Publisher boundary_marker_pub_;
   ros::Publisher frontier_marker_pub_;
+
+
   /**
   * buffer and quque for incoming data streams, in case the matching can't
   * be immediately done.
@@ -333,10 +338,10 @@ class SupereightNode {
   uint64_t image_time_stamp_;
 
   // voxel blockwise update for visualization
-  map3i voxel_block_map_;
-  map3i surface_voxel_map_;
-  map3i frontier_voxel_map_;
-  map3i occlusion_voxel_map_;
+  mapvec3i voxel_block_map_;
+  mapvec3i surface_voxel_map_;
+  mapvec3i frontier_voxel_map_;
+  mapvec3i occlusion_voxel_map_;
   // block based visualization
   bool pub_map_update_ = false;
   bool pub_block_based_ = true;
