@@ -196,7 +196,8 @@ class SupereightNode {
 //  void visualizeMapOFusion(std::vector<Eigen::Vector3i> &updated_blocks, std::vector<Eigen::Vector3i> &frontier_blocks);
   void visualizeMapOFusion(vec3i &updated_blocks,
                            vec3i &frontier_blocks,
-                           map3i &frontier_blocks_map);
+                           map3i &frontier_blocks_map,
+                           vec3i &occlusion_blocks);
 
   // TODO: change SDF visualization to be block based
   /**
@@ -311,7 +312,7 @@ class SupereightNode {
   ros::Publisher image_pose_pub_;
   ros::Publisher supereight_pose_pub_;
   ros::Publisher gt_tf_pose_pub_;
-  ros::Publisher image_pub_;
+  ros::Publisher depth_image_pub_;
 
 #ifdef WITH_RENDERING
   ros::Publisher depth_render_pub_;
@@ -347,7 +348,7 @@ class SupereightNode {
   bool pub_block_based_ = true;
 
   bool enable_icp_tracking_;
-
+  bool use_test_image_;
   // transform pose
 //  tf::TransformListener tf_listener_;
 //  tf::StampedTransform gt_pose_transform_;

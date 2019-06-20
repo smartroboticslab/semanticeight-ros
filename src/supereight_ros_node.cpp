@@ -20,7 +20,11 @@ int main(int argc, char **argv) {
 
   ros::spin();
 
-//  Stats.print_all_data(std::cout, false);
+//  std::string filename = "/home/anna/Data/timings.txt";
+  std::ofstream timing;
+  timing.open("/home/anna/Data/timing.txt", std::ofstream::app);
+  Stats.print_all_data(timing, true);
+  timing.close();
   // delete pipeline;
   return 0;
 }

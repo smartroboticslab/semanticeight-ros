@@ -8,38 +8,7 @@
 #include <supereight_ros/supereight_ros.hpp>
 
 namespace se {
-/**
- * @brief     converts disparity image from gazebo firefly with vi_sensor to depth image accepted
- * by supereight
- * @param[in] disp_msg disparity image to be converted
- * @param[in] depth_msg destination of depth image
- */
 
-void convertDisp2Depth(const sensor_msgs::ImageConstPtr &disp_msg,
-                       sensor_msgs::ImagePtr &depth_msg,
-                       const float &constant) {
-  // for each depth Z = focal length*baseline/disparity
-
-  const float *disp_row = reinterpret_cast<const float *>(&disp_msg->data[0]);
-  int row_step = disp_msg->step / sizeof(float);
-  float *depth_data = reinterpret_cast<float *>(&depth_msg->data[0]);
-  for (int v = 0; v < (int) disp_msg->height; ++v) {
-    for (int u = 0; u < (int) disp_msg->width; ++u) {
-      float disp = disp_row[u];
-      float depth_temp = constant /disp;
-      if (std::isfinite(disp)&& depth_temp <= 10 ) {
-        *depth_data = depth_temp; //[px][ m]/[px]
-
-      }else{
-        *depth_data = 0;
-      }
-//      std::cout << constant/disp << " ";
-      ++depth_data;
-    }
-    disp_row += row_step;
-  }
-//  std::cout <<"depth "<< depth_data[320+640*240] <<std::endl;
-}
 /**
  * @brief create new image message with all attributes
  * @param old_image_msg
@@ -84,5 +53,45 @@ Eigen::Matrix4f swapAxes(const Eigen::Matrix4f &input) {
   return output;
 }
 
+void createTestImage(const sensor_msgs::ImageConstPtr &disp_msg,
+                       sensor_msgs::ImagePtr &depth_msg){
+
+  int row_step = depth_msg->step / sizeof(float);
+  float *depth_data = reinterpret_cast<float *>(&depth_msg->data[0]);
+  for (int v = 0; v < (int) depth_msg->height; ++v) {
+    for (int u = 0; u < (int) depth_msg->width; ++u) {
+        *depth_data = 3.0;
+        ++depth_data;
+    }
+  }
+  int ncol = 300;
+   float *depth_data2 = reinterpret_cast<float *>(&depth_msg->data[ncol + 80 * row_step]);
+  for (int h = 80; h < (int) depth_msg->height; h++){
+    for (int w = ncol; w < ncol + 100 ;w++){
+      *depth_data2= 5.8;
+      ++depth_data2;
+    }
+    depth_data2 = depth_data2 + row_step- 100;
+  }
+
+  ncol = 900;
+  float *depth_data3 = reinterpret_cast<float *>(&depth_msg->data[ncol + 280 * row_step]);
+  for(int h = 280 ; h < (int) depth_msg->height ; h ++){
+    for (int w = ncol; w < ncol + 150; w++){
+      *depth_data3 = 1.f;
+      ++depth_data3;
+    }
+    depth_data3=depth_data3 + row_step - 150;
+  }
+  ncol = 1600;
+  float *depth_data4 = reinterpret_cast<float *>(&depth_msg->data[ncol + 380 * row_step]);
+  for(int h = 380 ; h < (int) depth_msg->height ; h ++){
+    for (int w = ncol; w < ncol + 150; w++){
+      *depth_data4 = 0.f;
+      ++depth_data4;
+    }
+    depth_data4=depth_data4 + row_step - 150;
+  }
+}
 }
 #endif //EXPLORATION_WS_FUNCTIONS_HPP

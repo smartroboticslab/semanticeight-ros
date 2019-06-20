@@ -6,7 +6,7 @@ integration_rate: 3
 
 rendering_rate: 4
 
-volume_resolution: [128, 128, 128]
+volume_resolution: [256, 256, 256]
 
 volume_size: [24.0, 24.0, 24.0]
 
