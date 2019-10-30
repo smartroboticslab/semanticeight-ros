@@ -11,7 +11,7 @@
 #include <memory>
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
-#include <se/lodepng.h>
+#include <lodepng.h>
 //#include <se/default_parameters.h>
 #include <supereight_ros/supereight_ros.hpp>
 
@@ -892,32 +892,38 @@ void SupereightNode<T>::visualizeMapSDF(vec3i &occupied_voxels,
 };
 
 template<typename T>
-double SupereightNode<T>::calculateAlpha(int64_t pre_time_stamp,
-                                         int64_t post_time_stamp,
-                                         int64_t img_time_stamp) {
+double SupereightNode<T>::calculateAlpha(const int64_t pre_time_stamp,
+                                         const int64_t post_time_stamp,
+                                         const int64_t img_time_stamp) {
   double alpha = (double) (img_time_stamp - pre_time_stamp) / (post_time_stamp - pre_time_stamp);
   return alpha;
 }
 
 template<typename T>
-Eigen::Vector3f SupereightNode<T>::interpolateVector(const Eigen::Vector3f &pre_vector3D,
-                                                     const Eigen::Vector3f &post_vector3D,
-                                                     double alpha) {
+Eigen::Vector3f SupereightNode<T>::interpolateVector(
+    const Eigen::Vector3f &pre_vector3D,
+    const Eigen::Vector3f &post_vector3D,
+    const double           alpha) {
+
   return pre_vector3D + alpha * (post_vector3D - pre_vector3D);
 }
 
 template<typename T>
-Eigen::Quaternionf SupereightNode<T>::interpolateOrientation(const Eigen::Quaternionf &pre_orientation,
-                                                             const Eigen::Quaternionf &post_orientation,
-                                                             double alpha) {
+Eigen::Quaternionf SupereightNode<T>::interpolateOrientation(
+    const Eigen::Quaternionf &pre_orientation,
+    const Eigen::Quaternionf &post_orientation,
+    const double              alpha) {
+
   Eigen::Quaternionf int_orientation = pre_orientation.slerp(alpha, post_orientation);
   return int_orientation;
 }
 
 template<typename T>
-Eigen::Matrix4f SupereightNode<T>::interpolatePose(const geometry_msgs::TransformStamped &pre_transformation,
-                                                   const geometry_msgs::TransformStamped &post_transformation,
-                                                   int64_t img_time_stamp) {
+Eigen::Matrix4f SupereightNode<T>::interpolatePose(
+    const geometry_msgs::TransformStamped &pre_transformation,
+    const geometry_msgs::TransformStamped &post_transformation,
+    const int64_t                          img_time_stamp) {
+
   double alpha = calculateAlpha(ros::Time(pre_transformation.header.stamp).toNSec(),
                                 ros::Time(post_transformation.header.stamp).toNSec(),
                                 img_time_stamp);
@@ -950,7 +956,7 @@ Eigen::Matrix4f SupereightNode<T>::interpolatePose(const geometry_msgs::Transfor
 
 /* Taken from https://github.com/ethz-asl/volumetric_mapping */
 template<typename T>
-std_msgs::ColorRGBA SupereightNode<T>::percentToColor(double h) {
+std_msgs::ColorRGBA SupereightNode<T>::percentToColor(const double h) {
   /* Helen's note: direct copy from OctomapProvider. */
   std_msgs::ColorRGBA color;
   color.a = 1.0;
