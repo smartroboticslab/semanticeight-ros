@@ -108,7 +108,7 @@ namespace se {
     * @brief sets configuration from YAML file to nodehandle
      * definitions, see supereight/se/config.h
     **/
-    void setSupereightConfig(const ros::NodeHandle &nh_private);
+    void readConfig(const ros::NodeHandle& nh_private);
 
     /**
      * @brief access for external packages
@@ -125,13 +125,6 @@ namespace se {
     void setSupereightVisualizationMapBased(const bool &pub_block_based) {
       pub_block_based_ = pub_block_based;
     }
-
-    /**
-     * @brief prints configuration parameters of the supereight denseSLAM
-     * pipeline
-     * @param config
-     */
-    void printSupereightConfig(const Configuration &config);
 
     /**
      * @brief set TF matrix supereight map from world

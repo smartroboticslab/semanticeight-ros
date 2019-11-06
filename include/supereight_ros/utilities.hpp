@@ -7,13 +7,32 @@
 
 #include <Eigen/Dense>
 
+#include <ros/ros.h>
 #include <sensor_msgs/Image.h>
+
+#include <se/config.h>
 
 #include "supereight_ros/ImagePose.h"
 
 
 
 namespace se {
+  /**
+   * @brief Read the supereight configuration into a struct given a node
+   * handle.
+   */
+  Configuration read_supereight_config(const ros::NodeHandle& nh);
+
+
+
+  /**
+   * @brief Show the value of the supplied supereight configuration struct
+   * using ROS_INFO.
+   */
+  void print_supereight_config(const Configuration& config);
+
+
+
   /**
    * @brief create new image message with all attributes
    * @param old_image_msg

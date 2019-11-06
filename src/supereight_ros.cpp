@@ -54,7 +54,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle 
     use_tf_transforms_(true),
     occupied_voxels_sum_(0) {
   // Configure supereight_config with default values
-  setSupereightConfig(nh_private);
+  readConfig(nh_private);
 
   input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * image_size_.x() * image_size_.y());
   init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
@@ -119,124 +119,10 @@ void SupereightNode::setupRos() {
 }
 
 // Read config.yaml into Configuration class
-void SupereightNode::setSupereightConfig(const ros::NodeHandle &nh_private) {
-  ROS_INFO("set Supereight config");
-  nh_private.param<int>("compute_size_ratio",
-                        supereight_config_.compute_size_ratio,
-                        default_compute_size_ratio);
+void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
+  supereight_config_ = read_supereight_config(nh_private);
 
-  nh_private.param<int>("tracking_rate", supereight_config_.tracking_rate, default_tracking_rate);
-
-  nh_private.param<int>("integration_rate",
-                        supereight_config_.integration_rate,
-                        default_integration_rate);
-
-  nh_private.param<int>("integration_rate",
-                        supereight_config_.rendering_rate,
-                        default_rendering_rate);
-
-  std::vector<int> volume_resolution_vector;
-  if (nh_private.getParam("volume_resolution", volume_resolution_vector)) {
-    for (unsigned int i = 0; i < volume_resolution_vector.size(); i++) {
-      supereight_config_.volume_resolution[i] = volume_resolution_vector[i];
-    }
-  } else {
-    supereight_config_.volume_resolution = default_volume_resolution;
-  }
-
-  std::vector<float> volume_size_vector;
-  if (nh_private.getParam("volume_size", volume_size_vector)) {
-    for (unsigned int i = 0; i < volume_size_vector.size(); i++) {
-      supereight_config_.volume_size[i] = volume_size_vector[i];
-    }
-  } else {
-    supereight_config_.volume_size = default_volume_size;
-  }
-
-  std::vector<float> initial_pos_factor_vector;
-  if (nh_private.getParam("initial_pos_factor", initial_pos_factor_vector)) {
-    for (unsigned int i = 0; i < initial_pos_factor_vector.size(); i++) {
-      supereight_config_.initial_pos_factor[i] = initial_pos_factor_vector[i];
-    }
-  } else {
-    supereight_config_.initial_pos_factor = default_initial_pos_factor;
-  }
-
-  std::vector<int> pyramid;
-  if (!nh_private.getParam("pyramid", pyramid)) {
-    supereight_config_.pyramid.clear();
-    for (int i = 0; i < DEFAULT_ITERATION_COUNT; i++) {
-      supereight_config_.pyramid.push_back(default_iterations[i]);
-    }
-  }
-
-  nh_private.param<std::string>("dump_volume_file",
-                                supereight_config_.dump_volume_file,
-                                default_dump_volume_file);
-
-  nh_private.param<std::string>("input_file", supereight_config_.input_file, default_input_file);
-
-  nh_private.param<std::string>("log_file", supereight_config_.log_file, default_log_file);
-
-  nh_private.param<std::string>("groundtruth_file",
-                                supereight_config_.groundtruth_file,
-                                default_groundtruth_file);
-
-  std::vector<float> gt_transform_vector;
-  nh_private.getParam("gt_transform", gt_transform_vector);
-  if (nh_private.getParam("gt_transform", gt_transform_vector)) {
-    for (unsigned int i = 0; i < std::sqrt(gt_transform_vector.size()); i++) {
-      for (unsigned int j = 0; j < std::sqrt(gt_transform_vector.size()); j++) {
-        supereight_config_.gt_transform(i, j) = gt_transform_vector[i * 4 + j];
-      }
-    }
-  } else {
-    supereight_config_.gt_transform = default_gt_transform;
-  }
-
-  std::vector<float> camera_vector;
-  if (!nh_private.getParam("camera", camera_vector)) {
-    ros::shutdown();
-  }
-  for (unsigned int i = 0; i < camera_vector.size(); i++) {
-    supereight_config_.camera[i] = camera_vector[i];
-  }
-  supereight_config_.camera_overrided = true;
-
-  /**
-   * The TSDF truncation bound. Values of the TSDF are assumed to be in the
-   * interval ±mu. See Section 3.3 of \cite NewcombeISMAR2011 for more
-   * details.
-   *  <br>\em Default: 0.1
-   */
-  nh_private.param<float>("mu", supereight_config_.mu, default_mu);
-
-  nh_private.param<int>("fps", supereight_config_.fps, default_fps);
-
-  nh_private.param<bool>("blocking_read", supereight_config_.blocking_read, default_blocking_read);
-
-  nh_private.param<float>("icp_threshold", supereight_config_.icp_threshold, default_icp_threshold);
-
-  nh_private.param<bool>("no_gui", supereight_config_.no_gui, default_no_gui);
-
-  nh_private.param<bool>("render_volume_fullsize",
-                         supereight_config_.render_volume_fullsize,
-                         default_render_volume_fullsize);
-
-  nh_private.param<bool>("bilateral_filter",
-                         supereight_config_.bilateral_filter,
-                         default_bilateral_filter);
-
-  nh_private.param<bool>("coloured_voxels",
-                         supereight_config_.coloured_voxels,
-                         default_coloured_voxels);
-
-  nh_private.param<bool>("multi_resolution",
-                         supereight_config_.multi_resolution,
-                         default_multi_resolution);
-
-  nh_private.param<bool>("bayesian", supereight_config_.bayesian, default_bayesian);
-
+  // Read the node configuration.
   std::vector<int> image_size_vector;
   if (nh_private.getParam("input_size", image_size_vector)) {
     for (unsigned int i = 0; i < image_size_vector.size(); i++) {
@@ -244,9 +130,7 @@ void SupereightNode::setSupereightConfig(const ros::NodeHandle &nh_private) {
     }
   }
 
-  for (int i = 0; i < volume_size_vector.size(); i++) {
-    init_position_octree_[i] = volume_size_vector[i] * initial_pos_factor_vector[i];
-  }
+  init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
   bool supereight_visualization_block = true;
   if (nh_private.getParam("block_based_map", supereight_visualization_block)) {
     setSupereightVisualizationMapBased(supereight_visualization_block);
@@ -255,36 +139,6 @@ void SupereightNode::setSupereightConfig(const ros::NodeHandle &nh_private) {
     setSupereightVisualizationMapBased(supereight_visualization_block);
   }
 };
-
-// print configuration to terminal
-void SupereightNode::printSupereightConfig(const Configuration &config) {
-  std::cout << "compute_size_ratio = " << config.compute_size_ratio << std::endl;
-  std::cout << "tracking_rate = " << config.tracking_rate << std::endl;
-  std::cout << "integration_rate = " << config.integration_rate << std::endl;
-  std::cout << "rendering_rate = " << config.rendering_rate << std::endl;
-  std::cout << "volume_resolution = \n" << config.volume_resolution << std::endl;
-  std::cout << "volume_size = \n" << config.volume_size << std::endl;
-  std::cout << "initial_pos_factor = \n" << config.initial_pos_factor << std::endl;
-  std::cout << "pyramid = \n" << config.pyramid[0] << " " << config.pyramid[1] << " "
-            << config.pyramid[2] << std::endl;
-  std::cout << "dump_volume_file = " << config.dump_volume_file << std::endl;
-  std::cout << "input_file = " << config.input_file << std::endl;
-  std::cout << "log_file = " << config.log_file << std::endl;
-  std::cout << "groundtruth_file = " << config.groundtruth_file << std::endl;
-  std::cout << "gt_transform = \n" << config.gt_transform << std::endl;
-  std::cout << "camera = \n" << config.camera << std::endl;
-  std::cout << "camera_overrided = " << config.camera_overrided << std::endl;
-  std::cout << "mu = " << config.mu << std::endl;
-  std::cout << "fps = " << config.fps << std::endl;
-  std::cout << "blocking_read = " << config.blocking_read << std::endl;
-  std::cout << "icp_threshold = " << config.icp_threshold << std::endl;
-  std::cout << "no_gui = " << config.no_gui << std::endl;
-  std::cout << "render_volume_fullsize = " << config.render_volume_fullsize << std::endl;
-  std::cout << "bilateral_filter = " << config.bilateral_filter << std::endl;
-  std::cout << "coloured_voxels = " << config.coloured_voxels << std::endl;
-  std::cout << "multi_resolution = " << config.multi_resolution << std::endl;
-  std::cout << "bayesian = " << config.bayesian << std::endl;
-}
 
 void SupereightNode::imageCallback(const sensor_msgs::ImageConstPtr &image_msg) {
 
