@@ -81,9 +81,9 @@
 
 
 
-typedef std::map<int, vec3i, std::less<int>,
-    Eigen::aligned_allocator<std::pair<const int, vec3i> > >
-    mapvec3i;
+//typedef std::map<int, vec3i, std::less<int>,
+//    Eigen::aligned_allocator<std::pair<const int, vec3i> > >
+//    mapvec3i;
 
 namespace se {
   template<typename T>
@@ -189,19 +189,19 @@ namespace se {
      * @brief loads the occpuancy map and publishs it to a ros topic
      * @param updated_blocks
      */
-    void visualizeMapOFusion(vec3i &updated_blocks,
-                             vec3i &frontier_blocks,
-                             map3i &frontier_blocks_map,
-                             vec3i &occlusion_blocks);
+    //void visualizeMapOFusion(vec3i &updated_blocks,
+    //                         vec3i &frontier_blocks,
+    //                         map3i &frontier_blocks_map,
+    //                         vec3i &occlusion_blocks);
 
     // TODO: change SDF visualization to be block based
     /**
      * @brief loads the SDF map and publishs it to a ros topic
      * @param updated_blocks
      */
-    void visualizeMapSDF(vec3i &occupied_voxels,
-                         vec3i &freed_voxels,
-                         vec3i &updated_blocks);
+    //void visualizeMapSDF(vec3i &occupied_voxels,
+    //                     vec3i &freed_voxels,
+    //                     vec3i &updated_blocks);
 
     /**
      * @brief       Calculates the fraction a given sample is located between
@@ -259,7 +259,7 @@ namespace se {
         const int64_t                          img_time_stamp);
 
     /* Taken from https://github.com/ethz-asl/volumetric_mapping */
-    std_msgs::ColorRGBA percentToColor(const double h);
+    std_msgs::ColorRGBA percentToColor(double h);
 
     ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
@@ -341,10 +341,10 @@ namespace se {
     uint64_t image_time_stamp_;
 
     // voxel blockwise update for visualization
-    mapvec3i voxel_block_map_;
-    mapvec3i surface_voxel_map_;
-    mapvec3i frontier_voxel_map_;
-    mapvec3i occlusion_voxel_map_;
+    //mapvec3i voxel_block_map_;
+    //mapvec3i surface_voxel_map_;
+    //mapvec3i frontier_voxel_map_;
+    //mapvec3i occlusion_voxel_map_;
     // block based visualization
     bool pub_map_update_ = false;
     bool pub_block_based_ = true;

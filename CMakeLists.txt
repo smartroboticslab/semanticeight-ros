@@ -131,7 +131,7 @@ target_compile_definitions(supereight_ros PUBLIC ${field_type})
 
 target_link_libraries(supereight_ros
         se-denseslam-ofusion
-        se-denseslam-sdf
+        se-denseslam-tsdf
         lodepng
         ${catkin_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
         ${GLUT_LIBRARIES}

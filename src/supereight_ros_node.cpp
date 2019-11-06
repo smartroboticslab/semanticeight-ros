@@ -1,5 +1,13 @@
 #include "supereight_ros/supereight_ros.hpp"
 
+
+
+// Needed due to the way the TICK and TOCK macros used in preprocessing are
+// defined.
+PerfStats Stats;
+
+
+
 int main(int argc, char **argv) {
   using namespace se;
   // initialize ROS nod
