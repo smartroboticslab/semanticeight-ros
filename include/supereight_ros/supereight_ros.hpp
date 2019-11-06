@@ -86,7 +86,6 @@
 //    mapvec3i;
 
 namespace se {
-  template<typename T>
   class SupereightNode {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

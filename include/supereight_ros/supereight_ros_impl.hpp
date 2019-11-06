@@ -47,8 +47,7 @@ const int default_multi_resolution = false;
 const bool default_bayesian = false;
 
 std::string sep = "\n----------------------------------------\n";
-template<typename T>
-SupereightNode<T>::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
+SupereightNode::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
     :
     nh_(nh),
     nh_private_(nh_private),
@@ -91,8 +90,7 @@ SupereightNode<T>::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHand
   res_ =
       (double) (pipeline_->getModelDimensions())[0] / (double) (pipeline_->getModelResolution())[0];
 }
-template<typename T>
-void SupereightNode<T>::setupRos() {
+void SupereightNode::setupRos() {
   // Subscriber
   image_sub_ = nh_.subscribe("/camera/depth_image", 100, &SupereightNode::imageCallback, this);
   pose_sub_ = nh_.subscribe("/pose", 1000, &SupereightNode::poseCallback, this);
@@ -126,8 +124,7 @@ void SupereightNode<T>::setupRos() {
 }
 
 // Read config.yaml into Configuration class
-template<typename T>
-void SupereightNode<T>::setSupereightConfig(const ros::NodeHandle &nh_private) {
+void SupereightNode::setSupereightConfig(const ros::NodeHandle &nh_private) {
   ROS_INFO("set Supereight config");
   nh_private.param<int>("compute_size_ratio",
                         supereight_config_.compute_size_ratio,
@@ -265,8 +262,7 @@ void SupereightNode<T>::setSupereightConfig(const ros::NodeHandle &nh_private) {
 };
 
 // print configuration to terminal
-template<typename T>
-void SupereightNode<T>::printSupereightConfig(const Configuration &config) {
+void SupereightNode::printSupereightConfig(const Configuration &config) {
   std::cout << "compute_size_ratio = " << config.compute_size_ratio << std::endl;
   std::cout << "tracking_rate = " << config.tracking_rate << std::endl;
   std::cout << "integration_rate = " << config.integration_rate << std::endl;
@@ -295,8 +291,7 @@ void SupereightNode<T>::printSupereightConfig(const Configuration &config) {
   std::cout << "bayesian = " << config.bayesian << std::endl;
 }
 
-template<typename T>
-void SupereightNode<T>::imageCallback(const sensor_msgs::ImageConstPtr &image_msg) {
+void SupereightNode::imageCallback(const sensor_msgs::ImageConstPtr &image_msg) {
 
 //   allocate new depth image message
   sensor_msgs::ImagePtr test_image(new sensor_msgs::Image());
@@ -318,8 +313,7 @@ void SupereightNode<T>::imageCallback(const sensor_msgs::ImageConstPtr &image_ms
   }
 }
 
-template<typename T>
-void SupereightNode<T>::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn) {
+void SupereightNode::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn) {
 //  ROS_INFO("cam info callback %i", cam_info_ready_);
   if (cam_info_ready_) return;
   CamInfo = *camInfoIn;
@@ -331,8 +325,7 @@ void SupereightNode<T>::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &c
 //  std::cout << CamModel.fx() << "," << CamModel.fy() << std::endl;
 }
 
-template<typename T>
-void SupereightNode<T>::poseCallback(const geometry_msgs::TransformStamped::ConstPtr &pose_msg) {
+void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPtr &pose_msg) {
 //  ROS_INFO("pose call back");
   Eigen::Quaternionf rot_q(pose_msg->transform.rotation.w,
                            pose_msg->transform.rotation.x,
@@ -415,8 +408,7 @@ void SupereightNode<T>::poseCallback(const geometry_msgs::TransformStamped::Cons
   gt_tf_pose_pub_.publish(gt_tf_pose_msg);
 }
 
-template<typename T>
-void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
+void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
   bool integrated = false;
   bool raycasted = false;
   bool tracked = false;
@@ -585,12 +577,11 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 
 }
 
-//template<typename T>
-//void SupereightNode<T>::visualizeMapOFusion(vec3i &updated_blocks,
+//void SupereightNode::visualizeMapOFusion(vec3i &updated_blocks,
 //                                            vec3i &frontier_blocks,
 //                                            map3i &frontier_blocks_map,
 //                                            vec3i &occlusion_blocks) {
-////void SupereightNode<T>::visualizeMapOFusion(std::vector<Eigen::Vector3i>& updated_blocks,
+////void SupereightNode::visualizeMapOFusion(std::vector<Eigen::Vector3i>& updated_blocks,
 ////                                            std::vector<Eigen::Vector3i>& frontier_blocks) {
 //  // publish every N-th frame
 //  int N_frame_pub = 1;
@@ -767,11 +758,10 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 //  block_based_marker_pub_.publish(voxel_block_marker_msg);
 //};
 
-//template<typename T>
-//void SupereightNode<T>::visualizeMapSDF(vec3i &occupied_voxels,
+//void SupereightNode::visualizeMapSDF(vec3i &occupied_voxels,
 //                                        vec3i &freed_voxels,
 //                                        vec3i &updated_blocks) {
-////void SupereightNode<T>::visualizeMapSDF(std::vector<Eigen::Vector3i>& occupied_voxels,
+////void SupereightNode::visualizeMapSDF(std::vector<Eigen::Vector3i>& occupied_voxels,
 ////                                        std::vector<Eigen::Vector3i>& freed_voxels,
 ////                                        std::vector<Eigen::Vector3i>& updated_blocks) {
 //  // publish every N-th frame
@@ -891,16 +881,14 @@ void SupereightNode<T>::fusionCallback(const supereight_ros::ImagePose::ConstPtr
 ////  }
 //};
 
-template<typename T>
-double SupereightNode<T>::calculateAlpha(const int64_t pre_time_stamp,
+double SupereightNode::calculateAlpha(const int64_t pre_time_stamp,
                                          const int64_t post_time_stamp,
                                          const int64_t img_time_stamp) {
   double alpha = (double) (img_time_stamp - pre_time_stamp) / (post_time_stamp - pre_time_stamp);
   return alpha;
 }
 
-template<typename T>
-Eigen::Vector3f SupereightNode<T>::interpolateVector(
+Eigen::Vector3f SupereightNode::interpolateVector(
     const Eigen::Vector3f &pre_vector3D,
     const Eigen::Vector3f &post_vector3D,
     const double           alpha) {
@@ -908,8 +896,7 @@ Eigen::Vector3f SupereightNode<T>::interpolateVector(
   return pre_vector3D + alpha * (post_vector3D - pre_vector3D);
 }
 
-template<typename T>
-Eigen::Quaternionf SupereightNode<T>::interpolateOrientation(
+Eigen::Quaternionf SupereightNode::interpolateOrientation(
     const Eigen::Quaternionf &pre_orientation,
     const Eigen::Quaternionf &post_orientation,
     const double              alpha) {
@@ -918,8 +905,7 @@ Eigen::Quaternionf SupereightNode<T>::interpolateOrientation(
   return int_orientation;
 }
 
-template<typename T>
-Eigen::Matrix4f SupereightNode<T>::interpolatePose(
+Eigen::Matrix4f SupereightNode::interpolatePose(
     const geometry_msgs::TransformStamped &pre_transformation,
     const geometry_msgs::TransformStamped &post_transformation,
     const int64_t                          img_time_stamp) {
@@ -955,8 +941,7 @@ Eigen::Matrix4f SupereightNode<T>::interpolatePose(
 }
 
 /* Taken from https://github.com/ethz-asl/volumetric_mapping */
-template<typename T>
-std_msgs::ColorRGBA SupereightNode<T>::percentToColor(double h) {
+std_msgs::ColorRGBA SupereightNode::percentToColor(double h) {
   /* Helen's note: direct copy from OctomapProvider. */
   std_msgs::ColorRGBA color;
   color.a = 1.0;
@@ -1011,8 +996,7 @@ std_msgs::ColorRGBA SupereightNode<T>::percentToColor(double h) {
   return color;
 }
 
-template<typename T>
-bool SupereightNode<T>::setTFMapfromWorld(const Eigen::Vector3f &translation,
+bool SupereightNode::setTFMapfromWorld(const Eigen::Vector3f &translation,
                                           const Eigen::Vector3f &init_position_octree,
                                           Eigen::Vector3f &const_translation,
                                           Eigen::Matrix4f &tf_matrix) {

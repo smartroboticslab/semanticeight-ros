@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   ros::NodeHandle nh_private("~");
 
 //#ifdef MAP_OM
-  SupereightNode<OFusion> node(nh, nh_private);
+  SupereightNode node(nh, nh_private);
   ROS_INFO_STREAM("Occupancy map");
 //#elif MAP_SDF
 //  SupereightNode<SDF> node(nh, nh_private);
