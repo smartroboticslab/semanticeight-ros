@@ -2,17 +2,13 @@
 <package format="2">
   <name>supereight_ros</name>
   <version>0.0.0</version>
-  <description>The supereight_ros package</description>
+  <description>ROS wrapper for supereight</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
-  <!-- Example:  -->
-  <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="nils@todo.todo">nils</maintainer>
+  <maintainer email="s.papatheodorou18@imperial.ac.uk">Sotiris Papatheodorou</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
   <license>TODO</license>
 
 
@@ -24,19 +20,14 @@
 
   <depend>roscpp</depend>
   <depend>rosbag</depend>
-
-  <!--<depend>mav_visualization</depend>-->
-  <depend>visualization_msgs</depend>
-  <depend>cv_bridge</depend>
-  <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
   <depend>image_geometry</depend>
   <depend>tf</depend>
+  <depend>cv_bridge</depend>
   <depend>eigen_conversions</depend>
-  <exec_depend>message_runtime</exec_depend>
-  <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    <!-- Other tools can request additional information be placed here -->
 
-  </export>
+  <exec_depend>message_runtime</exec_depend>
 </package>
