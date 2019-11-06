@@ -77,7 +77,7 @@
 #include "supereight_ros/ImagePose.h"  //message
 #include "supereight_ros/CircularBuffer.hpp"
 #include "supereight_ros/supereight_utils.hpp"
-#include "supereight_ros/functions.hpp"
+#include "supereight_ros/utilities.hpp"
 
 
 
@@ -361,7 +361,5 @@ namespace se {
   };
 } // namespace se
 
-
-#include "supereight_ros/supereight_ros_impl.hpp"
 #endif // SUPEREIGHT_ROS_HPP
 

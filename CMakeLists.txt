@@ -103,6 +103,8 @@ include_directories(
 
 
 add_executable(supereight_ros
+  "src/utilities.cpp"
+  "src/supereight_ros.cpp"
   "src/supereight_ros_node.cpp"
 )
 

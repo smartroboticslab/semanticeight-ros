@@ -2,10 +2,8 @@
 // Created by anna on 16/05/19.
 //
 
-#ifndef EXPLORATION_WS_FUNCTIONS_HPP
-#define EXPLORATION_WS_FUNCTIONS_HPP
-
-#include <supereight_ros/supereight_ros.hpp>
+#include "supereight_ros/utilities.hpp"
+#include "supereight_ros/supereight_ros.hpp"
 
 namespace se {
 
@@ -94,4 +92,4 @@ void createTestImage(const sensor_msgs::ImageConstPtr &disp_msg,
   }
 }
 }
-#endif //EXPLORATION_WS_FUNCTIONS_HPP
+
