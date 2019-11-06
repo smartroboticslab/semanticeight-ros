@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find supereight_ros)/launch/supereight_ros.launch">
+    <!-- Override topic names -->
+    <arg name="depth_image_topic"
+         value="/camera/depth/image_raw"/>
+    <arg name="pose_topic"
+         value="/vicon/f550/f550"/>
+  </include>
+</launch>
+
