@@ -1,3 +1,18 @@
+# Supereight ROS node settings
+# TODO use this option
+enable_tracking: true
+
+# TODO use this option
+enable_rendering: true
+
+input_size: [640, 480]
+
+# TODO remove this option
+block_based_map: true
+
+
+
+# Supereight settings
 compute_size_ratio: 2
 
 tracking_rate: 1
@@ -46,6 +61,3 @@ multi_resolution: false
 
 bayesian: false
 
-input_size: [640, 480]
-
-block_based_map: true

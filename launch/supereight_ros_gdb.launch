@@ -2,8 +2,7 @@
 <launch>
   <include file="$(find supereight_ros)/launch/supereight_ros.launch">
     <!-- Override default node argument values -->
-    <arg name="command_prefix"
-         value="valgrind --track-origins=yes --leak-check=full --read-var-info=yes --leak-check=full --leak-resolution=high"/>
+    <arg name="command_prefix" value="gdb -ex run --args"/>
   </include>
 </launch>
 

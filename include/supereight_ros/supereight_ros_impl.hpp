@@ -120,9 +120,9 @@ void SupereightNode<T>::setupRos() {
   frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
 
   std::string ns = ros::this_node::getName();
-  bool read_from_launch = ros::param::get(ns + "/enable_icp_tracking_", enable_icp_tracking_);
-  ros::param::get(ns + "/use_tf_transforms_", use_tf_transforms_);
-  bool use_test_image = ros::param::get(ns + "/use_test_image_", use_test_image_);
+  bool read_from_launch = ros::param::get(ns + "/enable_icp_tracking", enable_icp_tracking_);
+  ros::param::get(ns + "/use_tf_transforms", use_tf_transforms_);
+  bool use_test_image = ros::param::get(ns + "/use_test_image", use_test_image_);
 }
 
 // Read config.yaml into Configuration class
