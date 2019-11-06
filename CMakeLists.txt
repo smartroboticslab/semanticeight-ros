@@ -4,8 +4,6 @@ project(supereight_ros)
 # Eigen all instructions that are supported by the CPU are enabled
 add_compile_options(-std=c++14 -march=native)
 
-add_definitions(-DEIGEN_MAX_ALIGN_BYTES=16)
-#add_definitions(-DEIGEN_DONT_VECTORIZE)
 add_definitions(-DWITH_RENDERING)
 
 message(WARNING "CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG})
