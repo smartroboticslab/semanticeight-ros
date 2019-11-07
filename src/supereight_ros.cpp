@@ -87,9 +87,6 @@ void SupereightNode::setupRos() {
   block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
   boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
   frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
-
-  std::string ns = ros::this_node::getName();
-  bool use_test_image = ros::param::get(ns + "/use_test_image", use_test_image_);
 }
 
 
@@ -109,19 +106,7 @@ void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
 void SupereightNode::depthCallback(
     const sensor_msgs::ImageConstPtr& depth_msg) {
 
-  // Allocate new depth image message
-  sensor_msgs::ImagePtr test_image(new sensor_msgs::Image());
-  createImageMsg(depth_msg, test_image);
-  test_image->data.resize(test_image->height * test_image->step, 0.0f);
-
-  if (use_test_image_) {
-    // Generate the test image and push back to the image queue.
-    createTestImage(depth_msg, test_image);
-    image_queue_.push_back(*test_image);
-  } else {
-    // Just push back to the image queue.
-    image_queue_.push_back(*depth_msg);
-  }
+  image_queue_.push_back(*depth_msg);
 }
 
 

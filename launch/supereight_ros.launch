@@ -14,7 +14,6 @@
        default=""/>
 
   <arg name="camera_info_topic" default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>
-  <arg name="use_test_image" default="false"/>
   <arg name="body_frame" default="firefly/base_link"/>
   <arg name="tf_frame" default="navigation"/>
 
@@ -28,7 +27,6 @@
     <!-- Set values of node parameters -->
     <param name="tf_frame" type="string" value="$(arg tf_frame)"/>
     <param name="body_frame" type="string" value="$(arg body_frame)"/>
-    <param name="use_test_image" type="bool" value="$(arg use_test_image)"/>
 
     <!-- Remap topic names -->
     <remap from="/camera/depth_image" to="$(arg depth_image_topic)"/>

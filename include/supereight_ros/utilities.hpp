@@ -30,16 +30,6 @@ namespace se {
    * @brief create new image message with all attributes
    * @param old_image_msg
    * @param new_image_msg
-   */
-  void createImageMsg(const sensor_msgs::ImageConstPtr& old_image_msg,
-                      sensor_msgs::ImagePtr&            new_image_msg);
-
-
-
-  /**
-   * @brief create new image message with all attributes
-   * @param old_image_msg
-   * @param new_image_msg
    * @param image_size
    */
   void createImageMsg(const supereight_ros::ImagePose::ConstPtr& old_image_msg,
@@ -54,11 +44,6 @@ namespace se {
    * @return rotated pose
    */
   Eigen::Matrix4f swapAxes(const Eigen::Matrix4f& input);
-
-
-
-  void createTestImage(const sensor_msgs::ImageConstPtr& disp_msg,
-                       sensor_msgs::ImagePtr&            depth_msg);
 
 
 
