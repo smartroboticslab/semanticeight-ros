@@ -97,8 +97,6 @@ void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
 
   node_config_ = read_supereight_node_config(nh_private);
   print_supereight_node_config(node_config_);
-
-  setSupereightVisualizationMapBased(node_config_.block_based_map);
 };
 
 
@@ -580,8 +578,8 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 //      map_marker_pub_.publish(map_marker_msg);
 //    }
 //  }
-//
-////  if (pub_block_based_) {
+//    constexpr bool is_map_block_based = true;
+////  if (is_map_block_based) {
 ////    visualization_msgs::Marker voxel_block_marker;
 ////    voxel_block_marker.header.frame_id = frame_id_;
 ////    voxel_block_marker.ns = frame_id_;

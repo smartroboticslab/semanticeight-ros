@@ -107,14 +107,6 @@ namespace se {
     }
 
     /**
-     * set rviz visualization type
-     * @param pub_block_based fastest way, currently only for OFusion
-     */
-    void setSupereightVisualizationMapBased(const bool &pub_block_based) {
-      pub_block_based_ = pub_block_based;
-    }
-
-    /**
      * @brief set TF matrix supereight map from world
      * @param[in] translation first pose from robot
      * @param[in] init_position_octree: volume size vector * initial pos factor
@@ -262,7 +254,6 @@ namespace se {
     //mapvec3i occlusion_voxel_map_;
     // block based visualization
     bool pub_map_update_ = false;
-    bool pub_block_based_ = true;
 
     bool set_world_to_map_tf_ = false;
 

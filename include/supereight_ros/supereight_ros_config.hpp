@@ -17,7 +17,6 @@ namespace se {
   struct SupereightNodeConfig {
     bool enable_tracking;
     bool enable_rendering;
-    bool block_based_map;
     Eigen::Vector2i input_size;
   };
 
