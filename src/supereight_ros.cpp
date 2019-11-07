@@ -31,16 +31,18 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
   readConfig(nh_private);
 
-  input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * node_config_.input_size.x() * node_config_.input_size.y());
   init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
   computation_size_ = node_config_.input_size / supereight_config_.compute_size_ratio;
 
+  // Allocate image buffers.
+  const size_t input_size_pixels
+      = node_config_.input_size.x() * node_config_.input_size.y();
+  input_depth_ = std::unique_ptr<uint16_t>(new uint16_t[input_size_pixels]);
   if (node_config_.enable_rendering) {
-    const size_t render_size_bytes
-        = sizeof(uint32_t) * computation_size_.x() * computation_size_.y();
-    depth_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
-    track_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
-    volume_render_ = static_cast<uint32_t*>(malloc(render_size_bytes));
+    const size_t render_size_pixels = computation_size_.x() * computation_size_.y();
+    depth_render_  = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
+    track_render_  = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
+    volume_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
   }
 
   pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(
@@ -230,7 +232,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 
 
   timings[0] = std::chrono::steady_clock::now();
-  to_supereight_depth(image_pose_msg->image, input_depth_);
+  to_supereight_depth(image_pose_msg->image, input_depth_.get());
 
 
 
@@ -243,7 +245,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   //-------- supereight access point ----------------
   timings[2] = std::chrono::steady_clock::now();
   // supereight takes the values in [mm]
-  pipeline_->preprocessing(input_depth_, node_config_.input_size, supereight_config_.bilateral_filter);
+  pipeline_->preprocessing(input_depth_.get(), node_config_.input_size, supereight_config_.bilateral_filter);
   timings[3] = std::chrono::steady_clock::now();
 
   Eigen::Vector4f camera = supereight_config_.camera / (supereight_config_.compute_size_ratio);
@@ -312,9 +314,9 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 
 // ------------ supereight tracking visualization  ---------------------
   if (node_config_.enable_rendering) {
-    pipeline_->renderDepth((unsigned char *) depth_render_, pipeline_->getComputationResolution());
-    pipeline_->renderTrack((unsigned char *) track_render_, pipeline_->getComputationResolution());
-    pipeline_->renderVolume((unsigned char *) volume_render_,
+    pipeline_->renderDepth((unsigned char *) depth_render_.get(), pipeline_->getComputationResolution());
+    pipeline_->renderTrack((unsigned char *) track_render_.get(), pipeline_->getComputationResolution());
+    pipeline_->renderVolume((unsigned char *) volume_render_.get(),
                             pipeline_->getComputationResolution(),
                             frame_,
                             supereight_config_.rendering_rate,
@@ -326,21 +328,21 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
     createImageMsg(image_pose_msg, depth_render_msg, computation_size_);
     depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
     depth_render_msg->is_bigendian = 0;
-    memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_, depth_render_msg->width
+    memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_.get(), depth_render_msg->width
         * depth_render_msg->height * sizeof(float));
 
     sensor_msgs::ImagePtr track_render_msg(new sensor_msgs::Image());
     createImageMsg(image_pose_msg, track_render_msg, computation_size_);
     track_render_msg->encoding = "rgba8"; // rgba8 doesn't work
     track_render_msg->is_bigendian = 0;
-    memcpy((void *) track_render_msg->data.data(), (void *) track_render_, track_render_msg->width
+    memcpy((void *) track_render_msg->data.data(), (void *) track_render_.get(), track_render_msg->width
         * track_render_msg->height * sizeof(float));
 
     sensor_msgs::ImagePtr volume_render_msg(new sensor_msgs::Image());
     createImageMsg(image_pose_msg, volume_render_msg, computation_size_);
     volume_render_msg->encoding = "rgba8"; // rgba8 doesn't work
     volume_render_msg->is_bigendian = 0;
-    memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_, volume_render_msg->width
+    memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_.get(), volume_render_msg->width
         * volume_render_msg->height * sizeof(float));
 
     // publish to topic

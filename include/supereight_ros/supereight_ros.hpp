@@ -92,13 +92,6 @@ namespace se {
     SupereightNode(const ros::NodeHandle& nh,
                    const ros::NodeHandle& nh_private);
 
-    ~SupereightNode() {
-      free(input_depth_);
-      free(depth_render_);
-      free(track_render_);
-      free(volume_render_);
-    }
-
     /**
      * @brief sets configuration from YAML file to nodehandle
      * definitions, see supereight/se/config.h
@@ -213,11 +206,10 @@ namespace se {
     Configuration supereight_config_;
     int frame_;
 
-    uint16_t *input_depth_ = nullptr;
-
-    uint32_t* depth_render_ = nullptr;
-    uint32_t* volume_render_ = nullptr;
-    uint32_t* track_render_ = nullptr;
+    std::unique_ptr<uint16_t> input_depth_;
+    std::unique_ptr<uint32_t> depth_render_;
+    std::unique_ptr<uint32_t> track_render_;
+    std::unique_ptr<uint32_t> volume_render_;
 
     Eigen::Vector2i computation_size_;
     float res_;
