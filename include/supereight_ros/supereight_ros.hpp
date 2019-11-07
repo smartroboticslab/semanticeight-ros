@@ -175,66 +175,53 @@ namespace se {
     /* Taken from https://github.com/ethz-asl/volumetric_mapping */
     std_msgs::ColorRGBA percentToColor(double h);
 
+
+
+    // ROS node
     ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
     SupereightNodeConfig node_config_;
 
-    /**
-     * Global/map coordinate frame. Will always look up TF transforms to this
-     * frame.
-     */
-    std::string frame_id_;
-
-    // get pipeline with map
-    std::shared_ptr<DenseSLAMSystem> pipeline_ = nullptr;
-
-  //#ifdef MAP_OM
-    std::shared_ptr<se::Octree<OFusion>> octree_ = nullptr;
-  //#elif MAP_SDF
-  //  std::shared_ptr<se::Octree<SDF>> octree_ = nullptr;
-  //#endif
-
-    // pipeline configuration
+    // Supereight
     Configuration supereight_config_;
+    std::shared_ptr<DenseSLAMSystem> pipeline_ = nullptr;
+    Eigen::Vector3f init_position_octree_;
+    Eigen::Vector2i computation_size_;
     int frame_;
+    float res_;
+    //std::shared_ptr<se::Octree<SE_VOXEL_IMPLEMENTATION> > octree_;
 
+    // Image buffers
     std::unique_ptr<uint16_t> input_depth_;
     std::unique_ptr<uint32_t> depth_render_;
     std::unique_ptr<uint32_t> track_render_;
     std::unique_ptr<uint32_t> volume_render_;
 
-    Eigen::Vector2i computation_size_;
-    float res_;
-    int occupied_voxels_sum_;
-    float
-        cam_baseline_ = 0.110f; // [m] from rotors_description/urdf/component_snippets.xacro vi_sensor
-
-    // simulation camera reader
+    // Camera info
     sensor_msgs::CameraInfo CamInfo;
     image_geometry::PinholeCameraModel CamModel;
-
     bool cam_info_ready_ = false;
 
-    // Subscriber
+    // Subscribers
     ros::Subscriber image_sub_;
     ros::Subscriber pose_sub_;
     ros::Subscriber image_pose_sub_;
     ros::Subscriber cam_info_sub_;
 
-    // Publisher
+    // Publishers
     ros::Publisher image_pose_pub_;
     ros::Publisher supereight_pose_pub_;
 
+    // Render publishers
     ros::Publisher depth_render_pub_;
     ros::Publisher volume_render_pub_;
     ros::Publisher track_render_pub_;
 
-    // Visualization
+    // Visualization publishers
     ros::Publisher map_marker_pub_;
     ros::Publisher block_based_marker_pub_;
     ros::Publisher boundary_marker_pub_;
     ros::Publisher frontier_marker_pub_;
-
 
     /**
     * buffer and quque for incoming data streams, in case the matching can't
@@ -243,25 +230,26 @@ namespace se {
     CircularBuffer<geometry_msgs::TransformStamped> pose_buffer_;
     std::deque<sensor_msgs::Image> image_queue_;
 
-    // timing
-    std::deque<std::chrono::time_point<std::chrono::system_clock>> stop_watch_;
-
     // voxel blockwise update for visualization
     //mapvec3i voxel_block_map_;
     //mapvec3i surface_voxel_map_;
     //mapvec3i frontier_voxel_map_;
     //mapvec3i occlusion_voxel_map_;
     // block based visualization
-    bool pub_map_update_ = false;
+    //bool pub_map_update_ = false;
+
+    /**
+     * Global/map coordinate frame. Will always look up TF transforms to this
+     * frame.
+     */
+    std::string frame_id_;
 
     bool set_world_to_map_tf_ = false;
-
     Eigen::Matrix4f tf_map_from_world_ = Eigen::Matrix4f::Identity();
     Eigen::Matrix4f tf_world_from_map_ = Eigen::Matrix4f::Identity();
-
-    Eigen::Vector3f init_position_octree_;
     Eigen::Vector3f const_translation_;
 
+    // Timings
     std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;
     std::vector<std::string> timing_labels_;
   };

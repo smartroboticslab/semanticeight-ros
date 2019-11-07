@@ -23,10 +23,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
                                const ros::NodeHandle& nh_private)
     : nh_(nh),
       nh_private_(nh_private),
-      pose_buffer_(500),
       frame_(0),
-      frame_id_("map"),
-      occupied_voxels_sum_(0) {
+      pose_buffer_(500),
+      frame_id_("map") {
 
   readConfig(nh_private);
 
