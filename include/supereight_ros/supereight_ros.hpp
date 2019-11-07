@@ -76,6 +76,7 @@
 // supereight_ros headers
 #include "supereight_ros/ImagePose.h"  //message
 #include "supereight_ros/CircularBuffer.hpp"
+#include "supereight_ros/supereight_ros_config.hpp"
 
 
 
@@ -196,6 +197,7 @@ namespace se {
 
     ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
+    SupereightNodeConfig node_config_;
 
     /**
      * Global/map coordinate frame. Will always look up TF transforms to this

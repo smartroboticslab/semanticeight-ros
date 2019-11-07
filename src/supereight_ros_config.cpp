@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-#include <Eigen/Dense>
-
 
 
 // Default supereight configuration.
@@ -39,7 +37,52 @@ constexpr bool default_bayesian = false;
 
 
 
+// Default supereight node configuration.
+constexpr bool default_enable_tracking = true;
+constexpr bool default_enable_rendering = true;
+const Eigen::Vector2i default_input_size (640, 480);
+
+
+
 namespace se {
+  SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh) {
+    SupereightNodeConfig config;
+
+    nh.param<bool>("enable_tracking",
+        config.enable_tracking,
+        default_enable_tracking);
+
+    nh.param<bool>("enable_rendering",
+        config.enable_rendering,
+        default_enable_rendering);
+
+    std::vector<int> input_size_vector;
+    if (nh.getParam("input_size", input_size_vector)) {
+      for (size_t i = 0; i < input_size_vector.size(); ++i) {
+        config.input_size[i] = input_size_vector[i];
+      }
+    } else {
+      config.input_size = default_input_size;
+    }
+
+
+    return config;
+  }
+
+
+
+  void print_supereight_node_config(const SupereightNodeConfig& config) {
+    ROS_INFO("Supereight Node parameters:");
+    ROS_INFO("  enable_tracking:        %d",
+        config.enable_tracking);
+    ROS_INFO("  enable_rendering:       %d",
+        config.enable_rendering);
+    ROS_INFO("  input_size:             %d %d",
+        config.input_size.x(), config.input_size.y());
+  }
+
+
+
   Configuration read_supereight_config(const ros::NodeHandle& nh) {
     Configuration config;
 

@@ -99,15 +99,10 @@ void SupereightNode::setupRos() {
 // Read config.yaml into Configuration class
 void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
   supereight_config_ = read_supereight_config(nh_private);
+  node_config_ = read_supereight_node_config(nh_private);
+  image_size_ = node_config_.input_size;
 
   // Read the node configuration.
-  std::vector<int> image_size_vector;
-  if (nh_private.getParam("input_size", image_size_vector)) {
-    for (unsigned int i = 0; i < image_size_vector.size(); i++) {
-      image_size_[i] = image_size_vector[i];
-    }
-  }
-
   init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
   bool supereight_visualization_block = true;
   if (nh_private.getParam("block_based_map", supereight_visualization_block)) {
