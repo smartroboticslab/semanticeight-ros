@@ -25,7 +25,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
     : nh_(nh),
       nh_private_(nh_private),
       pose_buffer_(500),
-      image_size_{640, 480},
       frame_(0),
       frame_id_("map"),
       use_tf_transforms_(true),
@@ -34,9 +33,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   // Configure supereight_config with default values
   readConfig(nh_private);
 
-  input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * image_size_.x() * image_size_.y());
+  input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * node_config_.input_size.x() * node_config_.input_size.y());
   init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
-  computation_size_ = image_size_ / supereight_config_.compute_size_ratio;
+  computation_size_ = node_config_.input_size / supereight_config_.compute_size_ratio;
 
 #ifdef WITH_RENDERING
   const size_t render_size_bytes
@@ -98,7 +97,6 @@ void SupereightNode::setupRos() {
 void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
   supereight_config_ = read_supereight_config(nh_private);
   node_config_ = read_supereight_node_config(nh_private);
-  image_size_ = node_config_.input_size;
 
   // Read the node configuration.
   init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
@@ -260,7 +258,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   //-------- supereight access point ----------------
   timings[2] = std::chrono::steady_clock::now();
   // supereight takes the values in [mm]
-  pipeline_->preprocessing(input_depth_, image_size_, supereight_config_.bilateral_filter);
+  pipeline_->preprocessing(input_depth_, node_config_.input_size, supereight_config_.bilateral_filter);
   timings[3] = std::chrono::steady_clock::now();
 
   Eigen::Vector4f camera = supereight_config_.camera / (supereight_config_.compute_size_ratio);

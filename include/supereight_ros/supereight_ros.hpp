@@ -216,7 +216,6 @@ namespace se {
 
     // pipeline configuration
     Configuration supereight_config_;
-    Eigen::Vector2i image_size_;
     int frame_;
 
     uint16_t *input_depth_ = nullptr;
