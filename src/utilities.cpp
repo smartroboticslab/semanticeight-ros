@@ -4,6 +4,10 @@
 
 #include "supereight_ros/utilities.hpp"
 
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+
 
 
 // Default supereight configuration.
@@ -240,6 +244,41 @@ namespace se {
         config.multi_resolution);
     ROS_INFO("  bayesian:               %d",
         config.bayesian);
+  }
+
+
+
+  void to_supereight_depth(const sensor_msgs::Image& input_depth,
+                           uint16_t*                 output_depth) {
+
+    if (input_depth.encoding == "16UC1") {
+      // Just copy the image data since this is already the correct format.
+      const size_t image_size_bytes = input_depth.height * input_depth.step;
+      std::memcpy(output_depth, input_depth.data.data(), image_size_bytes);
+
+    } else if (input_depth.encoding == "32FC1") {
+      // The depth is in float meters, convert to uint16_t millimeters.
+      const size_t image_size_pixels = input_depth.width * input_depth.height;
+      // Cast the image data as a float pointer so that operator[] can be used
+      // to get the value of each pixel.
+      const float* input_ptr
+          = reinterpret_cast<const float*>(input_depth.data.data());
+#pragma omp parallel for
+      for (size_t i = 0; i < image_size_pixels; ++i) {
+        const float depth_mm = 1000.f * input_ptr[i];
+        // Test whether the depth value is NaN or if it would cause an overflow
+        // in a uint16_t. In that case store an invalid depth value.
+        if (std::isnan(depth_mm) || (depth_mm > (1 << 16) - 1)) {
+          output_depth[i] = 0;
+        } else {
+          output_depth[i] = static_cast<uint16_t>(depth_mm);
+        }
+      }
+
+    } else {
+      ROS_FATAL_STREAM("Invalid input depth format: " << input_depth.encoding);
+      abort();
+    }
   }
 
 

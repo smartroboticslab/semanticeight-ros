@@ -37,6 +37,15 @@ namespace se {
 
 
   /**
+   * @brief Convert the input depth image into the format required by
+   * supereight and copy it into the output depth buffer.
+   */
+  void to_supereight_depth(const sensor_msgs::Image& input_depth,
+                           uint16_t*                 output_depth);
+
+
+
+  /**
    * @brief create new image message with all attributes
    * @param old_image_msg
    * @param new_image_msg

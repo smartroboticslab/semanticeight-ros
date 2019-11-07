@@ -245,24 +245,12 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 
   std::chrono::time_point<std::chrono::steady_clock> timings[9];
 
+
+
   timings[0] = std::chrono::steady_clock::now();
-  const float *imagepointer = (const float *) image_pose_msg->image.data.data();
-  for (int p = 0; p < image_size_.y() * image_size_.x(); p++) {
-    if (imagepointer[p] != imagepointer[p]) {
-      input_depth_[p] = 0;
-    } else {
-      input_depth_[p] = static_cast<uint16_t>( 1000 * imagepointer[p]);
-//      ROS_INFO("depth %i, %f", input_depth_[p], imagepointer[p]);
-    }
-  }
-//  std::cout << input_depth_[150 * 640 + 320] << std::endl;
-//  save image to png
-//  lodepng_encode_file("/home/anna/image_file.png",
-//                      (unsigned char *) input_depth_,
-//                      image_size_.x(),
-//                      image_size_.y(),
-//                      LCT_GREY,
-//                      16);
+  to_supereight_depth(image_pose_msg->image, input_depth_);
+
+
 
   timings[1] = std::chrono::steady_clock::now();
   const Eigen::Matrix4f gt_pose = interpolate_pose(
