@@ -224,9 +224,9 @@ void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPt
 }
 
 void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
+  bool tracked = false;
   bool integrated = false;
   bool raycasted = false;
-  bool tracked = false;
 // ROS_INFO("fusion callback");
   // creates file with poses
 //  myfile.open("/home/anna/Data/integration.txt", std::ofstream::app);
@@ -314,7 +314,10 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 
   timings[5] = std::chrono::steady_clock::now();
 
-//  pipeline_->raycasting(camera, supereight_config_.mu, frame_);
+  if (node_config_.enable_tracking || node_config_.enable_rendering) {
+    raycasted = pipeline_->raycasting(camera, supereight_config_.mu, frame_);
+  }
+
   timings[6] = std::chrono::steady_clock::now();
 
   ROS_INFO("integrated %i, tracked %i ", integrated, tracked);
