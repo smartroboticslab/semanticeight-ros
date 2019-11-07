@@ -132,12 +132,9 @@ void SupereightNode::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camI
 
   cam_info_ready_ = true;
   ROS_INFO("got camera model..");
-//  std::cout << CamModel.cameraInfo() << std::endl;
-//  std::cout << CamModel.fx() << "," << CamModel.fy() << std::endl;
 }
 
 void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPtr &pose_msg) {
-//  ROS_INFO("pose call back");
   Eigen::Quaternionf rot_q(pose_msg->transform.rotation.w,
                            pose_msg->transform.rotation.x,
                            pose_msg->transform.rotation.y,
@@ -227,9 +224,6 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   bool tracked = false;
   bool integrated = false;
   bool raycasted = false;
-// ROS_INFO("fusion callback");
-  // creates file with poses
-//  myfile.open("/home/anna/Data/integration.txt", std::ofstream::app);
 
   std::chrono::time_point<std::chrono::steady_clock> timings[9];
 
@@ -245,8 +239,6 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
       image_pose_msg->pre_pose,
       image_pose_msg->post_pose,
       ros::Time(image_pose_msg->image.header.stamp).toNSec());
-//  myfile<<std::fixed<<gt_pose<<std::endl;
-//  myfile.close();
 
   //-------- supereight access point ----------------
   timings[2] = std::chrono::steady_clock::now();
@@ -290,8 +282,6 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   //vec3i occlusion_blocks(0);
   //map3i frontier_blocks_map;
   //map3i occlusion_blocks_map;
-//  std::cout<< "sizes of frontier blocks  " << frontier_blocks.size() << " freed " << freed_voxels
-//      .size() << " updated " << updated_blocks.size() << std::endl;
 
   // Integrate only if tracking was successful or it is one of the
   // first 4 frames.
@@ -309,8 +299,6 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   } else {
     integrated = false;
   }
-  //std::cout << "sizes of frontier blocks: " << frontier_blocks.size() << std::endl;
-//  std::cout << "frontier map " << frontier_blocks_map.size() << " updated " << updated_blocks.size() << std::endl;
 
   timings[5] = std::chrono::steady_clock::now();
 
@@ -321,9 +309,6 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   timings[6] = std::chrono::steady_clock::now();
 
   ROS_INFO("integrated %i, tracked %i ", integrated, tracked);
-  //ROS_INFO_STREAM("occluded voxels = " << occlusion_blocks.size());
-//    ROS_INFO_STREAM( "freed_voxels = " << freed_voxels.size());
-  //ROS_INFO_STREAM("updated voxels  = " << updated_blocks.size());
 
 // ------------ supereight tracking visualization  ---------------------
   if (node_config_.enable_rendering) {

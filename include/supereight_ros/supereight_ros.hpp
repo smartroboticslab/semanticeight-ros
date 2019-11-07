@@ -280,7 +280,6 @@ namespace se {
 
     Eigen::Vector3f init_position_octree_;
     Eigen::Vector3f const_translation_;
-    std::ofstream myfile;
   };
 } // namespace se
 
