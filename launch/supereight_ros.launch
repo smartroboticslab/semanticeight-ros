@@ -14,8 +14,6 @@
        default=""/>
 
   <arg name="camera_info_topic" default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>
-  <arg name="body_frame" default="firefly/base_link"/>
-  <arg name="tf_frame" default="navigation"/>
 
   <node pkg="supereight_ros" name="supereight"
         type="supereight_ros" clear_params="true" output="screen"
@@ -23,10 +21,6 @@
 
     <!-- Include rosparam yaml file -->
     <rosparam command="load" file="$(arg supereight_ros_config_file)"/>
-
-    <!-- Set values of node parameters -->
-    <param name="tf_frame" type="string" value="$(arg tf_frame)"/>
-    <param name="body_frame" type="string" value="$(arg body_frame)"/>
 
     <!-- Remap topic names -->
     <remap from="/camera/depth_image" to="$(arg depth_image_topic)"/>
