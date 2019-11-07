@@ -142,5 +142,21 @@ namespace se {
     return pose;
   }
 
+
+
+  void print_timings(
+      const std::vector<std::chrono::time_point<std::chrono::steady_clock> >& timings,
+      const std::vector<std::string>& labels) {
+
+    for (size_t i = 0; i < timings.size() - 1; ++i) {
+      const double delta_t
+          = std::chrono::duration<double>(timings[i+1] - timings[i]).count();
+      ROS_INFO("%-25s %.5f\n", labels[i].c_str(), delta_t);
+    }
+    const double total_t
+        = std::chrono::duration<double>(timings[timings.size()-1] - timings[0]).count();
+    ROS_INFO("Total                     %.5f\n", total_t);
+  }
+
 } // namespace se
 

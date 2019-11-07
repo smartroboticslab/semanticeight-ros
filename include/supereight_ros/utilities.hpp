@@ -5,7 +5,10 @@
 #ifndef __UTILITIES_HPP
 #define __UTILITIES_HPP
 
+#include <chrono>
 #include <cstdint>
+#include <string>
+#include <vector>
 
 #include <Eigen/Dense>
 
@@ -105,6 +108,12 @@ namespace se {
       const geometry_msgs::TransformStamped& prev_pose,
       const geometry_msgs::TransformStamped& next_pose,
       const int64_t                          query_timestamp);
+
+
+
+  void print_timings(
+      const std::vector<std::chrono::time_point<std::chrono::steady_clock> >& timings,
+      const std::vector<std::string>& labels);
 
 } // namespace se
 

@@ -262,6 +262,9 @@ namespace se {
 
     Eigen::Vector3f init_position_octree_;
     Eigen::Vector3f const_translation_;
+
+    std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;
+    std::vector<std::string> timing_labels_;
   };
 } // namespace se
 
