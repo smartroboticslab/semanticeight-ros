@@ -100,9 +100,9 @@ namespace se {
     }
 
     /**
-    * @brief sets configuration from YAML file to nodehandle
+     * @brief sets configuration from YAML file to nodehandle
      * definitions, see supereight/se/config.h
-    **/
+     */
     void readConfig(const ros::NodeHandle& nh_private);
 
     /**
@@ -135,8 +135,7 @@ namespace se {
                            Eigen::Vector3f       &const_translation,
                            Eigen::Matrix4f       &tf_matrix);
 
-    // public variables
-    Eigen::Vector3f init_pose_;
+
 
   private:
     /**

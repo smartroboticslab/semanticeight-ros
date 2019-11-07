@@ -29,11 +29,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       frame_id_("map"),
       occupied_voxels_sum_(0) {
 
-  // Configure supereight_config with default values
   readConfig(nh_private);
 
   input_depth_ = (uint16_t *) malloc(sizeof(uint16_t) * node_config_.input_size.x() * node_config_.input_size.y());
-  init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
+  init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
   computation_size_ = node_config_.input_size / supereight_config_.compute_size_ratio;
 
   if (node_config_.enable_rendering) {
@@ -48,7 +47,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       computation_size_,
       Eigen::Vector3i::Constant(supereight_config_.volume_resolution.x()),
       Eigen::Vector3f::Constant(supereight_config_.volume_size.x()),
-      init_pose_,
+      init_position_octree_,
       supereight_config_.pyramid,
       supereight_config_));
 
@@ -91,13 +90,16 @@ void SupereightNode::setupRos() {
   bool use_test_image = ros::param::get(ns + "/use_test_image", use_test_image_);
 }
 
-// Read config.yaml into Configuration class
+
+
 void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
   supereight_config_ = read_supereight_config(nh_private);
-  node_config_ = read_supereight_node_config(nh_private);
+  print_supereight_config(supereight_config_);
 
-  // Read the node configuration.
-  init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
+  node_config_ = read_supereight_node_config(nh_private);
+  print_supereight_node_config(node_config_);
+
+  setSupereightVisualizationMapBased(node_config_.block_based_map);
 };
 
 
