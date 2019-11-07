@@ -224,7 +224,6 @@ namespace se {
     // Publisher
     ros::Publisher image_pose_pub_;
     ros::Publisher supereight_pose_pub_;
-    ros::Publisher gt_tf_pose_pub_;
 
     ros::Publisher depth_render_pub_;
     ros::Publisher volume_render_pub_;

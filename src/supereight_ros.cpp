@@ -83,7 +83,6 @@ void SupereightNode::setupRos() {
   // Publisher
   image_pose_pub_ = nh_.advertise<supereight_ros::ImagePose>("/supereight/image_pose", 1000);
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", 1000);
-  gt_tf_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/gt_tf_pose", 1000);
 
   if (node_config_.enable_rendering) {
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
@@ -201,16 +200,6 @@ void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPt
     if (!image_queue_.empty())
       oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
   }
-
-  //publish the transformed vi_sensor_ground truth
-  geometry_msgs::PoseStamped gt_tf_pose_msg;
-  gt_tf_pose_msg.header = pose_msg->header;
-  gt_tf_pose_msg.header.frame_id = frame_id_;
-  gt_tf_pose_msg.pose.position.x = pose_tf_msg_.transform.translation.x + init_position_octree_(0);
-  gt_tf_pose_msg.pose.position.y = pose_tf_msg_.transform.translation.y + init_position_octree_(0);
-  gt_tf_pose_msg.pose.position.z = pose_tf_msg_.transform.translation.z + init_position_octree_(0);
-  gt_tf_pose_msg.pose.orientation = pose_tf_msg_.transform.rotation;
-  gt_tf_pose_pub_.publish(gt_tf_pose_msg);
 }
 
 void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
