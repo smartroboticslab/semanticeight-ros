@@ -90,12 +90,10 @@ namespace se {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    typedef std::shared_ptr<SupereightNode> Ptr;
+    SupereightNode(const ros::NodeHandle& nh,
+                   const ros::NodeHandle& nh_private);
 
-    SupereightNode(const ros::NodeHandle &nh,
-                   const ros::NodeHandle &nh_private);
-
-    virtual ~SupereightNode() {
+    ~SupereightNode() {
       free(input_depth_);
 #ifdef WITH_RENDERING
       free(depth_render_);
@@ -224,13 +222,13 @@ namespace se {
     uint16_t *input_depth_ = nullptr;
 
 #ifdef WITH_RENDERING
-    uchar4 *depth_render_ = nullptr;
-    uchar4 *volume_render_ = nullptr;
-    uchar4 *track_render_ = nullptr;
+    uint32_t* depth_render_ = nullptr;
+    uint32_t* volume_render_ = nullptr;
+    uint32_t* track_render_ = nullptr;
 #endif
 
     Eigen::Vector2i computation_size_;
-    double res_;
+    float res_;
     int occupied_voxels_sum_;
     float
         cam_baseline_ = 0.110f; // [m] from rotors_description/urdf/component_snippets.xacro vi_sensor

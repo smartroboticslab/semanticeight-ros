@@ -11,23 +11,23 @@
 #include <supereight_ros/supereight_ros.hpp>
 
 namespace se {
-/**
-* for ROS param function
-* default value list, same as in config.yaml
-*/
 
 std::string sep = "\n----------------------------------------\n";
-SupereightNode::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
-    :
-    nh_(nh),
-    nh_private_(nh_private),
-    pose_buffer_(500),
-    image_size_{640, 480},
-    frame_(0),
-    frame_id_("map"),
-    enable_icp_tracking_(false),
-    use_tf_transforms_(true),
-    occupied_voxels_sum_(0) {
+
+
+
+SupereightNode::SupereightNode(const ros::NodeHandle& nh,
+                               const ros::NodeHandle& nh_private)
+    : nh_(nh),
+      nh_private_(nh_private),
+      pose_buffer_(500),
+      image_size_{640, 480},
+      frame_(0),
+      frame_id_("map"),
+      enable_icp_tracking_(false),
+      use_tf_transforms_(true),
+      occupied_voxels_sum_(0) {
+
   // Configure supereight_config with default values
   readConfig(nh_private);
 
@@ -36,30 +36,30 @@ SupereightNode::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle 
   computation_size_ = image_size_ / supereight_config_.compute_size_ratio;
 
 #ifdef WITH_RENDERING
-  depth_render_ =
-      (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
-  track_render_ =
-      (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
-  volume_render_ =
-      (uchar4 *) malloc(sizeof(uchar4) * computation_size_.x() * computation_size_.y());
+  const size_t render_size_bytes
+      = sizeof(uint32_t) * computation_size_.x() * computation_size_.y();
+  depth_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
+  track_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
+  volume_render_ = static_cast<uint32_t*>(malloc(render_size_bytes));
 #endif
 
-  pipeline_ =
-      std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(Eigen::Vector2i(computation_size_.x(),
-                                                                           computation_size_.y()),
-                                                           Eigen::Vector3i::Constant(static_cast<int>(supereight_config_.volume_resolution.x())),
-                                                           Eigen::Vector3f::Constant(
-                                                               supereight_config_.volume_size.x()),
-                                                           init_pose_,
-                                                           supereight_config_.pyramid,
-                                                           supereight_config_));
+  pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(
+      computation_size_,
+      Eigen::Vector3i::Constant(supereight_config_.volume_resolution.x()),
+      Eigen::Vector3f::Constant(supereight_config_.volume_size.x()),
+      init_pose_,
+      supereight_config_.pyramid,
+      supereight_config_));
 
   //pipeline_->getMap(octree_);
+  res_ = static_cast<float>(pipeline_->getModelDimensions().x())
+       / static_cast<float>(pipeline_->getModelResolution().x());
+
   setupRos();
-//  ROS_INFO_STREAM("map publication mode block " << pub_block_based_ << ", map " << pub_map_update_);
-  res_ =
-      (double) (pipeline_->getModelDimensions())[0] / (double) (pipeline_->getModelResolution())[0];
 }
+
+
+
 void SupereightNode::setupRos() {
   // Subscriber
   image_sub_ = nh_.subscribe("/camera/depth_image", 100, &SupereightNode::depthCallback, this);
