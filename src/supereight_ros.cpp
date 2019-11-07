@@ -28,7 +28,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       image_size_{640, 480},
       frame_(0),
       frame_id_("map"),
-      enable_icp_tracking_(false),
       use_tf_transforms_(true),
       occupied_voxels_sum_(0) {
 
@@ -91,7 +90,6 @@ void SupereightNode::setupRos() {
   frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
 
   std::string ns = ros::this_node::getName();
-  bool read_from_launch = ros::param::get(ns + "/enable_icp_tracking", enable_icp_tracking_);
   ros::param::get(ns + "/use_tf_transforms", use_tf_transforms_);
   bool use_test_image = ros::param::get(ns + "/use_test_image", use_test_image_);
 }
@@ -266,7 +264,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   timings[3] = std::chrono::steady_clock::now();
 
   Eigen::Vector4f camera = supereight_config_.camera / (supereight_config_.compute_size_ratio);
-  if (enable_icp_tracking_) {
+  if (node_config_.enable_tracking) {
     tracked = pipeline_->tracking(camera,
                                   supereight_config_.icp_threshold,
                                   supereight_config_.tracking_rate,

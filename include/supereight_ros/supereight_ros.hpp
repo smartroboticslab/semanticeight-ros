@@ -282,7 +282,6 @@ namespace se {
     bool pub_map_update_ = false;
     bool pub_block_based_ = true;
 
-    bool enable_icp_tracking_;
     bool use_test_image_;
     bool set_world_to_map_tf_ = false;
 

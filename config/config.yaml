@@ -1,5 +1,4 @@
 # Supereight ROS node settings
-# TODO use this option
 enable_tracking: true
 
 # TODO use this option

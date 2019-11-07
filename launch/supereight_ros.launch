@@ -14,7 +14,6 @@
        default=""/>
 
   <arg name="camera_info_topic" default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>
-  <arg name="enable_icp_tracking" default="false"/>
   <arg name="use_test_image" default="false"/>
   <arg name="use_tf_transforms" default="true"/>
   <arg name="body_frame" default="firefly/base_link"/>
@@ -31,7 +30,6 @@
     <param name="tf_frame" type="string" value="$(arg tf_frame)"/>
     <param name="body_frame" type="string" value="$(arg body_frame)"/>
     <param name="use_test_image" type="bool" value="$(arg use_test_image)"/>
-    <param name="enable_icp_tracking" type="bool" value="$(arg enable_icp_tracking)"/>
     <param name="use_tf_transforms" type="bool" value="$(arg use_tf_transforms)"/>
 
     <!-- Remap topic names -->
