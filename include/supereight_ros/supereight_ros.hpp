@@ -94,11 +94,9 @@ namespace se {
 
     ~SupereightNode() {
       free(input_depth_);
-#ifdef WITH_RENDERING
       free(depth_render_);
       free(track_render_);
       free(volume_render_);
-#endif
     }
 
     /**
@@ -220,11 +218,9 @@ namespace se {
 
     uint16_t *input_depth_ = nullptr;
 
-#ifdef WITH_RENDERING
     uint32_t* depth_render_ = nullptr;
     uint32_t* volume_render_ = nullptr;
     uint32_t* track_render_ = nullptr;
-#endif
 
     Eigen::Vector2i computation_size_;
     float res_;
@@ -249,11 +245,9 @@ namespace se {
     ros::Publisher supereight_pose_pub_;
     ros::Publisher gt_tf_pose_pub_;
 
-#ifdef WITH_RENDERING
     ros::Publisher depth_render_pub_;
     ros::Publisher volume_render_pub_;
     ros::Publisher track_render_pub_;
-#endif
 
     // Visualization
     ros::Publisher map_marker_pub_;

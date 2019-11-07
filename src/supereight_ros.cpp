@@ -37,13 +37,13 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   init_pose_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
   computation_size_ = node_config_.input_size / supereight_config_.compute_size_ratio;
 
-#ifdef WITH_RENDERING
-  const size_t render_size_bytes
-      = sizeof(uint32_t) * computation_size_.x() * computation_size_.y();
-  depth_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
-  track_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
-  volume_render_ = static_cast<uint32_t*>(malloc(render_size_bytes));
-#endif
+  if (node_config_.enable_rendering) {
+    const size_t render_size_bytes
+        = sizeof(uint32_t) * computation_size_.x() * computation_size_.y();
+    depth_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
+    track_render_  = static_cast<uint32_t*>(malloc(render_size_bytes));
+    volume_render_ = static_cast<uint32_t*>(malloc(render_size_bytes));
+  }
 
   pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(
       computation_size_,
@@ -76,12 +76,12 @@ void SupereightNode::setupRos() {
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", 1000);
   gt_tf_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/gt_tf_pose", 1000);
 
-  // TODO ifdef
-#ifdef WITH_RENDERING
-  depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
-  volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
-  track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
-#endif
+  if (node_config_.enable_rendering) {
+    depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
+    volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
+    track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
+  }
+
   // Visualization
   map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
   block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
@@ -330,44 +330,43 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   //ROS_INFO_STREAM("updated voxels  = " << updated_blocks.size());
 
 // ------------ supereight tracking visualization  ---------------------
-#ifdef WITH_RENDERING
+  if (node_config_.enable_rendering) {
+    pipeline_->renderDepth((unsigned char *) depth_render_, pipeline_->getComputationResolution());
+    pipeline_->renderTrack((unsigned char *) track_render_, pipeline_->getComputationResolution());
+    pipeline_->renderVolume((unsigned char *) volume_render_,
+                            pipeline_->getComputationResolution(),
+                            frame_,
+                            supereight_config_.rendering_rate,
+                            camera,
+                            0.75 * supereight_config_.mu);
 
-  pipeline_->renderDepth((unsigned char *) depth_render_, pipeline_->getComputationResolution());
-  pipeline_->renderTrack((unsigned char *) track_render_, pipeline_->getComputationResolution());
-  pipeline_->renderVolume((unsigned char *) volume_render_,
-                          pipeline_->getComputationResolution(),
-                          frame_,
-                          supereight_config_.rendering_rate,
-                          camera,
-                          0.75 * supereight_config_.mu);
+  // create image
+    sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
+    createImageMsg(image_pose_msg, depth_render_msg, computation_size_);
+    depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
+    depth_render_msg->is_bigendian = 0;
+    memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_, depth_render_msg->width
+        * depth_render_msg->height * sizeof(float));
 
-// create image
-  sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
-  createImageMsg(image_pose_msg, depth_render_msg, computation_size_);
-  depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
-  depth_render_msg->is_bigendian = 0;
-  memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_, depth_render_msg->width
-      * depth_render_msg->height * sizeof(float));
+    sensor_msgs::ImagePtr track_render_msg(new sensor_msgs::Image());
+    createImageMsg(image_pose_msg, track_render_msg, computation_size_);
+    track_render_msg->encoding = "rgba8"; // rgba8 doesn't work
+    track_render_msg->is_bigendian = 0;
+    memcpy((void *) track_render_msg->data.data(), (void *) track_render_, track_render_msg->width
+        * track_render_msg->height * sizeof(float));
 
-  sensor_msgs::ImagePtr track_render_msg(new sensor_msgs::Image());
-  createImageMsg(image_pose_msg, track_render_msg, computation_size_);
-  track_render_msg->encoding = "rgba8"; // rgba8 doesn't work
-  track_render_msg->is_bigendian = 0;
-  memcpy((void *) track_render_msg->data.data(), (void *) track_render_, track_render_msg->width
-      * track_render_msg->height * sizeof(float));
+    sensor_msgs::ImagePtr volume_render_msg(new sensor_msgs::Image());
+    createImageMsg(image_pose_msg, volume_render_msg, computation_size_);
+    volume_render_msg->encoding = "rgba8"; // rgba8 doesn't work
+    volume_render_msg->is_bigendian = 0;
+    memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_, volume_render_msg->width
+        * volume_render_msg->height * sizeof(float));
 
-  sensor_msgs::ImagePtr volume_render_msg(new sensor_msgs::Image());
-  createImageMsg(image_pose_msg, volume_render_msg, computation_size_);
-  volume_render_msg->encoding = "rgba8"; // rgba8 doesn't work
-  volume_render_msg->is_bigendian = 0;
-  memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_, volume_render_msg->width
-      * volume_render_msg->height * sizeof(float));
-
-  // publish to topic
-  depth_render_pub_.publish(*depth_render_msg);
-  track_render_pub_.publish(*track_render_msg);
-  volume_render_pub_.publish(*volume_render_msg);
-#endif
+    // publish to topic
+    depth_render_pub_.publish(*depth_render_msg);
+    track_render_pub_.publish(*track_render_msg);
+    volume_render_pub_.publish(*volume_render_msg);
+  }
   timings[7] = std::chrono::steady_clock::now();
 
   // ------------- supereight map visualization ------------

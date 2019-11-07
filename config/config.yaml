@@ -1,7 +1,6 @@
 # Supereight ROS node settings
 enable_tracking: true
 
-# TODO use this option
 enable_rendering: true
 
 input_size: [640, 480]
