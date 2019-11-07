@@ -27,7 +27,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       pose_buffer_(500),
       frame_(0),
       frame_id_("map"),
-      use_tf_transforms_(true),
       occupied_voxels_sum_(0) {
 
   // Configure supereight_config with default values
@@ -89,7 +88,6 @@ void SupereightNode::setupRos() {
   frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
 
   std::string ns = ros::this_node::getName();
-  ros::param::get(ns + "/use_tf_transforms", use_tf_transforms_);
   bool use_test_image = ros::param::get(ns + "/use_test_image", use_test_image_);
 }
 

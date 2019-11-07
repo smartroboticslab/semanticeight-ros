@@ -138,8 +138,6 @@ namespace se {
     // public variables
     Eigen::Vector3f init_pose_;
 
-    bool use_tf_transforms_;
-
   private:
     /**
      * @brief Sets up publishing and subscribing, should only be called from
