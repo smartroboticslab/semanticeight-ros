@@ -40,6 +40,7 @@ constexpr bool default_bayesian = false;
 // Default supereight node configuration.
 constexpr bool default_enable_tracking = true;
 constexpr bool default_enable_rendering = true;
+constexpr bool default_block_based_map = true;
 const Eigen::Vector2i default_input_size (640, 480);
 
 
@@ -55,6 +56,10 @@ namespace se {
     nh.param<bool>("enable_rendering",
         config.enable_rendering,
         default_enable_rendering);
+
+    nh.param<bool>("block_based_map",
+        config.block_based_map,
+        default_block_based_map);
 
     std::vector<int> input_size_vector;
     if (nh.getParam("input_size", input_size_vector)) {

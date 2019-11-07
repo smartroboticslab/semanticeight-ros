@@ -98,13 +98,6 @@ void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
 
   // Read the node configuration.
   init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
-  bool supereight_visualization_block = true;
-  if (nh_private.getParam("block_based_map", supereight_visualization_block)) {
-    setSupereightVisualizationMapBased(supereight_visualization_block);
-    printf("map viz %i", supereight_visualization_block);
-  } else {
-    setSupereightVisualizationMapBased(supereight_visualization_block);
-  }
 };
 
 
