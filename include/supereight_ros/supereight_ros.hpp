@@ -156,7 +156,7 @@ namespace se {
      * @brief adds images to image queue
      * @param old_image_msg
      */
-    void imageCallback(const sensor_msgs::ImageConstPtr &image_msg);
+    void depthCallback(const sensor_msgs::ImageConstPtr& depth_msg);
 
     /**
      * @brief reads camera info
@@ -251,7 +251,6 @@ namespace se {
     ros::Publisher image_pose_pub_;
     ros::Publisher supereight_pose_pub_;
     ros::Publisher gt_tf_pose_pub_;
-    ros::Publisher depth_image_pub_;
 
 #ifdef WITH_RENDERING
     ros::Publisher depth_render_pub_;
@@ -275,7 +274,6 @@ namespace se {
 
     // timing
     std::deque<std::chrono::time_point<std::chrono::system_clock>> stop_watch_;
-    uint64_t image_time_stamp_;
 
     // voxel blockwise update for visualization
     //mapvec3i voxel_block_map_;

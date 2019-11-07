@@ -62,7 +62,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle 
 }
 void SupereightNode::setupRos() {
   // Subscriber
-  image_sub_ = nh_.subscribe("/camera/depth_image", 100, &SupereightNode::imageCallback, this);
+  image_sub_ = nh_.subscribe("/camera/depth_image", 100, &SupereightNode::depthCallback, this);
   pose_sub_ = nh_.subscribe("/pose", 1000, &SupereightNode::poseCallback, this);
   image_pose_sub_ =
       nh_.subscribe("/supereight/image_pose", 100, &SupereightNode::fusionCallback, this);
@@ -73,7 +73,6 @@ void SupereightNode::setupRos() {
   image_pose_pub_ = nh_.advertise<supereight_ros::ImagePose>("/supereight/image_pose", 1000);
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", 1000);
   gt_tf_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/gt_tf_pose", 1000);
-  depth_image_pub_ = nh_.advertise<sensor_msgs::Image>("depth_image", 30);
 
   // TODO ifdef
 #ifdef WITH_RENDERING
@@ -115,27 +114,27 @@ void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
   }
 };
 
-void SupereightNode::imageCallback(const sensor_msgs::ImageConstPtr &image_msg) {
 
-//   allocate new depth image message
+
+void SupereightNode::depthCallback(
+    const sensor_msgs::ImageConstPtr& depth_msg) {
+
+  // Allocate new depth image message
   sensor_msgs::ImagePtr test_image(new sensor_msgs::Image());
-  createImageMsg(image_msg, test_image);
-
+  createImageMsg(depth_msg, test_image);
   test_image->data.resize(test_image->height * test_image->step, 0.0f);
 
   if (use_test_image_) {
-    createTestImage(image_msg, test_image);
-    depth_image_pub_.publish(test_image);
+    // Generate the test image and push back to the image queue.
+    createTestImage(depth_msg, test_image);
     image_queue_.push_back(*test_image);
   } else {
-    depth_image_pub_.publish(image_msg);
-    image_queue_.push_back(*image_msg);
-  }
-
-  if (image_queue_.size() == 1) {
-    image_time_stamp_ = ros::Time(image_queue_.front().header.stamp).toNSec();
+    // Just push back to the image queue.
+    image_queue_.push_back(*depth_msg);
   }
 }
+
+
 
 void SupereightNode::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn) {
 //  ROS_INFO("cam info callback %i", cam_info_ready_);
@@ -196,10 +195,14 @@ void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPt
   pose_tf_msg_.header = pose_msg->header;
   pose_tf_msg_.header.frame_id = frame_id_;
 
+  uint64_t oldest_depth_timestamp;
+  if (!image_queue_.empty()) {
+    oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
+  }
   // insert to ring buffer
   pose_buffer_.put(pose_tf_msg_);
   while (image_queue_.size() > 0
-      && (ros::Time(pose_msg->header.stamp).toNSec() > image_time_stamp_)) {
+      && (ros::Time(pose_msg->header.stamp).toNSec() > oldest_depth_timestamp)) {
     supereight_ros::ImagePose image_pose_msg;
 
     image_pose_msg.image = image_queue_.front();
@@ -207,7 +210,7 @@ void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPt
     geometry_msgs::TransformStamped pre_pose;
     geometry_msgs::TransformStamped post_pose;
 
-    pose_buffer_.get(image_time_stamp_, pre_pose, post_pose);
+    pose_buffer_.get(oldest_depth_timestamp, pre_pose, post_pose);
 
     image_pose_msg.pre_pose = pre_pose;
     image_pose_msg.post_pose = post_pose;
@@ -217,8 +220,8 @@ void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPt
 
     image_queue_.pop_front();
 
-    if (image_queue_.size() > 0)
-      image_time_stamp_ = ros::Time(image_queue_.front().header.stamp).toNSec();
+    if (!image_queue_.empty())
+      oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
   }
 
   //publish the transformed vi_sensor_ground truth
