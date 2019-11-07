@@ -93,12 +93,6 @@ namespace se {
                    const ros::NodeHandle& nh_private);
 
     /**
-     * @brief sets configuration from YAML file to nodehandle
-     * definitions, see supereight/se/config.h
-     */
-    void readConfig(const ros::NodeHandle& nh_private);
-
-    /**
      * @brief access for external packages
      * @return pointer to supereight pipeline
      */
@@ -123,6 +117,12 @@ namespace se {
 
 
   private:
+    /**
+     * @brief sets configuration from YAML file to nodehandle
+     * definitions, see supereight/se/config.h
+     */
+    void readConfig(const ros::NodeHandle& nh_private);
+
     /**
      * @brief Sets up publishing and subscribing, should only be called from
      * constructor
