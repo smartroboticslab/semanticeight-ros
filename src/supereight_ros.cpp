@@ -7,8 +7,12 @@
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 #include <lodepng.h>
-//#include <se/default_parameters.h>
-#include <supereight_ros/supereight_ros.hpp>
+#include "supereight_ros/supereight_ros.hpp"
+#include "supereight_ros/supereight_ros_config.hpp"
+#include "supereight_ros/supereight_utils.hpp"
+#include "supereight_ros/utilities.hpp"
+
+
 
 namespace se {
 

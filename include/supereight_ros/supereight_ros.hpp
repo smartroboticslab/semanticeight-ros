@@ -76,8 +76,6 @@
 // supereight_ros headers
 #include "supereight_ros/ImagePose.h"  //message
 #include "supereight_ros/CircularBuffer.hpp"
-#include "supereight_ros/supereight_utils.hpp"
-#include "supereight_ros/utilities.hpp"
 
 
 
