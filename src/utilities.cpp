@@ -321,5 +321,78 @@ namespace se {
     }
   }
 
+
+
+  float compute_alpha(const int64_t prev_timestamp,
+                      const int64_t query_timestamp,
+                      const int64_t next_timestamp) {
+
+    return static_cast<float>(query_timestamp - prev_timestamp)
+         / static_cast<float>(next_timestamp - prev_timestamp);
+  }
+
+
+
+  Eigen::Vector3f interpolate_position(const Eigen::Vector3f& prev_pos,
+                                       const Eigen::Vector3f& next_pos,
+                                       const float            alpha) {
+
+    return prev_pos + alpha * (next_pos - prev_pos);
+  }
+
+
+
+  Eigen::Quaternionf interpolate_orientation(
+      const Eigen::Quaternionf& prev_orientation,
+      const Eigen::Quaternionf& next_orientation,
+      const float               alpha) {
+
+    return prev_orientation.slerp(alpha, next_orientation);
+  }
+
+
+
+  Eigen::Matrix4f interpolate_pose(
+      const geometry_msgs::TransformStamped& prev_pose,
+      const geometry_msgs::TransformStamped& next_pose,
+      const int64_t                          query_timestamp) {
+
+    const float alpha = compute_alpha(
+        ros::Time(prev_pose.header.stamp).toNSec(),
+        query_timestamp,
+        ros::Time(next_pose.header.stamp).toNSec());
+
+    const Eigen::Vector3f prev_translation(
+        prev_pose.transform.translation.x,
+        prev_pose.transform.translation.y,
+        prev_pose.transform.translation.z);
+    const Eigen::Vector3f next_translation(
+        next_pose.transform.translation.x,
+        next_pose.transform.translation.y,
+        next_pose.transform.translation.z);
+
+    const Eigen::Quaternionf prev_rotation(
+        prev_pose.transform.rotation.w,
+        prev_pose.transform.rotation.x,
+        prev_pose.transform.rotation.y,
+        prev_pose.transform.rotation.z);
+    const Eigen::Quaternionf next_rotation(
+        next_pose.transform.rotation.w,
+        next_pose.transform.rotation.x,
+        next_pose.transform.rotation.y,
+        next_pose.transform.rotation.z);
+
+    const Eigen::Vector3f inter_translation
+        = interpolate_position(prev_translation, next_translation, alpha);
+    const Eigen::Quaternionf inter_rotation
+        = interpolate_orientation(prev_rotation, next_rotation, alpha);
+
+    Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
+    pose.block<3, 1>(0, 3) = inter_translation;
+    pose.block<3, 3>(0, 0) = inter_rotation.toRotationMatrix();
+
+    return pose;
+  }
+
 } // namespace se
 

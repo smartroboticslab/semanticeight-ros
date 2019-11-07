@@ -195,61 +195,6 @@ namespace se {
     //                     vec3i &freed_voxels,
     //                     vec3i &updated_blocks);
 
-    /**
-     * @brief       Calculates the fraction a given sample is located between
-     * the closest pre and post sample
-     *
-     * @param[in]   pre_time_stamp    Closest pre vicon time stamp to image
-     * @param[in]   post_time_stamp   Closest post vicon time stamp to image
-     * @param[in]   img_time_stamp    Image time stamp
-     *
-     * @return      Fraction
-     */
-    double calculateAlpha(const int64_t pre_time_stamp,
-                          const int64_t post_time_stamp,
-                          const int64_t img_time_stamp);
-
-    /**
-     * @brief      Linear 3D interpolation
-     *
-     * @param[in]  pre_vector3D  The pre vector 3D
-     * @param[in]  post_vector3D      The post vector 3D
-     * @param[in]  alpha              Fraction
-     *
-     * @return     Interpolated translation
-     */
-    Eigen::Vector3f interpolateVector(const Eigen::Vector3f &pre_vector3D,
-                                      const Eigen::Vector3f &post_vector3D,
-                                      const double           alpha);
-
-    /**
-     * @brief      Slerp interpolation for quaterniond
-     *
-     * @param[in]  pre_orientation       The previous orientation
-     * @param[in]  post_orientation      The post orientation
-     * @param[in]  alpha                 Fraction
-     *
-     * @return     Interpolated orientation
-     */
-    Eigen::Quaternionf interpolateOrientation(
-        const Eigen::Quaternionf &pre_orientation,
-        const Eigen::Quaternionf &post_orientation,
-        const double              alpha);
-
-    /**
-     * @brief      Interpolation for transformations
-     *
-     * @param[in]  pre_transformation       The previous transformation
-     * @param[in]  post_transformation      The post transformation
-     * @param[in]  alpha                    Fraction
-     *
-     * @return     Interpolated transformation
-     */
-    Eigen::Matrix4f interpolatePose(
-        const geometry_msgs::TransformStamped &pre_transformation,
-        const geometry_msgs::TransformStamped &post_transformation,
-        const int64_t                          img_time_stamp);
-
     /* Taken from https://github.com/ethz-asl/volumetric_mapping */
     std_msgs::ColorRGBA percentToColor(double h);
 

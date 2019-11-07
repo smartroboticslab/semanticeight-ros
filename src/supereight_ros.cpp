@@ -262,9 +262,10 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 //                      16);
 
   timings[1] = std::chrono::steady_clock::now();
-  Eigen::Matrix4f gt_pose = interpolatePose(image_pose_msg->pre_pose,
-                                            image_pose_msg->post_pose,
-                                            ros::Time(image_pose_msg->image.header.stamp).toNSec());
+  const Eigen::Matrix4f gt_pose = interpolate_pose(
+      image_pose_msg->pre_pose,
+      image_pose_msg->post_pose,
+      ros::Time(image_pose_msg->image.header.stamp).toNSec());
 //  myfile<<std::fixed<<gt_pose<<std::endl;
 //  myfile.close();
 
@@ -705,64 +706,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 ////  }
 //};
 
-double SupereightNode::calculateAlpha(const int64_t pre_time_stamp,
-                                         const int64_t post_time_stamp,
-                                         const int64_t img_time_stamp) {
-  double alpha = (double) (img_time_stamp - pre_time_stamp) / (post_time_stamp - pre_time_stamp);
-  return alpha;
-}
 
-Eigen::Vector3f SupereightNode::interpolateVector(
-    const Eigen::Vector3f &pre_vector3D,
-    const Eigen::Vector3f &post_vector3D,
-    const double           alpha) {
-
-  return pre_vector3D + alpha * (post_vector3D - pre_vector3D);
-}
-
-Eigen::Quaternionf SupereightNode::interpolateOrientation(
-    const Eigen::Quaternionf &pre_orientation,
-    const Eigen::Quaternionf &post_orientation,
-    const double              alpha) {
-
-  Eigen::Quaternionf int_orientation = pre_orientation.slerp(alpha, post_orientation);
-  return int_orientation;
-}
-
-Eigen::Matrix4f SupereightNode::interpolatePose(
-    const geometry_msgs::TransformStamped &pre_transformation,
-    const geometry_msgs::TransformStamped &post_transformation,
-    const int64_t                          img_time_stamp) {
-
-  double alpha = calculateAlpha(ros::Time(pre_transformation.header.stamp).toNSec(),
-                                ros::Time(post_transformation.header.stamp).toNSec(),
-                                img_time_stamp);
-
-  Eigen::Vector3f pre_translation(pre_transformation.transform.translation.x,
-                                  pre_transformation.transform.translation.y,
-                                  pre_transformation.transform.translation.z);
-  Eigen::Vector3f post_translation(post_transformation.transform.translation.x,
-                                   post_transformation.transform.translation.y,
-                                   post_transformation.transform.translation.z);
-
-  Eigen::Quaternionf pre_rotation(pre_transformation.transform.rotation.w,
-                                  pre_transformation.transform.rotation.x,
-                                  pre_transformation.transform.rotation.y,
-                                  pre_transformation.transform.rotation.z);
-  Eigen::Quaternionf post_rotation(post_transformation.transform.rotation.w,
-                                   post_transformation.transform.rotation.x,
-                                   post_transformation.transform.rotation.y,
-                                   post_transformation.transform.rotation.z);
-
-  Eigen::Vector3f inter_translation = interpolateVector(pre_translation, post_translation, alpha);
-  Eigen::Quaternionf inter_rotation = interpolateOrientation(pre_rotation, post_rotation, alpha);
-
-  Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-  pose.block<3, 1>(0, 3) = inter_translation;
-  pose.block<3, 3>(0, 0) = inter_rotation.toRotationMatrix();
-
-  return pose;
-}
 
 /* Taken from https://github.com/ethz-asl/volumetric_mapping */
 std_msgs::ColorRGBA SupereightNode::percentToColor(double h) {
