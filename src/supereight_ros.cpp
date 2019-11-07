@@ -170,7 +170,7 @@ void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPt
   pose_tf_msg_.header = pose_msg->header;
   pose_tf_msg_.header.frame_id = frame_id_;
 
-  uint64_t oldest_depth_timestamp;
+  uint64_t oldest_depth_timestamp = -1;
   if (!image_queue_.empty()) {
     oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
   }
