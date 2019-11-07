@@ -16,31 +16,6 @@ namespace se {
 * default value list, same as in config.yaml
 */
 
-#define DEFAULT_ITERATION_COUNT 3
-static const int default_iterations[DEFAULT_ITERATION_COUNT] = {10, 5, 4};
-const int default_compute_size_ratio = 2;
-const int default_tracking_rate = 1;
-const int default_integration_rate = 3;
-const int default_rendering_rate = 4;
-const Eigen::Vector3i default_volume_resolution(256, 256, 256);
-const Eigen::Vector3f default_volume_size(6.f, 6.f, 6.f);
-const Eigen::Vector3f default_initial_pos_factor(0.5f, 0.5f, 0.0f);
-const std::string default_dump_volume_file = "";
-const std::string default_input_file = "";
-const std::string default_log_file = "";
-const std::string default_groundtruth_file = "";
-const Eigen::Matrix4f default_gt_transform = Eigen::Matrix4f::Identity();
-const float default_mu = 0.1f;
-const int default_fps = 0;
-const bool default_blocking_read = false;
-const float default_icp_threshold = 1e-6;
-const bool default_no_gui = false;
-const bool default_render_volume_fullsize = false;
-const bool default_bilateral_filter = false;
-const int default_coloured_voxels = false;
-const int default_multi_resolution = false;
-const bool default_bayesian = false;
-
 std::string sep = "\n----------------------------------------\n";
 SupereightNode::SupereightNode(const ros::NodeHandle &nh, const ros::NodeHandle &nh_private)
     :
