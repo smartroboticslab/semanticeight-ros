@@ -125,59 +125,66 @@ void SupereightNode::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camI
   ROS_INFO("got camera model..");
 }
 
-void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPtr &pose_msg) {
-  Eigen::Quaternionf rot_q(pose_msg->transform.rotation.w,
-                           pose_msg->transform.rotation.x,
-                           pose_msg->transform.rotation.y,
-                           pose_msg->transform.rotation.z);
-  Eigen::Vector3f translation(pose_msg->transform.translation.x,
-                              pose_msg->transform.translation.y,
-                              pose_msg->transform.translation.z);
 
-  geometry_msgs::TransformStamped pose_tf_msg_;
-  Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-  // set Eigen pose from ROS msg
-  pose.block<3, 1>(0, 3) = translation;
-  pose.block<3, 3>(0, 0) = rot_q.toRotationMatrix();
 
-  // world frame to octree frame rotation transformation
-  pose = swapAxes(pose);
+void SupereightNode::poseCallback(
+    const geometry_msgs::TransformStamped::ConstPtr& T_WR_msg) {
 
-  // initialize map from world transformation matrix
-  if (!set_world_to_map_tf_) {
-//    const_translation_ = init_position_octree_;
-//    const_translation_(0) -= translation(0);
-//    const_translation_(1) -= translation(2);
-//    const_translation_(2) -= translation(1);
-//    // x- axis 90, z-axis 90
-//    tf_map_from_world_ << 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-//    tf_map_from_world_.block<3, 1>(0, 3) -= init_position_octree_;
-    set_world_to_map_tf_ = setTFMapfromWorld(translation,
-                                             init_position_octree_,
-                                             const_translation_,
-                                             tf_map_from_world_);
-  }
-  // continuous transformation
-  pose.block<3, 1>(0, 3) -= const_translation_;
-  pose = tf_map_from_world_ * pose;
+  // Convert the message to an Eigen matrix.
+  Eigen::Matrix4d T_WR = Eigen::Matrix4d::Identity();
+  Eigen::Quaterniond q_WR;
+  tf::quaternionMsgToEigen(T_WR_msg->transform.rotation, q_WR);
+  T_WR.topLeftCorner<3, 3>() = q_WR.toRotationMatrix();
+  Eigen::Vector3d t_WR;
+  tf::vectorMsgToEigen(T_WR_msg->transform.translation, t_WR);
+  T_WR.topRightCorner<3, 1>() = t_WR;
 
-  // convert bag to ROS msg
-  tf::StampedTransform tf_pose_msg;
-  rot_q = Eigen::Quaternionf(pose.block<3, 3>(0, 0));
-  translation = pose.block<3, 1>(0, 3);
-  tf::vectorEigenToMsg(translation.cast<double>(), pose_tf_msg_.transform.translation);
-  tf::quaternionEigenToMsg(rot_q.cast<double>(), pose_tf_msg_.transform.rotation);
-  pose_tf_msg_.header = pose_msg->header;
-  pose_tf_msg_.header.frame_id = frame_id_;
+  // Convert from the ROS x forward, z up to the supereight z forward, x right
+  // camera conventions.
+  Eigen::Matrix4d T_RC;
+  T_RC <<  0,  0, 1, 0,
+          -1,  0, 0, 0,
+           0, -1, 0, 0,
+           0,  0, 0, 1;
+  const Eigen::Matrix4d T_WC = T_WR * T_RC;
 
+//  // initialize map from world transformation matrix
+//  if (!set_world_to_map_tf_) {
+////    const_translation_ = init_position_octree_;
+////    const_translation_(0) -= translation(0);
+////    const_translation_(1) -= translation(2);
+////    const_translation_(2) -= translation(1);
+////    // x- axis 90, z-axis 90
+////    tf_map_from_world_ << 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+////    tf_map_from_world_.block<3, 1>(0, 3) -= init_position_octree_;
+//    set_world_to_map_tf_ = setTFMapfromWorld(translation,
+//                                             init_position_octree_,
+//                                             const_translation_,
+//                                             tf_map_from_world_);
+//  }
+//  // continuous transformation
+//  //pose.block<3, 1>(0, 3) -= const_translation_;
+//  //pose = tf_map_from_world_ * pose;
+
+  // Create a ROS message from T_WC and put into the ring buffer.
+  geometry_msgs::TransformStamped T_WC_msg;
+  T_WC_msg.header = T_WR_msg->header;
+  T_WC_msg.header.frame_id = frame_id_;
+  const Eigen::Quaterniond q_WC (T_WC.topLeftCorner<3, 3>());
+  tf::quaternionEigenToMsg(q_WC, T_WC_msg.transform.rotation);
+  const Eigen::Vector3d t_WC = T_WC.topRightCorner<3, 1>();
+  tf::vectorEigenToMsg(t_WC, T_WC_msg.transform.translation);
+  pose_buffer_.put(T_WC_msg);
+
+  // Get the timestamp of the oldest depth image.
   uint64_t oldest_depth_timestamp = -1;
   if (!image_queue_.empty()) {
     oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
   }
-  // insert to ring buffer
-  pose_buffer_.put(pose_tf_msg_);
+
   while (image_queue_.size() > 0
-      && (ros::Time(pose_msg->header.stamp).toNSec() > oldest_depth_timestamp)) {
+      && (ros::Time(T_WR_msg->header.stamp).toNSec() > oldest_depth_timestamp)) {
+
     supereight_ros::ImagePose image_pose_msg;
 
     image_pose_msg.image = image_queue_.front();
@@ -199,6 +206,8 @@ void SupereightNode::poseCallback(const geometry_msgs::TransformStamped::ConstPt
       oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
   }
 }
+
+
 
 void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
   bool tracked = false;

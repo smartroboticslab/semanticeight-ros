@@ -143,9 +143,12 @@ namespace se {
 
     /**
      * @brief adds pose from ground truth file or recorded pose to pose buffer
-     * @param pose_msg
+     * @param T_WR_msg
+     *
+     * The supplied pose is the camera frame expressed in world coordinates.
+     * The camera frame is using the ROS convention of x forward, z up.
      */
-    void poseCallback(const geometry_msgs::TransformStamped::ConstPtr &pose_msg);
+    void poseCallback(const geometry_msgs::TransformStamped::ConstPtr& T_WR_msg);
 
     /**
      * @brief aligns the pose with the image and calls the supereight denseslam
