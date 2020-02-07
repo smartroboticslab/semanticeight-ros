@@ -204,20 +204,23 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   bool tracked = false;
   bool integrated = false;
   bool raycasted = false;
-
-
-
   timings_[0] = std::chrono::steady_clock::now();
+
+
+
+  // Message preprocessing
   to_supereight_depth(image_pose_msg->image, input_depth_.get());
-
-
-
   timings_[1] = std::chrono::steady_clock::now();
+
+
+
+  // Preprocessing
   pipeline_->preprocessing(input_depth_.get(), node_config_.input_size, supereight_config_.bilateral_filter);
-
-
-
   timings_[2] = std::chrono::steady_clock::now();
+
+
+
+  // Tracking
   const Eigen::Vector4f camera = supereight_config_.camera / (supereight_config_.compute_size_ratio);
   if (node_config_.enable_tracking) {
     tracked = pipeline_->tracking(camera,
@@ -242,10 +245,11 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   tf::quaternionEigenToMsg(q_rot.cast<double>(), supereight_pose.pose.orientation);
   // Publish pose estimated by supereight.
   supereight_pose_pub_.publish(supereight_pose);
-
-
-
   timings_[3] = std::chrono::steady_clock::now();
+
+
+
+  // Integration
   // for visualization
   //vec3i occupied_voxels(0);
   //vec3i freed_voxels(0);
@@ -254,7 +258,6 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   //vec3i occlusion_blocks(0);
   //map3i frontier_blocks_map;
   //map3i occlusion_blocks_map;
-
   // Integrate only if tracking was successful or it is one of the
   // first 4 frames.
   if (tracked || frame_ <= 3) {
@@ -270,17 +273,19 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   } else {
     integrated = false;
   }
-
-
-
   timings_[4] = std::chrono::steady_clock::now();
+
+
+
+  // Raycasting
   if (node_config_.enable_tracking || node_config_.enable_rendering) {
     raycasted = pipeline_->raycasting(camera, supereight_config_.mu, frame_);
   }
-
-
-
   timings_[5] = std::chrono::steady_clock::now();
+
+
+
+  // Rendering
   if (node_config_.enable_rendering) {
     pipeline_->renderDepth((unsigned char *) depth_render_.get(), pipeline_->getComputationResolution());
     pipeline_->renderTrack((unsigned char *) track_render_.get(), pipeline_->getComputationResolution());
@@ -291,7 +296,6 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
                             camera,
                             0.75 * supereight_config_.mu);
 
-  // create image
     sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
     createImageMsg(image_pose_msg, depth_render_msg, computation_size_);
     depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
@@ -318,29 +322,28 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
     track_render_pub_.publish(*track_render_msg);
     volume_render_pub_.publish(*volume_render_msg);
   }
-
-
-
-
   timings_[6] = std::chrono::steady_clock::now();
+
+
+
+  // Visualization
   //if (std::is_same<FieldType, OFusion>::value) {
   //  visualizeMapOFusion(updated_blocks, frontier_blocks, frontier_blocks_map, occlusion_blocks);
   //} else if (std::is_same<FieldType, SDF>::value) {
   //  visualizeMapSDF(occupied_voxels, freed_voxels, updated_blocks);
   //}
-
-
-
   timings_[7] = std::chrono::steady_clock::now();
-  ROS_INFO("Frame %d ----------\n", frame_);
-  ROS_INFO("Tracked: %d   Integrated: %d   Raycasted: %d\n",
+
+
+
+  ROS_INFO("-----------------------------------------");
+  ROS_INFO("Frame %d", frame_);
+  ROS_INFO("Tracked: %d   Integrated: %d   Raycasted: %d",
       tracked, integrated, raycasted);
   print_timings(timings_, timing_labels_);
 
 
 
-  //frontier_blocks.clear();
-  //updated_blocks.clear();
   frame_++;
 }
 
