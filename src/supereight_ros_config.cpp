@@ -20,9 +20,6 @@ const Eigen::Vector3i default_volume_resolution(256, 256, 256);
 const Eigen::Vector3f default_volume_size(6.f, 6.f, 6.f);
 const Eigen::Vector3f default_initial_pos_factor(0.5f, 0.5f, 0.0f);
 const std::string default_dump_volume_file = "";
-const std::string default_input_file = "";
-const std::string default_log_file = "";
-const std::string default_groundtruth_file = "";
 const Eigen::Matrix4f default_gt_transform = Eigen::Matrix4f::Identity();
 constexpr float default_mu = 0.1f;
 constexpr int default_fps = 0;
@@ -86,6 +83,12 @@ namespace se {
   Configuration read_supereight_config(const ros::NodeHandle& nh) {
     Configuration config;
 
+    // Initialize unused parameters.
+    config.input_file = "";
+    config.log_file = "";
+    config.groundtruth_file = "";
+
+    // Read the other parameters.
     nh.param<int>("compute_size_ratio",
         config.compute_size_ratio,
         default_compute_size_ratio);
@@ -140,18 +143,6 @@ namespace se {
     nh.param<std::string>("dump_volume_file",
         config.dump_volume_file,
         default_dump_volume_file);
-
-    nh.param<std::string>("input_file",
-        config.input_file,
-        default_input_file);
-
-    nh.param<std::string>("log_file",
-        config.log_file,
-        default_log_file);
-
-    nh.param<std::string>("groundtruth_file",
-        config.groundtruth_file,
-        default_groundtruth_file);
 
     std::vector<float> gt_transform_vector;
     nh.getParam("gt_transform", gt_transform_vector);
@@ -247,12 +238,6 @@ namespace se {
         config.pyramid[2]);
     ROS_INFO("  dump_volume_file:       \"%s\"",
         config.dump_volume_file.c_str());
-    ROS_INFO("  input_file:             \"%s\"",
-        config.input_file.c_str());
-    ROS_INFO("  log_file:               \"%s\"",
-        config.log_file.c_str());
-    ROS_INFO("  groundtruth_file:       \"%s\"",
-        config.groundtruth_file.c_str());
     ROS_INFO("  gt_transform:");
     for (size_t i = 0; i < 4; ++i) {
       ROS_INFO("                          %f %f %f %f",
