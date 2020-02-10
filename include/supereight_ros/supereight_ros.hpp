@@ -92,6 +92,8 @@ namespace se {
     SupereightNode(const ros::NodeHandle& nh,
                    const ros::NodeHandle& nh_private);
 
+    ~SupereightNode();
+
     /**
      * @brief access for external packages
      * @return pointer to supereight pipeline

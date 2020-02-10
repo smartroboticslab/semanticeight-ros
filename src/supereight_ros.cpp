@@ -69,6 +69,14 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
 
 
+SupereightNode::~SupereightNode() {
+  if (!supereight_config_.dump_volume_file.empty()) {
+    pipeline_->dump_mesh(supereight_config_.dump_volume_file.c_str());
+  }
+}
+
+
+
 void SupereightNode::setupRos() {
   // Subscriber
   image_sub_ = nh_.subscribe("/camera/depth_image", 100, &SupereightNode::depthCallback, this);
