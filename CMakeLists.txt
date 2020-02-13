@@ -29,17 +29,14 @@ find_package(supereight REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
-  rosbag
-  message_generation
-  message_filters
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  visualization_msgs
-  image_geometry
-  tf
-  cv_bridge
   eigen_conversions
+  geometry_msgs
+  image_geometry
+  message_filters
+  message_generation
+  sensor_msgs
+  std_msgs
+  visualization_msgs
 )
 
 add_message_files(FILES
@@ -47,9 +44,9 @@ add_message_files(FILES
 )
 
 generate_messages(DEPENDENCIES
-  std_msgs
-  sensor_msgs
   geometry_msgs
+  sensor_msgs
+  std_msgs
   visualization_msgs
 )
 
@@ -73,14 +70,11 @@ catkin_package(
   LIBRARIES ${catkin_LIBRARIES}
   CATKIN_DEPENDS
   roscpp
-  rosbag
   message_runtime
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  tf
-  cv_bridge
   eigen_conversions
+  geometry_msgs
+  sensor_msgs
+  std_msgs
 )
 
 # ------------------------------------------------------------------------------
@@ -118,31 +112,3 @@ target_link_libraries(supereight_ros
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-
-
-#add_dependencies(supereight_ros supereight_ros_generate_messages_cpp)
-#install(TARGETS ${PROJECT_NAME}
-#        RUNTIME DESTINATION bin
-#        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
-#
-#install(DIRECTORY include/supereight_ros/
-#        DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}/supereight_ros/
-#        FILES_MATCHING PATTERN "*.h*"
-#        )
-#
-#
-##############
-### Testing ##
-##############
-## command : catkin run_tests
-## Add gtest based cpp test target and link libraries
-#catkin_add_gtest(supereight_ros-test
-#        test/main.cpp
-#        test/test_example.cpp
-#        test/test_supereight_ros.cpp
-#        )
-#
-#target_compile_definitions(supereight_ros-test PUBLIC ${field_type})
-#target_link_libraries(supereight_ros-test
-#        ${catkin_LIBRARIES} )
-#add_dependencies(supereight_ros-test supereight_ros_generate_messages_cpp)

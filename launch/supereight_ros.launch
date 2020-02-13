@@ -10,10 +10,10 @@
        default="/firefly/vi_sensor/camera_depth/depth/disparity"/>
   <arg name="pose_topic"
        default="/firefly/vi_sensor/ground_truth/transform"/>
+  <arg name="camera_info_topic"
+       default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>
   <arg name="command_prefix"
        default=""/>
-
-  <arg name="camera_info_topic" default="/firefly/vi_sensor/camera_depth/depth/camera_info"/>
 
   <node pkg="supereight_ros" name="supereight"
         type="supereight_ros" clear_params="true" output="screen"

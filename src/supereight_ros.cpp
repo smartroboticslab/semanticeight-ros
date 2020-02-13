@@ -2,22 +2,19 @@
 // Created by anna on 12/04/19.
 //
 
-#include <iostream>
-#include <memory>
-#include <glog/logging.h>
-#include <yaml-cpp/yaml.h>
-#include <lodepng.h>
 #include "supereight_ros/supereight_ros.hpp"
-#include "supereight_ros/supereight_ros_config.hpp"
+
+#include <lodepng.h>
+
+#include <eigen_conversions/eigen_msg.h>
+
+#include <se/config.h>
+
 #include "supereight_ros/utilities.hpp"
 
 
 
 namespace se {
-
-std::string sep = "\n----------------------------------------\n";
-
-
 
 SupereightNode::SupereightNode(const ros::NodeHandle& nh,
                                const ros::NodeHandle& nh_private)

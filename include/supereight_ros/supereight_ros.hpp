@@ -12,77 +12,33 @@
  * octree coordinates is at the point of the volume encoded in init_pose
  */
 
-/**
-* @brief
-* @param
-* @returns
-**/
-
 #ifndef __SUPEREIGHT_ROS_HPP
 #define __SUPEREIGHT_ROS_HPP
 
 #include <chrono>
 #include <cstdint>
-#include <cstring>
-#include <ctime>
-#include <ctime>
-#include <iomanip>
-#include <iostream>
-#include <map>
 #include <memory>
 #include <queue>
-#include <ratio>
-#include <set>
-#include <sstream>
 #include <string>
 #include <vector>
 
-#include <getopt.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <Eigen/Dense>
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
-#include <glog/logging.h>
-
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 #include <ros/ros.h>
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
-#include <std_msgs/String.h>
-#include <cv_bridge/cv_bridge.h>
-#include <message_filters/subscriber.h>
-#include <eigen_conversions/eigen_msg.h>
-#include <image_geometry/pinhole_camera_model.h>
-#include <tf/transform_listener.h>
-#include <tf/LinearMath/Transform.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <sensor_msgs/Image.h>
+#include <image_geometry/pinhole_camera_model.h>
 #include <sensor_msgs/CameraInfo.h>
-#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/Image.h>
 #include <visualization_msgs/MarkerArray.h>
 
-// supereight package
 #include <se/DenseSLAMSystem.h>
-#include <se/config.h>
-#include <se/node_iterator.hpp>
-#include <se/utils/morton_utils.hpp>
 
-// supereight_ros headers
-#include "supereight_ros/ImagePose.h"  //message
+#include "supereight_ros/ImagePose.h"
 #include "supereight_ros/CircularBuffer.hpp"
 #include "supereight_ros/supereight_ros_config.hpp"
 
 
-
-//typedef std::map<int, vec3i, std::less<int>,
-//    Eigen::aligned_allocator<std::pair<const int, vec3i> > >
-//    mapvec3i;
 
 namespace se {
   class SupereightNode {
