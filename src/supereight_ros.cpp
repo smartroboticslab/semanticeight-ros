@@ -232,7 +232,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 
 
   // Preprocessing
-  pipeline_->preprocessing(input_depth_.get(), node_config_.input_size, supereight_config_.bilateral_filter);
+  pipeline_->preprocessDepth(input_depth_.get(), node_config_.input_size, supereight_config_.bilateral_filter);
   timings_[2] = std::chrono::steady_clock::now();
 
 
@@ -240,10 +240,12 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   // Tracking
   const Eigen::Vector4f camera = supereight_config_.camera / (supereight_config_.compute_size_ratio);
   if (node_config_.enable_tracking) {
-    tracked = pipeline_->tracking(camera,
-                                  supereight_config_.icp_threshold,
-                                  supereight_config_.tracking_rate,
-                                  frame_);
+      if (frame_ % supereight_config_.tracking_rate == 0) {
+        tracked = pipeline_->track(camera, supereight_config_.icp_threshold);
+      } else {
+        tracked = false;
+      }
+
   } else {
     const Eigen::Matrix4f external_pose = interpolate_pose(
         image_pose_msg->pre_pose,
@@ -277,16 +279,16 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   //map3i occlusion_blocks_map;
   // Integrate only if tracking was successful or it is one of the
   // first 4 frames.
-  if (tracked || frame_ <= 3) {
-    integrated = pipeline_->integration(camera,
-                                        supereight_config_.integration_rate,
-                                        supereight_config_.mu,
-                                        frame_);
-                                        //&updated_blocks,
-                                        //&frontier_blocks,
-                                        //&occlusion_blocks,
-                                        //frontier_blocks_map,
-                                        //occlusion_blocks_map);
+  if ((tracked && (frame_ % supereight_config_.integration_rate == 0))
+      || frame_ <= 3) {
+    integrated = pipeline_->integrate(camera,
+                                      supereight_config_.mu,
+                                      frame_);
+                                      //&updated_blocks,
+                                      //&frontier_blocks,
+                                      //&occlusion_blocks,
+                                      //frontier_blocks_map,
+                                      //occlusion_blocks_map);
   } else {
     integrated = false;
   }
@@ -295,8 +297,9 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 
 
   // Raycasting
-  if (node_config_.enable_tracking || node_config_.enable_rendering) {
-    raycasted = pipeline_->raycasting(camera, supereight_config_.mu, frame_);
+  if ((node_config_.enable_tracking || node_config_.enable_rendering)
+      && frame_ > 2) {
+    raycasted = pipeline_->raycast(camera, supereight_config_.mu);
   }
   timings_[5] = std::chrono::steady_clock::now();
 
@@ -306,12 +309,12 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   if (node_config_.enable_rendering) {
     pipeline_->renderDepth((unsigned char *) depth_render_.get(), pipeline_->getComputationResolution());
     pipeline_->renderTrack((unsigned char *) track_render_.get(), pipeline_->getComputationResolution());
-    pipeline_->renderVolume((unsigned char *) volume_render_.get(),
-                            pipeline_->getComputationResolution(),
-                            frame_,
-                            supereight_config_.rendering_rate,
-                            camera,
-                            0.75 * supereight_config_.mu);
+    if (frame_ % supereight_config_.rendering_rate == 0) {
+      pipeline_->renderVolume((unsigned char *) volume_render_.get(),
+                              pipeline_->getComputationResolution(),
+                              camera,
+                              0.75 * supereight_config_.mu);
+    }
 
     sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
     createImageMsg(image_pose_msg, depth_render_msg, computation_size_);

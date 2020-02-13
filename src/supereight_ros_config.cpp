@@ -20,7 +20,7 @@ const Eigen::Vector3i default_volume_resolution(256, 256, 256);
 const Eigen::Vector3f default_volume_size(6.f, 6.f, 6.f);
 const Eigen::Vector3f default_initial_pos_factor(0.5f, 0.5f, 0.0f);
 const std::string default_dump_volume_file = "";
-const Eigen::Matrix4f default_gt_transform = Eigen::Matrix4f::Identity();
+const Eigen::Matrix4f default_T_BC = Eigen::Matrix4f::Identity();
 constexpr float default_mu = 0.1f;
 constexpr int default_fps = 0;
 constexpr bool default_blocking_read = false;
@@ -28,9 +28,6 @@ constexpr float default_icp_threshold = 1e-6;
 constexpr bool default_no_gui = false;
 constexpr bool default_render_volume_fullsize = false;
 constexpr bool default_bilateral_filter = false;
-constexpr int default_coloured_voxels = false;
-constexpr int default_multi_resolution = false;
-constexpr bool default_bayesian = false;
 
 
 
@@ -144,16 +141,16 @@ namespace se {
         config.dump_volume_file,
         default_dump_volume_file);
 
-    std::vector<float> gt_transform_vector;
-    nh.getParam("gt_transform", gt_transform_vector);
-    if (nh.getParam("gt_transform", gt_transform_vector)) {
-      for (size_t i = 0; i < std::sqrt(gt_transform_vector.size()); ++i) {
-        for (size_t j = 0; j < std::sqrt(gt_transform_vector.size()); ++j) {
-          config.gt_transform(i, j) = gt_transform_vector[i * 4 + j];
+    std::vector<float> T_BC_vector;
+    nh.getParam("T_BC", T_BC_vector);
+    if (nh.getParam("T_BC", T_BC_vector)) {
+      for (size_t i = 0; i < std::sqrt(T_BC_vector.size()); ++i) {
+        for (size_t j = 0; j < std::sqrt(T_BC_vector.size()); ++j) {
+          config.T_BC(i, j) = T_BC_vector[i * 4 + j];
         }
       }
     } else {
-      config.gt_transform = default_gt_transform;
+      config.T_BC = default_T_BC;
     }
 
     std::vector<float> camera_vector;
@@ -193,18 +190,6 @@ namespace se {
         config.bilateral_filter,
         default_bilateral_filter);
 
-    nh.param<bool>("coloured_voxels",
-        config.coloured_voxels,
-        default_coloured_voxels);
-
-    nh.param<bool>("multi_resolution",
-        config.multi_resolution,
-        default_multi_resolution);
-
-    nh.param<bool>("bayesian",
-        config.bayesian,
-        default_bayesian);
-
     return config;
   }
 
@@ -238,13 +223,13 @@ namespace se {
         config.pyramid[2]);
     ROS_INFO("  dump_volume_file:       \"%s\"",
         config.dump_volume_file.c_str());
-    ROS_INFO("  gt_transform:");
+    ROS_INFO("  T_BC:");
     for (size_t i = 0; i < 4; ++i) {
       ROS_INFO("                          %f %f %f %f",
-          config.gt_transform(4 * i + 0),
-          config.gt_transform(4 * i + 1),
-          config.gt_transform(4 * i + 2),
-          config.gt_transform(4 * i + 3));
+          config.T_BC(4 * i + 0),
+          config.T_BC(4 * i + 1),
+          config.T_BC(4 * i + 2),
+          config.T_BC(4 * i + 3));
     }
     ROS_INFO("  camera:                 %f %f %f %f",
         config.camera.x(),
@@ -267,12 +252,6 @@ namespace se {
         config.render_volume_fullsize);
     ROS_INFO("  bilateral_filter:       %d",
         config.bilateral_filter);
-    ROS_INFO("  coloured_voxels:        %d",
-        config.coloured_voxels);
-    ROS_INFO("  multi_resolution:       %d",
-        config.multi_resolution);
-    ROS_INFO("  bayesian:               %d",
-        config.bayesian);
   }
 
 } // namespace se
