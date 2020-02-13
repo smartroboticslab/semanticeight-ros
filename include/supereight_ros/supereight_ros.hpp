@@ -24,6 +24,8 @@
 
 #include <Eigen/Dense>
 
+#include <boost/circular_buffer.hpp>
+
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -92,6 +94,11 @@ namespace se {
      * @param old_image_msg
      */
     void depthCallback(const sensor_msgs::ImageConstPtr& depth_msg);
+
+    /** Add an RGB image to the queue.
+     * \param[in] rgb_msg Pointer to the RGB image message.
+     */
+    void RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg);
 
     /**
      * @brief reads camera info
@@ -165,6 +172,7 @@ namespace se {
 
     // Subscribers
     ros::Subscriber image_sub_;
+    ros::Subscriber rgb_image_sub_;
     ros::Subscriber pose_sub_;
     ros::Subscriber image_pose_sub_;
     ros::Subscriber cam_info_sub_;
@@ -190,6 +198,8 @@ namespace se {
     */
     CircularBuffer<geometry_msgs::TransformStamped> pose_buffer_;
     std::deque<sensor_msgs::Image> image_queue_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr> rgb_image_buffer_;
+    static constexpr size_t rgb_image_buffer_size_ = 50;
 
     // voxel blockwise update for visualization
     //mapvec3i voxel_block_map_;

@@ -22,6 +22,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       nh_private_(nh_private),
       frame_(0),
       pose_buffer_(500),
+      rgb_image_buffer_(rgb_image_buffer_size_),
       frame_id_("map") {
 
   readConfig(nh_private);
@@ -81,6 +82,9 @@ void SupereightNode::setupRos() {
   image_pose_sub_ =
       nh_.subscribe("/supereight/image_pose", 100, &SupereightNode::fusionCallback, this);
   cam_info_sub_ = nh_.subscribe("/camera/camera_info", 2, &SupereightNode::camInfoCallback, this);
+  if (node_config_.enable_rgb) {
+    rgb_image_sub_ = nh_.subscribe("/camera/rgb_image", 100, &SupereightNode::RGBCallback, this);
+  }
 
 
   // Publisher
@@ -116,6 +120,13 @@ void SupereightNode::depthCallback(
     const sensor_msgs::ImageConstPtr& depth_msg) {
 
   image_queue_.push_back(*depth_msg);
+}
+
+
+
+void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg) {
+  rgb_image_buffer_.push_back(rgb_msg);
+  ROS_DEBUG("RGB image queue size: %lu", rgb_image_buffer_.size());
 }
 
 

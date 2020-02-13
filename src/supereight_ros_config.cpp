@@ -34,6 +34,7 @@ constexpr bool default_bilateral_filter = false;
 // Default supereight node configuration.
 constexpr bool default_enable_tracking = true;
 constexpr bool default_enable_rendering = true;
+constexpr bool default_process_rgb = false;
 const Eigen::Vector2i default_input_size (640, 480);
 
 
@@ -49,6 +50,10 @@ namespace se {
     nh.param<bool>("enable_rendering",
         config.enable_rendering,
         default_enable_rendering);
+
+    nh.param<bool>("enable_rgb",
+        config.enable_rgb,
+        default_process_rgb);
 
     std::vector<int> input_size_vector;
     if (nh.getParam("input_size", input_size_vector)) {
@@ -71,6 +76,8 @@ namespace se {
         config.enable_tracking);
     ROS_INFO("  enable_rendering:       %d",
         config.enable_rendering);
+    ROS_INFO("  enable_rgb:             %d",
+        config.enable_rgb);
     ROS_INFO("  input_size:             %d %d",
         config.input_size.x(), config.input_size.y());
   }

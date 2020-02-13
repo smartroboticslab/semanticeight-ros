@@ -3,6 +3,8 @@ enable_tracking: false
 
 enable_rendering: true
 
+enable_rgb: false
+
 input_size: [640, 480]
 
 
