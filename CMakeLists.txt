@@ -24,6 +24,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(Eigen3 REQUIRED)
 find_package(supereight REQUIRED)
+find_package(Boost REQUIRED)
 
 # Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -91,6 +92,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${SUPEREIGHT_INCLUDE_DIR}
   ${EIGEN3_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
 )
 
 
@@ -109,6 +111,7 @@ target_link_libraries(supereight_ros
   se-denseslam-ofusion
   lodepng
   ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
