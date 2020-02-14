@@ -4,6 +4,9 @@
 
 #include "supereight_ros/supereight_ros.hpp"
 
+#include <functional>
+#include <thread>
+
 #include <lodepng.h>
 
 #include <eigen_conversions/eigen_msg.h>
@@ -21,9 +24,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
     : nh_(nh),
       nh_private_(nh_private),
       frame_(0),
-      pose_buffer_(500),
-      depth_image_buffer_(depth_image_buffer_size_),
-      rgb_image_buffer_(rgb_image_buffer_size_),
+      pose_buffer_(pose_buffer_size_),
+      depth_buffer_(depth_buffer_size_),
+      rgb_buffer_(rgb_buffer_size_),
       frame_id_("map") {
 
   readConfig(nh_private);
@@ -35,6 +38,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   const size_t input_size_pixels
       = node_config_.input_size.x() * node_config_.input_size.y();
   input_depth_ = std::unique_ptr<uint16_t>(new uint16_t[input_size_pixels]);
+  if (node_config_.enable_rgb) {
+    input_rgb_ = std::unique_ptr<uint32_t>(new uint32_t[input_size_pixels]);
+  }
   if (node_config_.enable_rendering) {
     const size_t render_size_pixels = computation_size_.x() * computation_size_.y();
     depth_render_  = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
@@ -77,21 +83,21 @@ SupereightNode::~SupereightNode() {
 
 
 void SupereightNode::setupRos() {
-  // Subscriber
-  image_sub_ = nh_.subscribe("/camera/depth_image", 100, &SupereightNode::depthCallback, this);
-  pose_sub_ = nh_.subscribe("/pose", 1000, &SupereightNode::poseCallback, this);
-  image_pose_sub_ =
-      nh_.subscribe("/supereight/image_pose", 100, &SupereightNode::fusionCallback, this);
-  cam_info_sub_ = nh_.subscribe("/camera/camera_info", 2, &SupereightNode::camInfoCallback, this);
+  // Subscribers
+  pose_sub_ = nh_.subscribe("/pose",
+      pose_buffer_size_, &SupereightNode::poseCallback, this);
+  depth_sub_ = nh_.subscribe("/camera/depth_image",
+      depth_buffer_size_, &SupereightNode::depthCallback, this);
   if (node_config_.enable_rgb) {
-    rgb_image_sub_ = nh_.subscribe("/camera/rgb_image", 100, &SupereightNode::RGBCallback, this);
+    rgb_sub_ = nh_.subscribe("/camera/rgb_image",
+        rgb_buffer_size_, &SupereightNode::RGBCallback, this);
   }
+  cam_info_sub_ = nh_.subscribe("/camera/camera_info",
+      2, &SupereightNode::camInfoCallback, this);
 
 
-  // Publisher
-  image_pose_pub_ = nh_.advertise<supereight_ros::ImagePose>("/supereight/image_pose", 1000);
-  supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", 1000);
-
+  // Publishers
+  supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", pose_buffer_size_);
   if (node_config_.enable_rendering) {
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
     volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
@@ -99,10 +105,10 @@ void SupereightNode::setupRos() {
   }
 
   // Visualization
-  map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
-  block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
-  boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
-  frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
+  //map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
+  //block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
+  //boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
+  //frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
 }
 
 
@@ -117,17 +123,20 @@ void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
 
 
 
-void SupereightNode::depthCallback(
-    const sensor_msgs::ImageConstPtr& depth_msg) {
-
-  depth_image_buffer_.push_back(depth_msg);
+void SupereightNode::depthCallback(const sensor_msgs::ImageConstPtr& depth_msg) {
+  const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
+  depth_buffer_.push_back(depth_msg);
+  ROS_DEBUG("Depth image buffer: %lu/%lu",
+      depth_buffer_.size(), depth_buffer_.capacity());
 }
 
 
 
 void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg) {
-  rgb_image_buffer_.push_back(rgb_msg);
-  ROS_DEBUG("RGB image queue size: %lu", rgb_image_buffer_.size());
+  const std::lock_guard<std::mutex> rgb_lock(rgb_buffer_mutex_);
+  rgb_buffer_.push_back(rgb_msg);
+  ROS_DEBUG("RGB image buffer:   %lu/%lu",
+      rgb_buffer_.size(), rgb_buffer_.capacity());
 }
 
 
@@ -165,25 +174,7 @@ void SupereightNode::poseCallback(
            0,  0, 0, 1;
   const Eigen::Matrix4d T_WC = T_WR * T_RC;
 
-//  // initialize map from world transformation matrix
-//  if (!set_world_to_map_tf_) {
-////    const_translation_ = init_position_octree_;
-////    const_translation_(0) -= translation(0);
-////    const_translation_(1) -= translation(2);
-////    const_translation_(2) -= translation(1);
-////    // x- axis 90, z-axis 90
-////    tf_map_from_world_ << 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-////    tf_map_from_world_.block<3, 1>(0, 3) -= init_position_octree_;
-//    set_world_to_map_tf_ = setTFMapfromWorld(translation,
-//                                             init_position_octree_,
-//                                             const_translation_,
-//                                             tf_map_from_world_);
-//  }
-//  // continuous transformation
-//  //pose.block<3, 1>(0, 3) -= const_translation_;
-//  //pose = tf_map_from_world_ * pose;
-
-  // Create a ROS message from T_WC and put into the ring buffer.
+  // Create a ROS message from T_WC.
   geometry_msgs::TransformStamped T_WC_msg;
   T_WC_msg.header = T_WR_msg->header;
   T_WC_msg.header.frame_id = frame_id_;
@@ -191,62 +182,119 @@ void SupereightNode::poseCallback(
   tf::quaternionEigenToMsg(q_WC, T_WC_msg.transform.rotation);
   const Eigen::Vector3d t_WC = T_WC.topRightCorner<3, 1>();
   tf::vectorEigenToMsg(t_WC, T_WC_msg.transform.translation);
-  pose_buffer_.put(T_WC_msg);
 
-  // Get the timestamp of the oldest depth image.
-  uint64_t oldest_depth_timestamp = -1;
-  if (!depth_image_buffer_.empty()) {
-    oldest_depth_timestamp = ros::Time(depth_image_buffer_.front()->header.stamp).toNSec();
-  }
+  // Put it into the buffer.
+  const std::lock_guard<std::mutex> pose_lock(pose_buffer_mutex_);
+  pose_buffer_.push_back(T_WC_msg);
+  ROS_DEBUG("Pose buffer:        %lu/%lu",
+      pose_buffer_.size(), pose_buffer_.capacity());
 
-  while (depth_image_buffer_.size() > 0
-      && (ros::Time(T_WR_msg->header.stamp).toNSec() > oldest_depth_timestamp)) {
-
-    supereight_ros::ImagePose image_pose_msg;
-
-    image_pose_msg.image = *(depth_image_buffer_.front());
-
-    geometry_msgs::TransformStamped pre_pose;
-    geometry_msgs::TransformStamped post_pose;
-
-    pose_buffer_.get(oldest_depth_timestamp, pre_pose, post_pose);
-
-    image_pose_msg.pre_pose = pre_pose;
-    image_pose_msg.post_pose = post_pose;
-
-    // fusion callback
-    image_pose_pub_.publish(image_pose_msg);
-
-    depth_image_buffer_.pop_front();
-
-    if (!depth_image_buffer_.empty())
-      oldest_depth_timestamp = ros::Time(depth_image_buffer_.front()->header.stamp).toNSec();
-  }
+  std::thread fusion_thread (std::bind(&SupereightNode::fusionCallback, this));
+  fusion_thread.detach();
 }
 
 
 
-void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg) {
-  bool tracked = false;
-  bool integrated = false;
-  bool raycasted = false;
+void SupereightNode::fusionCallback() {
+  // fusionCallback() should only be run by a single thread at a time.
+  const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
+
   timings_[0] = std::chrono::steady_clock::now();
 
 
 
-  // Message preprocessing
-  to_supereight_depth(image_pose_msg->image, input_depth_.get());
+  // Message association
+  // Depth
+  sensor_msgs::ImageConstPtr current_depth_msg;
+  uint64_t depth_timestamp;
+  {
+    const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
+    if (depth_buffer_.empty()) {
+      ROS_DEBUG("Aborted fusion: depth buffer empty");
+      return;
+    } else {
+      current_depth_msg = depth_buffer_.front();
+      depth_timestamp = ros::Time(current_depth_msg->header.stamp).toNSec();
+    }
+  }
+
+  // RGB
+  sensor_msgs::ImageConstPtr current_rgb_msg;
+  {
+    if (node_config_.enable_rgb) {
+      const std::lock_guard<std::mutex> rgb_lock(rgb_buffer_mutex_);
+      if (rgb_buffer_.empty()) {
+        ROS_DEBUG("Aborted fusion: RGB buffer empty");
+        return;
+      } else {
+        // TODO find matching RGB image, return if none found.
+      }
+    }
+  }
+
+  // Pose
+  Eigen::Matrix4f external_pose;
+  {
+    if (!node_config_.enable_tracking) {
+      const std::lock_guard<std::mutex> pose_lock(pose_buffer_mutex_);
+      if (pose_buffer_.empty()) {
+        // Clear the depth and RGB buffers if no poses have arrived yet. These
+        // images will never be associated to poses.
+        depth_buffer_.clear();
+        rgb_buffer_.clear(); // OK to call even when RGB images are not used
+        ROS_DEBUG("Aborted fusion: pose buffer empty");
+        return;
+      } else {
+        // Find the two closest poses and interpolate to the depth timestamp.
+        geometry_msgs::TransformStamped prev_pose;
+        geometry_msgs::TransformStamped next_pose;
+        const InterpResult result = get_surrounding_poses(
+            pose_buffer_, depth_timestamp, prev_pose, next_pose);
+        if (result == InterpResult::query_smaller) {
+          // Remove the depth image, it will never be matched to poses.
+          const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
+          depth_buffer_.pop_front();
+          ROS_DEBUG("Aborted fusion: query smaller than all poses");
+          return;
+        } else if (result == InterpResult::query_greater) {
+          // Remove the first poses, they will never be matched to depth images.
+          pose_buffer_.erase_begin(pose_buffer_.size() - 1);
+          ROS_DEBUG("Aborted fusion: query greater than all poses");
+          return;
+        }
+
+        // Interpolate to associate a pose to the depth image.
+        external_pose = interpolate_pose(prev_pose, next_pose, depth_timestamp);
+      }
+    }
+  }
+
+  // The currect depth image is going to be integrated, remove it from the
+  // buffer to avoid integrating it again.
+  {
+    const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
+    depth_buffer_.pop_front();
+  }
   timings_[1] = std::chrono::steady_clock::now();
 
 
 
   // Preprocessing
-  pipeline_->preprocessDepth(input_depth_.get(), node_config_.input_size, supereight_config_.bilateral_filter);
+  // Copy the depth and RGB images into the buffers used by supereight.
+  to_supereight_depth(*current_depth_msg, input_depth_.get());
+  // TODO copy RGB
+  pipeline_->preprocessDepth(input_depth_.get(), node_config_.input_size,
+      supereight_config_.bilateral_filter);
+  if (node_config_.enable_rgb) {
+    const uint8_t* rgb_ptr = reinterpret_cast<const uint8_t*>(input_rgb_.get());
+    pipeline_->preprocessColor(rgb_ptr, node_config_.input_size);
+  }
   timings_[2] = std::chrono::steady_clock::now();
 
 
 
   // Tracking
+  bool tracked = false;
   const Eigen::Vector4f camera = supereight_config_.camera / (supereight_config_.compute_size_ratio);
   if (node_config_.enable_tracking) {
       if (frame_ % supereight_config_.tracking_rate == 0) {
@@ -256,17 +304,13 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
       }
 
   } else {
-    const Eigen::Matrix4f external_pose = interpolate_pose(
-        image_pose_msg->pre_pose,
-        image_pose_msg->post_pose,
-        ros::Time(image_pose_msg->image.header.stamp).toNSec());
     pipeline_->setPose(external_pose);
     tracked = true;
   }
 
   const Eigen::Matrix4f tracked_pose = pipeline_->getPose();
   geometry_msgs::PoseStamped supereight_pose;
-  supereight_pose.header = image_pose_msg->image.header;
+  supereight_pose.header = current_depth_msg->header;
   supereight_pose.header.frame_id = frame_id_;
   tf::pointEigenToMsg(tracked_pose.block<3, 1>(0, 3).cast<double>(), supereight_pose.pose.position);
   Eigen::Quaternionf q_rot(tracked_pose.block<3, 3>(0, 0));
@@ -288,6 +332,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
   //map3i occlusion_blocks_map;
   // Integrate only if tracking was successful or it is one of the
   // first 4 frames.
+  bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0))
       || frame_ <= 3) {
     integrated = pipeline_->integrate(camera,
@@ -306,6 +351,7 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
 
 
   // Raycasting
+  bool raycasted = false;
   if ((node_config_.enable_tracking || node_config_.enable_rendering)
       && frame_ > 2) {
     raycasted = pipeline_->raycast(camera, supereight_config_.mu);
@@ -326,21 +372,21 @@ void SupereightNode::fusionCallback(const supereight_ros::ImagePose::ConstPtr &i
     }
 
     sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
-    createImageMsg(image_pose_msg, depth_render_msg, computation_size_);
+    createImageMsg(current_depth_msg, depth_render_msg, computation_size_);
     depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
     depth_render_msg->is_bigendian = 0;
     memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_.get(), depth_render_msg->width
         * depth_render_msg->height * sizeof(float));
 
     sensor_msgs::ImagePtr track_render_msg(new sensor_msgs::Image());
-    createImageMsg(image_pose_msg, track_render_msg, computation_size_);
+    createImageMsg(current_depth_msg, track_render_msg, computation_size_);
     track_render_msg->encoding = "rgba8"; // rgba8 doesn't work
     track_render_msg->is_bigendian = 0;
     memcpy((void *) track_render_msg->data.data(), (void *) track_render_.get(), track_render_msg->width
         * track_render_msg->height * sizeof(float));
 
     sensor_msgs::ImagePtr volume_render_msg(new sensor_msgs::Image());
-    createImageMsg(image_pose_msg, volume_render_msg, computation_size_);
+    createImageMsg(current_depth_msg, volume_render_msg, computation_size_);
     volume_render_msg->encoding = "rgba8"; // rgba8 doesn't work
     volume_render_msg->is_bigendian = 0;
     memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_.get(), volume_render_msg->width

@@ -12,14 +12,38 @@
 
 #include <Eigen/Dense>
 
+#include <boost/circular_buffer.hpp>
+
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/TransformStamped.h>
-
-#include "supereight_ros/ImagePose.h"
 
 
 
 namespace se {
+  /**
+   * @brief The possible return values of se::get_surrounding_poses().
+   */
+  enum InterpResult {
+    /**
+     * @brief The interpolation was successful.
+     * This is also the case when a pose with the exact same timestamp as the
+     * query is found, in which case no interpolation is needed.
+     */
+    ok            = 0,
+    /**
+     * @brief The query timestamp is smaller than all the pose timestamps.
+     * No interpolation could be performed.
+     */
+    query_smaller = 1,
+    /**
+     * @brief The query timestamp is great than all the pose timestamps.
+     * No interpolation could be performed.
+     */
+    query_greater = 2,
+  };
+
+
+
   /**
    * @brief Convert the input depth image into the format required by
    * supereight and copy it into the output depth buffer.
@@ -35,9 +59,9 @@ namespace se {
    * @param new_image_msg
    * @param image_size
    */
-  void createImageMsg(const supereight_ros::ImagePose::ConstPtr& old_image_msg,
-                      sensor_msgs::ImagePtr&                     new_image_msg,
-                      Eigen::Vector2i&                           image_size);
+  void createImageMsg(const sensor_msgs::ImageConstPtr& old_image_msg,
+                      sensor_msgs::ImagePtr&            new_image_msg,
+                      Eigen::Vector2i&                  image_size);
 
 
 
@@ -114,6 +138,27 @@ namespace se {
   void print_timings(
       const std::vector<std::chrono::time_point<std::chrono::steady_clock> >& timings,
       const std::vector<std::string>& labels);
+
+
+
+  /**
+   * @brief Find the two closest poses whose timestamps are before and after the
+   * query timestamp.
+   *
+   * @param[in]  buffer          The circular buffer containing all the poses.
+   * @param[in]  query_timestamp The timestamp to look for.
+   * @param[out] prev_pose       The pose whose timestamp is exactly before the
+   *                             query timestamp.
+   * @param[out] next_pose       The pose whose timestamp is exactly after the
+   *                             query timestamp.
+   *
+   * @return An se::InterpResult. See its documentation for details.
+   */
+  InterpResult get_surrounding_poses(
+      const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
+      const uint64_t                                                 query_timestamp,
+      geometry_msgs::TransformStamped&                               prev_pose,
+      geometry_msgs::TransformStamped&                               next_pose);
 
 } // namespace se
 

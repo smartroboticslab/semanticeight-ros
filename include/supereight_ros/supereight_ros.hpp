@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <vector>
@@ -36,8 +37,6 @@
 
 #include <se/DenseSLAMSystem.h>
 
-#include "supereight_ros/ImagePose.h"
-#include "supereight_ros/CircularBuffer.hpp"
 #include "supereight_ros/supereight_ros_config.hpp"
 
 
@@ -118,9 +117,8 @@ namespace se {
     /**
      * @brief aligns the pose with the image and calls the supereight denseslam
      * pipeline
-     * @param image_pose_msg
      */
-    void fusionCallback(const supereight_ros::ImagePose::ConstPtr &image_pose_msg);
+    void fusionCallback();
 
     /**
      * @brief loads the occpuancy map and publishs it to a ros topic
@@ -161,6 +159,7 @@ namespace se {
 
     // Image buffers
     std::unique_ptr<uint16_t> input_depth_;
+    std::unique_ptr<uint32_t> input_rgb_;
     std::unique_ptr<uint32_t> depth_render_;
     std::unique_ptr<uint32_t> track_render_;
     std::unique_ptr<uint32_t> volume_render_;
@@ -171,14 +170,12 @@ namespace se {
     bool cam_info_ready_ = false;
 
     // Subscribers
-    ros::Subscriber image_sub_;
-    ros::Subscriber rgb_image_sub_;
     ros::Subscriber pose_sub_;
-    ros::Subscriber image_pose_sub_;
+    ros::Subscriber depth_sub_;
+    ros::Subscriber rgb_sub_;
     ros::Subscriber cam_info_sub_;
 
     // Publishers
-    ros::Publisher image_pose_pub_;
     ros::Publisher supereight_pose_pub_;
 
     // Render publishers
@@ -192,15 +189,16 @@ namespace se {
     ros::Publisher boundary_marker_pub_;
     ros::Publisher frontier_marker_pub_;
 
-    /**
-    * buffer and quque for incoming data streams, in case the matching can't
-    * be immediately done.
-    */
-    CircularBuffer<geometry_msgs::TransformStamped> pose_buffer_;
-    boost::circular_buffer<sensor_msgs::ImageConstPtr> depth_image_buffer_;
-    static constexpr size_t depth_image_buffer_size_ = 50;
-    boost::circular_buffer<sensor_msgs::ImageConstPtr> rgb_image_buffer_;
-    static constexpr size_t rgb_image_buffer_size_ = 50;
+    // Circular buffers for incoming messages
+    boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr>      depth_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr>      rgb_buffer_;
+    static constexpr size_t pose_buffer_size_  = 1000;
+    static constexpr size_t depth_buffer_size_ = 100;
+    static constexpr size_t rgb_buffer_size_   = 100;
+    std::mutex pose_buffer_mutex_;
+    std::mutex depth_buffer_mutex_;
+    std::mutex rgb_buffer_mutex_;
 
     // voxel blockwise update for visualization
     //mapvec3i voxel_block_map_;
@@ -209,6 +207,8 @@ namespace se {
     //mapvec3i occlusion_voxel_map_;
     // block based visualization
     //bool pub_map_update_ = false;
+
+    std::mutex fusion_mutex_;
 
     /**
      * Global/map coordinate frame. Will always look up TF transforms to this

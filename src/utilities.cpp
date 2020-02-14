@@ -48,11 +48,11 @@ namespace se {
 
 
 
-  void createImageMsg(const supereight_ros::ImagePose::ConstPtr& old_image_msg,
-                      sensor_msgs::ImagePtr&                     new_image_msg,
-                      Eigen::Vector2i&                           image_size) {
+  void createImageMsg(const sensor_msgs::ImageConstPtr& old_image_msg,
+                      sensor_msgs::ImagePtr&            new_image_msg,
+                      Eigen::Vector2i&                  image_size) {
 
-    new_image_msg->header = old_image_msg->image.header;
+    new_image_msg->header = old_image_msg->header;
     new_image_msg->height = image_size.y();
     new_image_msg->width  = image_size.x();
     new_image_msg->step   = sizeof(float) * image_size.x(); //sizeof(float)=4 // TODO fix this hack.
@@ -156,6 +156,40 @@ namespace se {
     const double total_t
         = std::chrono::duration<double>(timings[timings.size()-1] - timings[0]).count();
     ROS_INFO("Total                     %.5f s", total_t);
+  }
+
+
+
+  InterpResult get_surrounding_poses(
+      const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
+      const uint64_t                                                 query_timestamp,
+      geometry_msgs::TransformStamped&                               prev_pose,
+      geometry_msgs::TransformStamped&                               next_pose) {
+
+    for (size_t i = 0; i < buffer.size(); ++i) {
+      const uint64_t pose_timestamp = ros::Time(buffer[i].header.stamp).toNSec();
+
+      if (pose_timestamp == query_timestamp) {
+        // Found an exact timestamp.
+        prev_pose = buffer[i];
+        next_pose = buffer[i];
+        return InterpResult::ok;
+
+      } else if (pose_timestamp > query_timestamp) {
+        if (i > 0) {
+          // Found previous and next poses.
+          prev_pose = buffer[i - 1];
+          next_pose = buffer[i];
+          return InterpResult::ok;
+        } else {
+          // The query_timestamp is smaller than all the pose timestamps.
+          return InterpResult::query_smaller;
+        }
+      }
+    }
+
+    // The query_timestamp is greater than all the pose timestamps.
+    return InterpResult::query_greater;
   }
 
 } // namespace se

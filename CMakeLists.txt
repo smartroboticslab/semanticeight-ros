@@ -40,10 +40,6 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-add_message_files(FILES
-  ImagePose.msg
-)
-
 generate_messages(DEPENDENCIES
   geometry_msgs
   sensor_msgs
