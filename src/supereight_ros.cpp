@@ -22,6 +22,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       nh_private_(nh_private),
       frame_(0),
       pose_buffer_(500),
+      depth_image_buffer_(depth_image_buffer_size_),
       rgb_image_buffer_(rgb_image_buffer_size_),
       frame_id_("map") {
 
@@ -119,7 +120,7 @@ void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
 void SupereightNode::depthCallback(
     const sensor_msgs::ImageConstPtr& depth_msg) {
 
-  image_queue_.push_back(*depth_msg);
+  depth_image_buffer_.push_back(depth_msg);
 }
 
 
@@ -194,16 +195,16 @@ void SupereightNode::poseCallback(
 
   // Get the timestamp of the oldest depth image.
   uint64_t oldest_depth_timestamp = -1;
-  if (!image_queue_.empty()) {
-    oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
+  if (!depth_image_buffer_.empty()) {
+    oldest_depth_timestamp = ros::Time(depth_image_buffer_.front()->header.stamp).toNSec();
   }
 
-  while (image_queue_.size() > 0
+  while (depth_image_buffer_.size() > 0
       && (ros::Time(T_WR_msg->header.stamp).toNSec() > oldest_depth_timestamp)) {
 
     supereight_ros::ImagePose image_pose_msg;
 
-    image_pose_msg.image = image_queue_.front();
+    image_pose_msg.image = *(depth_image_buffer_.front());
 
     geometry_msgs::TransformStamped pre_pose;
     geometry_msgs::TransformStamped post_pose;
@@ -216,10 +217,10 @@ void SupereightNode::poseCallback(
     // fusion callback
     image_pose_pub_.publish(image_pose_msg);
 
-    image_queue_.pop_front();
+    depth_image_buffer_.pop_front();
 
-    if (!image_queue_.empty())
-      oldest_depth_timestamp = ros::Time(image_queue_.front().header.stamp).toNSec();
+    if (!depth_image_buffer_.empty())
+      oldest_depth_timestamp = ros::Time(depth_image_buffer_.front()->header.stamp).toNSec();
   }
 }
 

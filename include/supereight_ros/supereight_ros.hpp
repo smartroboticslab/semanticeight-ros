@@ -197,7 +197,8 @@ namespace se {
     * be immediately done.
     */
     CircularBuffer<geometry_msgs::TransformStamped> pose_buffer_;
-    std::deque<sensor_msgs::Image> image_queue_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr> depth_image_buffer_;
+    static constexpr size_t depth_image_buffer_size_ = 50;
     boost::circular_buffer<sensor_msgs::ImageConstPtr> rgb_image_buffer_;
     static constexpr size_t rgb_image_buffer_size_ = 50;
 
