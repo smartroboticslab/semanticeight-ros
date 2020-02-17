@@ -70,16 +70,6 @@ namespace se {
 
 
 
-  Eigen::Matrix4f swapAxes(const Eigen::Matrix4f& input) {
-    Eigen::Matrix4f output = input;
-    output.block<3, 1>(0, 0) = -input.block<3, 1>(0, 1);
-    output.block<3, 1>(0, 1) = -input.block<3, 1>(0, 2);
-    output.block<3, 1>(0, 2) =  input.block<3, 1>(0, 0);
-    return output;
-  }
-
-
-
   float compute_alpha(const int64_t prev_timestamp,
                       const int64_t query_timestamp,
                       const int64_t next_timestamp) {

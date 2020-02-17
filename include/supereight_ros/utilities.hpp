@@ -72,15 +72,6 @@ namespace se {
 
 
   /**
-   * @brief swaps the rotation axis to convert the world frame to octree frame
-   * @param[in] camera pose in world frame
-   * @return rotated pose
-   */
-  Eigen::Matrix4f swapAxes(const Eigen::Matrix4f& input);
-
-
-
-  /**
    * @brief       Calculates the fraction a given timestamp is located between
    * the closest previous and next timestamp
    *
