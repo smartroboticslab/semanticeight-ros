@@ -33,15 +33,15 @@ namespace se {
         const float depth_mm = 1000.f * input_ptr[i];
         // Test whether the depth value is NaN or if it would cause an overflow
         // in a uint16_t. In that case store an invalid depth value.
-        if (std::isnan(depth_mm) || (depth_mm > (1 << 16) - 1)) {
+        if (std::isnan(depth_mm) || (depth_mm > UINT16_MAX)) {
           output_depth[i] = 0;
         } else {
           output_depth[i] = static_cast<uint16_t>(depth_mm);
         }
       }
-
     } else {
-      ROS_FATAL_STREAM("Invalid input depth format: " << input_depth.encoding);
+      ROS_FATAL("Invalid input depth format %s, expected 16UC1 or 32FC1",
+          input_depth.encoding);
       abort();
     }
   }

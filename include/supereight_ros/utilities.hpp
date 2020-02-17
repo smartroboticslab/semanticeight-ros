@@ -45,8 +45,12 @@ namespace se {
 
 
   /**
-   * @brief Convert the input depth image into the format required by
-   * supereight and copy it into the output depth buffer.
+   * @brief Copy the depth image message into the supereight buffer.
+   * If needed, the input depth image is converted into uint16_t containing
+   * millimiters.
+   *
+   * @param[in]  input_depth  The depth message to copy.
+   * @param[out] output_depth The destination buffer.
    */
   void to_supereight_depth(const sensor_msgs::Image& input_depth,
                            uint16_t*                 output_depth);
