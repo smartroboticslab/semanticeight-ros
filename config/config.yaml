@@ -7,6 +7,12 @@ enable_rgb: false
 
 input_size: [640, 480]
 
+pose_buffer_size: 600
+
+depth_buffer_size: 60
+
+rgb_buffer_size: 60
+
 
 
 # Supereight settings

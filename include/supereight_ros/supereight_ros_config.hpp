@@ -19,6 +19,9 @@ namespace se {
     bool enable_rendering;
     bool enable_rgb;
     Eigen::Vector2i input_size;
+    int pose_buffer_size;
+    int depth_buffer_size;
+    int rgb_buffer_size;
   };
 
 

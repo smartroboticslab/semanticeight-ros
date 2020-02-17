@@ -24,9 +24,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
     : nh_(nh),
       nh_private_(nh_private),
       frame_(0),
-      pose_buffer_(pose_buffer_size_),
-      depth_buffer_(depth_buffer_size_),
-      rgb_buffer_(rgb_buffer_size_),
       frame_id_("map") {
 
   readConfig(nh_private);
@@ -69,6 +66,11 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
                     "Rendering",
                     "Visualization"};
 
+  // Allocate message circular buffers.
+  pose_buffer_.set_capacity(node_config_.pose_buffer_size);
+  depth_buffer_.set_capacity(node_config_.depth_buffer_size);
+  rgb_buffer_.set_capacity(node_config_.rgb_buffer_size);
+
   setupRos();
 }
 
@@ -85,19 +87,19 @@ SupereightNode::~SupereightNode() {
 void SupereightNode::setupRos() {
   // Subscribers
   pose_sub_ = nh_.subscribe("/pose",
-      pose_buffer_size_, &SupereightNode::poseCallback, this);
+      node_config_.pose_buffer_size, &SupereightNode::poseCallback, this);
   depth_sub_ = nh_.subscribe("/camera/depth_image",
-      depth_buffer_size_, &SupereightNode::depthCallback, this);
+      node_config_.depth_buffer_size, &SupereightNode::depthCallback, this);
   if (node_config_.enable_rgb) {
     rgb_sub_ = nh_.subscribe("/camera/rgb_image",
-        rgb_buffer_size_, &SupereightNode::RGBCallback, this);
+        node_config_.rgb_buffer_size, &SupereightNode::RGBCallback, this);
   }
   cam_info_sub_ = nh_.subscribe("/camera/camera_info",
       2, &SupereightNode::camInfoCallback, this);
 
 
   // Publishers
-  supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", pose_buffer_size_);
+  supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", node_config_.pose_buffer_size);
   if (node_config_.enable_rendering) {
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
     volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);

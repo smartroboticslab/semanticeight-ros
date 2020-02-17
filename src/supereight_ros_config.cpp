@@ -36,6 +36,9 @@ constexpr bool default_enable_tracking = true;
 constexpr bool default_enable_rendering = true;
 constexpr bool default_process_rgb = false;
 const Eigen::Vector2i default_input_size (640, 480);
+constexpr int default_pose_buffer_size = 600;
+constexpr int default_depth_buffer_size = 60;
+constexpr int default_rgb_buffer_size = 60;
 
 
 
@@ -64,6 +67,17 @@ namespace se {
       config.input_size = default_input_size;
     }
 
+    nh.param<int>("pose_buffer_size",
+        config.pose_buffer_size,
+        default_pose_buffer_size);
+
+    nh.param<int>("depth_buffer_size",
+        config.depth_buffer_size,
+        default_depth_buffer_size);
+
+    nh.param<int>("rgb_buffer_size",
+        config.rgb_buffer_size,
+        default_rgb_buffer_size);
 
     return config;
   }
@@ -80,6 +94,12 @@ namespace se {
         config.enable_rgb);
     ROS_INFO("  input_size:             %d %d",
         config.input_size.x(), config.input_size.y());
+    ROS_INFO("  pose_buffer_size:       %lu",
+        config.pose_buffer_size);
+    ROS_INFO("  depth_buffer_size:      %lu",
+        config.depth_buffer_size);
+    ROS_INFO("  rgb_buffer_size:        %lu",
+        config.rgb_buffer_size);
   }
 
 
