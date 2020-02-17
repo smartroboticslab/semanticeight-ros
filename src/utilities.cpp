@@ -48,15 +48,24 @@ namespace se {
 
 
 
-  void createImageMsg(const sensor_msgs::ImageConstPtr& old_image_msg,
-                      sensor_msgs::ImagePtr&            new_image_msg,
-                      Eigen::Vector2i&                  image_size) {
+  sensor_msgs::Image msg_from_RGB_image(
+      const uint32_t*                   image_data,
+      const Eigen::Vector2i&            image_size,
+      const sensor_msgs::ImageConstPtr& header_source) {
 
-    new_image_msg->header = old_image_msg->header;
-    new_image_msg->height = image_size.y();
-    new_image_msg->width  = image_size.x();
-    new_image_msg->step   = sizeof(float) * image_size.x(); //sizeof(float)=4 // TODO fix this hack.
-    new_image_msg->data   = std::vector<uint8_t>(image_size.x() * image_size.y() * sizeof(float));
+    const size_t num_bytes = image_size.x() * image_size.y() * sizeof(uint32_t);
+    sensor_msgs::Image image;
+
+    image.header       = header_source->header;
+    image.height       = image_size.y();
+    image.width        = image_size.x();
+    image.encoding     = "rgba8";
+    image.is_bigendian = 0;
+    image.step         = sizeof(uint32_t) * image_size.x();
+    image.data         = std::vector<uint8_t>(num_bytes);
+    memcpy(image.data.data(), image_data, num_bytes);
+
+    return image;
   }
 
 

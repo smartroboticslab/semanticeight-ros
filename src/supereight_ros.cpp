@@ -362,40 +362,26 @@ void SupereightNode::fusionCallback() {
 
   // Rendering
   if (node_config_.enable_rendering) {
-    pipeline_->renderDepth((unsigned char *) depth_render_.get(), pipeline_->getComputationResolution());
-    pipeline_->renderTrack((unsigned char *) track_render_.get(), pipeline_->getComputationResolution());
+    pipeline_->renderDepth(
+        (unsigned char*) depth_render_.get(), computation_size_);
+    pipeline_->renderTrack(
+        (unsigned char*) track_render_.get(), computation_size_);
     if (frame_ % supereight_config_.rendering_rate == 0) {
-      pipeline_->renderVolume((unsigned char *) volume_render_.get(),
-                              pipeline_->getComputationResolution(),
-                              camera,
-                              0.75 * supereight_config_.mu);
+      pipeline_->renderVolume(
+          (unsigned char*) volume_render_.get(), computation_size_,
+          camera, 0.75 * supereight_config_.mu);
     }
 
-    sensor_msgs::ImagePtr depth_render_msg(new sensor_msgs::Image());
-    createImageMsg(current_depth_msg, depth_render_msg, computation_size_);
-    depth_render_msg->encoding = "rgba8"; // rgba8 doesn't work
-    depth_render_msg->is_bigendian = 0;
-    memcpy((void *) depth_render_msg->data.data(), (void *) depth_render_.get(), depth_render_msg->width
-        * depth_render_msg->height * sizeof(float));
+    const sensor_msgs::Image depth_render_msg = msg_from_RGB_image(
+        depth_render_.get(), computation_size_, current_depth_msg);
+    const sensor_msgs::Image track_render_msg = msg_from_RGB_image(
+        track_render_.get(), computation_size_, current_depth_msg);
+    const sensor_msgs::Image volume_render_msg = msg_from_RGB_image(
+        volume_render_.get(), computation_size_, current_depth_msg);
 
-    sensor_msgs::ImagePtr track_render_msg(new sensor_msgs::Image());
-    createImageMsg(current_depth_msg, track_render_msg, computation_size_);
-    track_render_msg->encoding = "rgba8"; // rgba8 doesn't work
-    track_render_msg->is_bigendian = 0;
-    memcpy((void *) track_render_msg->data.data(), (void *) track_render_.get(), track_render_msg->width
-        * track_render_msg->height * sizeof(float));
-
-    sensor_msgs::ImagePtr volume_render_msg(new sensor_msgs::Image());
-    createImageMsg(current_depth_msg, volume_render_msg, computation_size_);
-    volume_render_msg->encoding = "rgba8"; // rgba8 doesn't work
-    volume_render_msg->is_bigendian = 0;
-    memcpy((void *) volume_render_msg->data.data(), (void *) volume_render_.get(), volume_render_msg->width
-        * volume_render_msg->height * sizeof(float));
-
-    // publish to topic
-    depth_render_pub_.publish(*depth_render_msg);
-    track_render_pub_.publish(*track_render_msg);
-    volume_render_pub_.publish(*volume_render_msg);
+    depth_render_pub_.publish(depth_render_msg);
+    track_render_pub_.publish(track_render_msg);
+    volume_render_pub_.publish(volume_render_msg);
   }
   timings_[6] = std::chrono::steady_clock::now();
 

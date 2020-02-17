@@ -58,14 +58,16 @@ namespace se {
 
 
   /**
-   * @brief create new image message with all attributes
-   * @param old_image_msg
-   * @param new_image_msg
-   * @param image_size
+   * @brief Create an RGB image message from a buffer.
+   *
+   * @param[in] image_data    The data to copy into the new image.
+   * @param[in] image_size    The dimensions of the new image.
+   * @param[in] header_source The image to copy the header from.
    */
-  void createImageMsg(const sensor_msgs::ImageConstPtr& old_image_msg,
-                      sensor_msgs::ImagePtr&            new_image_msg,
-                      Eigen::Vector2i&                  image_size);
+  sensor_msgs::Image msg_from_RGB_image(
+      const uint32_t*                   image_data,
+      const Eigen::Vector2i&            image_size,
+      const sensor_msgs::ImageConstPtr& header_source);
 
 
 
