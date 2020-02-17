@@ -41,7 +41,7 @@ namespace se {
       }
     } else {
       ROS_FATAL("Invalid input depth format %s, expected 16UC1 or 32FC1",
-          input_depth.encoding);
+          input_depth.encoding.c_str());
       abort();
     }
   }

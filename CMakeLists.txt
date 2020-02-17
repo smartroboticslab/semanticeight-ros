@@ -40,13 +40,6 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-generate_messages(DEPENDENCIES
-  geometry_msgs
-  sensor_msgs
-  std_msgs
-  visualization_msgs
-)
-
 if (WITH_OPENMP)
   find_package(OpenMP)
   if (OPENMP_FOUND)

@@ -94,11 +94,11 @@ namespace se {
         config.enable_rgb);
     ROS_INFO("  input_size:             %d %d",
         config.input_size.x(), config.input_size.y());
-    ROS_INFO("  pose_buffer_size:       %lu",
+    ROS_INFO("  pose_buffer_size:       %d",
         config.pose_buffer_size);
-    ROS_INFO("  depth_buffer_size:      %lu",
+    ROS_INFO("  depth_buffer_size:      %d",
         config.depth_buffer_size);
-    ROS_INFO("  rgb_buffer_size:        %lu",
+    ROS_INFO("  rgb_buffer_size:        %d",
         config.rgb_buffer_size);
   }
 
