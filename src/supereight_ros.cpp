@@ -211,7 +211,6 @@ void SupereightNode::fusionCallback() {
   // Message association
   // Depth
   sensor_msgs::ImageConstPtr current_depth_msg;
-  uint64_t depth_timestamp_nsec;
   double depth_timestamp;
   {
     const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
@@ -220,7 +219,6 @@ void SupereightNode::fusionCallback() {
       return;
     } else {
       current_depth_msg = depth_buffer_.front();
-      depth_timestamp_nsec = ros::Time(current_depth_msg->header.stamp).toNSec();
       depth_timestamp = ros::Time(current_depth_msg->header.stamp).toSec();
     }
   }
@@ -261,7 +259,7 @@ void SupereightNode::fusionCallback() {
         geometry_msgs::TransformStamped prev_pose;
         geometry_msgs::TransformStamped next_pose;
         const InterpResult result = get_surrounding_poses(
-            pose_buffer_, depth_timestamp_nsec, prev_pose, next_pose);
+            pose_buffer_, depth_timestamp, prev_pose, next_pose);
         if (result == InterpResult::query_smaller) {
           // Remove the depth image, it will never be matched to poses.
           const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
@@ -276,7 +274,7 @@ void SupereightNode::fusionCallback() {
         }
 
         // Interpolate to associate a pose to the depth image.
-        external_pose = interpolate_pose(prev_pose, next_pose, depth_timestamp_nsec);
+        external_pose = interpolate_pose(prev_pose, next_pose, depth_timestamp);
       }
     }
   }

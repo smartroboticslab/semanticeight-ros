@@ -71,12 +71,11 @@ namespace se {
 
 
 
-  float compute_alpha(const int64_t prev_timestamp,
-                      const int64_t query_timestamp,
-                      const int64_t next_timestamp) {
+  float compute_alpha(const double prev_timestamp,
+                      const double query_timestamp,
+                      const double next_timestamp) {
 
-    return static_cast<float>(query_timestamp - prev_timestamp)
-         / static_cast<float>(next_timestamp - prev_timestamp);
+    return (query_timestamp - prev_timestamp) / (next_timestamp - prev_timestamp);
   }
 
 
@@ -103,12 +102,12 @@ namespace se {
   Eigen::Matrix4f interpolate_pose(
       const geometry_msgs::TransformStamped& prev_pose,
       const geometry_msgs::TransformStamped& next_pose,
-      const int64_t                          query_timestamp) {
+      const double                           query_timestamp) {
 
     const float alpha = compute_alpha(
-        ros::Time(prev_pose.header.stamp).toNSec(),
+        ros::Time(prev_pose.header.stamp).toSec(),
         query_timestamp,
-        ros::Time(next_pose.header.stamp).toNSec());
+        ros::Time(next_pose.header.stamp).toSec());
 
     const Eigen::Vector3f prev_translation(
         prev_pose.transform.translation.x,
@@ -162,12 +161,12 @@ namespace se {
 
   InterpResult get_surrounding_poses(
       const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
-      const uint64_t                                                 query_timestamp,
+      const double                                                   query_timestamp,
       geometry_msgs::TransformStamped&                               prev_pose,
       geometry_msgs::TransformStamped&                               next_pose) {
 
     for (size_t i = 0; i < buffer.size(); ++i) {
-      const uint64_t pose_timestamp = ros::Time(buffer[i].header.stamp).toNSec();
+      const double pose_timestamp = ros::Time(buffer[i].header.stamp).toSec();
 
       if (pose_timestamp == query_timestamp) {
         // Found an exact timestamp.

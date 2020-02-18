@@ -72,18 +72,19 @@ namespace se {
 
 
   /**
-   * @brief       Calculates the fraction a given timestamp is located between
-   * the closest previous and next timestamp
+   * @brief Calculate the fraction a given timestamp is located between
+   * the closest previous and next timestamp.
    *
-   * @param[in]  prev_timestamp   Closest previous timestamp
-   * @param[in]  query_timestamp  The timestamp for which to compute alpha
-   * @param[in]  next_timestamp   Closest next timestampe
+   * @param[in] prev_timestamp  Closest previous timestamp in seconds.
+   * @param[in] query_timestamp The timestamp for which to compute alpha in
+   *                            seconds.
+   * @param[in] next_timestamp  Closest next timestamp in seconds.
    *
-   * @return      Fraction
+   * @return A number in the interval [0, 1].
    */
-  float compute_alpha(const int64_t prev_timestamp,
-                      const int64_t query_timestamp,
-                      const int64_t next_timestamp);
+  float compute_alpha(const double prev_timestamp,
+                      const double query_timestamp,
+                      const double next_timestamp);
 
 
 
@@ -117,18 +118,19 @@ namespace se {
       const float               alpha);
 
   /**
-   * @brief      Interpolation for transformations
+   * @brief Linear pose interpolation.
    *
-   * @param[in]  prev_pose        The previous pose
-   * @param[in]  next_pose        The next pose
-   * @param[in]  query_timestamp  The timestamp the pose should interpolated at
+   * @param[in] prev_pose       The previous pose.
+   * @param[in] next_pose       The next pose.
+   * @param[in] query_timestamp The timestamp the pose should interpolated at in
+   *                            seconds.
    *
-   * @return     Interpolated pose
+   * @return The interpolated pose.
    */
   Eigen::Matrix4f interpolate_pose(
       const geometry_msgs::TransformStamped& prev_pose,
       const geometry_msgs::TransformStamped& next_pose,
-      const int64_t                          query_timestamp);
+      const double                           query_timestamp);
 
 
 
@@ -143,7 +145,7 @@ namespace se {
    * query timestamp.
    *
    * @param[in]  buffer          The circular buffer containing all the poses.
-   * @param[in]  query_timestamp The timestamp to look for.
+   * @param[in]  query_timestamp The timestamp to look for in seconds.
    * @param[out] prev_pose       The pose whose timestamp is exactly before the
    *                             query timestamp.
    * @param[out] next_pose       The pose whose timestamp is exactly after the
@@ -153,7 +155,7 @@ namespace se {
    */
   InterpResult get_surrounding_poses(
       const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
-      const uint64_t                                                 query_timestamp,
+      const double                                                   query_timestamp,
       geometry_msgs::TransformStamped&                               prev_pose,
       geometry_msgs::TransformStamped&                               next_pose);
 
