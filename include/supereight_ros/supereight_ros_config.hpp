@@ -1,6 +1,8 @@
-//
-// Created by anna on 16/05/19.
-//
+/*
+ * SPDX-FileCopyrightText: 2019 Anna Dai
+ * SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 
 #ifndef __SUPEREIGHT_ROS_CONFIG_HPP
 #define __SUPEREIGHT_ROS_CONFIG_HPP

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2019 Anna Dai
+# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
 # Supereight ROS node settings
 enable_tracking: false
 

@@ -1,17 +1,15 @@
 <?xml version="1.0"?>
+<!--
+SPDX-FileCopyrightText: 2019 Anna Dai
+SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
+SPDX-License-Identifier: BSD-3-Clause
+-->
 <package format="2">
   <name>supereight_ros</name>
   <version>0.0.0</version>
   <description>ROS wrapper for supereight</description>
-
-  <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <maintainer email="s.papatheodorou18@imperial.ac.uk">Sotiris Papatheodorou</maintainer>
-
-
-  <!-- One license tag required, multiple allowed, one license per tag -->
-  <license>TODO</license>
-
-
+  <license>BSD-3-Clause</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>

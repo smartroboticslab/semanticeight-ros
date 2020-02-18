@@ -1,6 +1,8 @@
-//
-// Created by anna on 12/04/19.
-//
+/*
+ * SPDX-FileCopyrightText: 2019 Anna Dai
+ * SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 
 #include "supereight_ros/supereight_ros.hpp"
 

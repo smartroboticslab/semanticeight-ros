@@ -1,4 +1,9 @@
 <?xml version="1.0"?>
+<!--
+SPDX-FileCopyrightText: 2019 Anna Dai
+SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
+SPDX-License-Identifier: BSD-3-Clause
+-->
 <launch>
   <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>

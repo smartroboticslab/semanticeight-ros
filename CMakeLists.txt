@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2019 Anna Dai
+# SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
 cmake_minimum_required(VERSION 3.10)
 
 project(supereight_ros)
