@@ -22,6 +22,7 @@ namespace se {
     int pose_buffer_size;
     int depth_buffer_size;
     int rgb_buffer_size;
+    double max_timestamp_diff;
   };
 
 

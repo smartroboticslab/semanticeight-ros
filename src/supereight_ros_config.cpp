@@ -39,6 +39,7 @@ const Eigen::Vector2i default_input_size (640, 480);
 constexpr int default_pose_buffer_size = 600;
 constexpr int default_depth_buffer_size = 60;
 constexpr int default_rgb_buffer_size = 60;
+constexpr double default_max_timestamp_diff = 0.001;
 
 
 
@@ -79,6 +80,10 @@ namespace se {
         config.rgb_buffer_size,
         default_rgb_buffer_size);
 
+    nh.param<double>("max_timestamp_diff",
+        config.max_timestamp_diff,
+        default_max_timestamp_diff);
+
     return config;
   }
 
@@ -100,6 +105,8 @@ namespace se {
         config.depth_buffer_size);
     ROS_INFO("  rgb_buffer_size:        %d",
         config.rgb_buffer_size);
+    ROS_INFO("  max_timestamp_diff:     %f",
+        config.max_timestamp_diff);
   }
 
 

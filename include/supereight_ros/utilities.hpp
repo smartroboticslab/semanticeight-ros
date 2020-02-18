@@ -157,6 +157,27 @@ namespace se {
       geometry_msgs::TransformStamped&                               prev_pose,
       geometry_msgs::TransformStamped&                               next_pose);
 
+
+
+  /**
+   * @brief Find the image in the buffer that is closest to the query_timestamp.
+   * The difference between the query_timestamp and the image timestamp will be
+   * at most threshold seconds.
+   *
+   * @param[in]  buffer          The circular buffer containing the images.
+   * @param[in]  query_timestamp The timestamp in seconds to try and match.
+   * @param[in]  threshold       The maximum time difference in seconds for an
+   *                             image to be considered a match.
+   * @param[out] closest_image   The matched image.
+   *
+   * @return true if a match was found, false otherwise.
+   */
+  bool get_closest_image(
+      const boost::circular_buffer<sensor_msgs::ImageConstPtr>& buffer,
+      const double                                              query_timestamp,
+      const double                                              threshold,
+      sensor_msgs::ImageConstPtr&                               closest_image);
+
 } // namespace se
 
 #endif

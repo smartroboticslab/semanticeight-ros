@@ -160,6 +160,7 @@ namespace se {
     // Image buffers
     std::unique_ptr<uint16_t> input_depth_;
     std::unique_ptr<uint32_t> input_rgb_;
+    std::unique_ptr<uint32_t> rgb_render_;
     std::unique_ptr<uint32_t> depth_render_;
     std::unique_ptr<uint32_t> track_render_;
     std::unique_ptr<uint32_t> volume_render_;
@@ -179,6 +180,7 @@ namespace se {
     ros::Publisher supereight_pose_pub_;
 
     // Render publishers
+    ros::Publisher rgb_render_pub_;
     ros::Publisher depth_render_pub_;
     ros::Publisher volume_render_pub_;
     ros::Publisher track_render_pub_;
