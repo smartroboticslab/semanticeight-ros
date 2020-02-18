@@ -88,8 +88,10 @@ SupereightNode::~SupereightNode() {
 
 void SupereightNode::setupRos() {
   // Subscribers
-  pose_sub_ = nh_.subscribe("/pose",
-      node_config_.pose_buffer_size, &SupereightNode::poseCallback, this);
+  if (!node_config_.enable_tracking) {
+    pose_sub_ = nh_.subscribe("/pose",
+        node_config_.pose_buffer_size, &SupereightNode::poseCallback, this);
+  }
   depth_sub_ = nh_.subscribe("/camera/depth_image",
       node_config_.depth_buffer_size, &SupereightNode::depthCallback, this);
   if (node_config_.enable_rgb) {
@@ -133,6 +135,13 @@ void SupereightNode::depthCallback(const sensor_msgs::ImageConstPtr& depth_msg) 
   depth_buffer_.push_back(depth_msg);
   ROS_DEBUG("Depth image buffer: %lu/%lu",
       depth_buffer_.size(), depth_buffer_.capacity());
+
+  // If tracking is enabled the fusion callback has to be called from here since
+  // the pose callback is never called.
+  if (node_config_.enable_tracking) {
+    std::thread fusion_thread (std::bind(&SupereightNode::fusionCallback, this));
+    fusion_thread.detach();
+  }
 }
 
 
