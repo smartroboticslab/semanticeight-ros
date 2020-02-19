@@ -42,8 +42,6 @@ T_BC: [0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0
 
 camera: [570.3422241210938, 570.3422241210938, 314.5, 235.5]
 
-camera_overrideds: false
-
 mu: 0.1
 
 fps: 0
@@ -57,10 +55,4 @@ no_gui: false
 render_volume_fullsize: false
 
 bilateral_filter: false
-
-coloured_voxels: false
-
-multi_resolution: false
-
-bayesian: false
 
