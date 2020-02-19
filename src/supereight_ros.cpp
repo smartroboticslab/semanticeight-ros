@@ -91,8 +91,17 @@ SupereightNode::~SupereightNode() {
 void SupereightNode::setupRos() {
   // Subscribers
   if (!node_config_.enable_tracking) {
-    pose_sub_ = nh_.subscribe("/pose",
-        node_config_.pose_buffer_size, &SupereightNode::poseCallback, this);
+    if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
+      pose_sub_ = nh_.subscribe("/pose", node_config_.pose_buffer_size,
+          &SupereightNode::poseStampedCallback, this);
+    } else if (node_config_.pose_topic_type == "geometry_msgs::TransformStamped") {
+      pose_sub_ = nh_.subscribe("/pose", node_config_.pose_buffer_size,
+          &SupereightNode::transformStampedCallback, this);
+    } else {
+      ROS_FATAL("Invalid pose topic type %s", node_config_.pose_topic_type.c_str());
+      ROS_FATAL("Expected geometry_msgs::PoseStamped or geometry_msgs::TransformStamped");
+      abort();
+    }
   }
   depth_sub_ = nh_.subscribe("/camera/depth_image",
       node_config_.depth_buffer_size, &SupereightNode::depthCallback, this);
@@ -100,7 +109,6 @@ void SupereightNode::setupRos() {
     rgb_sub_ = nh_.subscribe("/camera/rgb_image",
         node_config_.rgb_buffer_size, &SupereightNode::RGBCallback, this);
   }
-
 
   // Publishers
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", node_config_.pose_buffer_size);
@@ -155,7 +163,25 @@ void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg) {
 
 
 
-void SupereightNode::poseCallback(
+void SupereightNode::poseStampedCallback(
+    const geometry_msgs::PoseStamped::ConstPtr& T_WB_msg) {
+
+  // Convert the message to an Eigen matrix.
+  Eigen::Matrix4d T_WB = Eigen::Matrix4d::Identity();
+  Eigen::Quaterniond q_WB;
+  tf::quaternionMsgToEigen(T_WB_msg->pose.orientation, q_WB);
+  T_WB.topLeftCorner<3, 3>() = q_WB.toRotationMatrix();
+  Eigen::Vector3d t_WB;
+  tf::pointMsgToEigen(T_WB_msg->pose.position, t_WB);
+  T_WB.topRightCorner<3, 1>() = t_WB;
+
+  // Call the general pose callback.
+  poseCallback(T_WB, T_WB_msg->header);
+}
+
+
+
+void SupereightNode::transformStampedCallback(
     const geometry_msgs::TransformStamped::ConstPtr& T_WB_msg) {
 
   // Convert the message to an Eigen matrix.
@@ -167,12 +193,21 @@ void SupereightNode::poseCallback(
   tf::vectorMsgToEigen(T_WB_msg->transform.translation, t_WB);
   T_WB.topRightCorner<3, 1>() = t_WB;
 
+  // Call the general pose callback.
+  poseCallback(T_WB, T_WB_msg->header);
+}
+
+
+
+void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
+                                  const std_msgs::Header& header) {
+
   // Convert body pose to camera pose.
   const Eigen::Matrix4d T_WC = T_WB * supereight_config_.T_BC.cast<double>();
 
   // Create a ROS message from T_WC.
   geometry_msgs::TransformStamped T_WC_msg;
-  T_WC_msg.header = T_WB_msg->header;
+  T_WC_msg.header = header;
   T_WC_msg.header.frame_id = frame_id_;
   const Eigen::Quaterniond q_WC (T_WC.topLeftCorner<3, 3>());
   tf::quaternionEigenToMsg(q_WC, T_WC_msg.transform.rotation);

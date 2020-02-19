@@ -20,6 +20,7 @@
 #include <boost/circular_buffer.hpp>
 
 #include <ros/ros.h>
+#include <std_msgs/Header.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/Image.h>
@@ -95,18 +96,46 @@ namespace se {
     void RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg);
 
     /*!
-     * \brief ROS callback for body pose messages in topic `/pose`.
+     * \brief ROS callback for body pose messages of type
+     * geometry_msgs::PoseStamped in topic `/pose`.
      *
+     * Converts the pose to an Eigen::Matrix4d and calls
+     * se::SupereightNode::poseCallback.
+     *
+     * \param[in] T_WB_msg The received body pose message in the world frame
+     *                     with the ROS convention (x forward, y left, z up).
+     */
+    void poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr& T_WB_msg);
+
+    /*!
+     * \brief ROS callback for body pose messages of type
+     * geometry_msgs::TransformStamped in topic `/pose`.
+     *
+     * Converts the pose to an Eigen::Matrix4d and calls
+     * se::SupereightNode::poseCallback.
+     *
+     * \param[in] T_WB_msg The received body pose message in the world frame
+     *                     with the ROS convention (x forward, y left, z up).
+     */
+    void transformStampedCallback(const geometry_msgs::TransformStamped::ConstPtr& T_WB_msg);
+
+    /*!
+     * \brief Generic callback for body pose messages.
+     *
+     * Called by se::SupereightNode::transformStampedCallback or
+     * se::SupereightNode::poseStampedCallback, depending on the message type.
      * Convert the body pose (using the ROS convention x forward, y left, z up)
      * to a camera pose (using the supereight convention x right, y down, z
      * forward) and append it to se::SupereightNode::pose_buffer_. If tracking
      * is disabled (`se::SupereightNode::enable_tracking == false`) also call
      * se::SupereightNode::fusionCallback.
      *
-     * \param[in] T_WB_msg The received body pose message in the world frame
-     *                     with the ROS convention (x forward, y left, z up).
+     * \param[in] T_WB   The received body pose in the world frame with the ROS
+     *                   convention (x forward, y left, z up).
+     * \param[in] header The header of the body pose message.
      */
-    void poseCallback(const geometry_msgs::TransformStamped::ConstPtr& T_WB_msg);
+    void poseCallback(const Eigen::Matrix4d&  T_WB,
+                      const std_msgs::Header& header);
 
     /*!
      * \brief Integrate the measurements using the supereight pipeline.

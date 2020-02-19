@@ -9,13 +9,15 @@ SPDX-License-Identifier: BSD-3-Clause
     <!-- Use a different config file -->
     <arg name="supereight_ros_config_file"
          value="$(find supereight_ros)/config/config_ICRA2020_experiment.yaml"/>
-    <!-- Override topic names -->
+    <!-- Override topic names and types -->
     <arg name="depth_image_topic"
          value="/camera/depth/image_raw"/>
     <arg name="rgb_image_topic"
          value="/camera/rgb/image_raw"/>
     <arg name="pose_topic"
          value="/vicon/f550/f550"/>
+    <arg name="pose_topic_type"
+         default="geometry_msgs::TransformStamped"/>
   </include>
 </launch>
 

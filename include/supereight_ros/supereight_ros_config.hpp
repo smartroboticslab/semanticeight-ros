@@ -7,6 +7,8 @@
 #ifndef __SUPEREIGHT_ROS_CONFIG_HPP
 #define __SUPEREIGHT_ROS_CONFIG_HPP
 
+#include <string>
+
 #include <Eigen/Dense>
 
 #include <ros/ros.h>
@@ -43,6 +45,12 @@ namespace se {
      * initialize supereight.
      */
     Eigen::Vector2i input_size;
+
+    /*!
+     * The type of the pose topic. Valid values are geometry_msgs::PoseStamped
+     * and geometry_msgs::TransformStamped.
+     */
+    std::string pose_topic_type;
 
     /*!
      * The number of elements in the pose circular buffer.

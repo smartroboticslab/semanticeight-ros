@@ -38,6 +38,7 @@ constexpr bool default_enable_tracking = true;
 constexpr bool default_enable_rendering = true;
 constexpr bool default_process_rgb = false;
 const Eigen::Vector2i default_input_size (640, 480);
+const std::string default_pose_topic_type ("geometry_msgs::PoseStampedddddd");
 constexpr int default_pose_buffer_size = 600;
 constexpr int default_depth_buffer_size = 60;
 constexpr int default_rgb_buffer_size = 60;
@@ -70,6 +71,10 @@ namespace se {
       config.input_size = default_input_size;
     }
 
+    nh.param<std::string>("pose_topic_type",
+        config.pose_topic_type,
+        default_pose_topic_type);
+
     nh.param<int>("pose_buffer_size",
         config.pose_buffer_size,
         default_pose_buffer_size);
@@ -101,6 +106,8 @@ namespace se {
         config.enable_rgb);
     ROS_INFO("  input_size:             %d %d",
         config.input_size.x(), config.input_size.y());
+    ROS_INFO("  pose_topic_type:        %s",
+        config.pose_topic_type.c_str());
     ROS_INFO("  pose_buffer_size:       %d",
         config.pose_buffer_size);
     ROS_INFO("  depth_buffer_size:      %d",
