@@ -73,54 +73,8 @@ namespace se {
 
 
 
-  /**
-   * @brief Calculate the fraction a given timestamp is located between
-   * the closest previous and next timestamp.
-   *
-   * @param[in] prev_timestamp  Closest previous timestamp in seconds.
-   * @param[in] query_timestamp The timestamp for which to compute alpha in
-   *                            seconds.
-   * @param[in] next_timestamp  Closest next timestamp in seconds.
-   *
-   * @return A number in the interval [0, 1].
-   */
-  float compute_alpha(const double prev_timestamp,
-                      const double query_timestamp,
-                      const double next_timestamp);
-
-
-
-  /**
-   * @brief      Linear 3D interpolation
-   *
-   * @param[in]  prev_pos  The previous pose
-   * @param[in]  prev_pos  The next pose
-   * @param[in]  alpha     Fraction
-   *
-   * @return     Interpolated translation
-   */
-  Eigen::Vector3f interpolate_position(const Eigen::Vector3f& prev_pos,
-                                       const Eigen::Vector3f& next_pos,
-                                       const float            alpha);
-
-
-
-  /**
-   * @brief      Slerp interpolation for quaterniond
-   *
-   * @param[in]  prev_orientation  The previous orientation
-   * @param[in]  next_orientation  The next orientation
-   * @param[in]  alpha             Fraction
-   *
-   * @return     Interpolated orientation
-   */
-  Eigen::Quaternionf interpolate_orientation(
-      const Eigen::Quaternionf& prev_orientation,
-      const Eigen::Quaternionf& next_orientation,
-      const float               alpha);
-
-  /**
-   * @brief Linear pose interpolation.
+  /*!
+   * \brief Linear pose interpolation.
    *
    * @param[in] prev_pose       The previous pose.
    * @param[in] next_pose       The next pose.

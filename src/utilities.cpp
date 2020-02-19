@@ -73,44 +73,12 @@ namespace se {
 
 
 
-  float compute_alpha(const double prev_timestamp,
-                      const double query_timestamp,
-                      const double next_timestamp) {
-
-    return (query_timestamp - prev_timestamp) / (next_timestamp - prev_timestamp);
-  }
-
-
-
-  Eigen::Vector3f interpolate_position(const Eigen::Vector3f& prev_pos,
-                                       const Eigen::Vector3f& next_pos,
-                                       const float            alpha) {
-
-    return prev_pos + alpha * (next_pos - prev_pos);
-  }
-
-
-
-  Eigen::Quaternionf interpolate_orientation(
-      const Eigen::Quaternionf& prev_orientation,
-      const Eigen::Quaternionf& next_orientation,
-      const float               alpha) {
-
-    return prev_orientation.slerp(alpha, next_orientation);
-  }
-
-
-
   Eigen::Matrix4f interpolate_pose(
       const geometry_msgs::TransformStamped& prev_pose,
       const geometry_msgs::TransformStamped& next_pose,
       const double                           query_timestamp) {
 
-    const float alpha = compute_alpha(
-        ros::Time(prev_pose.header.stamp).toSec(),
-        query_timestamp,
-        ros::Time(next_pose.header.stamp).toSec());
-
+    // Convert from ROS to Eigen
     const Eigen::Vector3f prev_translation(
         prev_pose.transform.translation.x,
         prev_pose.transform.translation.y,
@@ -131,11 +99,17 @@ namespace se {
         next_pose.transform.rotation.y,
         next_pose.transform.rotation.z);
 
+    // Interpolate translation and rotation separately
+    const double prev_timestamp = ros::Time(prev_pose.header.stamp).toSec();
+    const double next_timestamp = ros::Time(next_pose.header.stamp).toSec();
+    const float alpha
+        = (query_timestamp - prev_timestamp) / (next_timestamp - prev_timestamp);
     const Eigen::Vector3f inter_translation
-        = interpolate_position(prev_translation, next_translation, alpha);
+        = (1.f - alpha) * prev_translation + alpha * next_translation;
     const Eigen::Quaternionf inter_rotation
-        = interpolate_orientation(prev_rotation, next_rotation, alpha);
+        = prev_rotation.slerp(alpha, next_rotation);
 
+    // Combine into homogeneous transform
     Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
     pose.block<3, 1>(0, 3) = inter_translation;
     pose.block<3, 3>(0, 0) = inter_rotation.toRotationMatrix();
