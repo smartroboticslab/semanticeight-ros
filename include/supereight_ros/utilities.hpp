@@ -22,49 +22,50 @@
 
 
 namespace se {
-  /**
-   * @brief The possible return values of se::get_surrounding_poses().
+  /*!
+   * \brief The possible return values of se::get_surrounding_poses().
    */
   enum InterpResult {
-    /**
-     * @brief The interpolation was successful.
-     * This is also the case when a pose with the exact same timestamp as the
-     * query is found, in which case no interpolation is needed.
+    /*!
+     * The interpolation was successful.  This is also the case when a pose with
+     * the exact same timestamp as the query is found, in which case no
+     * interpolation is needed.
      */
     ok            = 0,
-    /**
-     * @brief The query timestamp is smaller than all the pose timestamps.
-     * No interpolation could be performed.
+    /*!
+     * The query timestamp is smaller than all the pose timestamps.  No
+     * interpolation could be performed.
      */
     query_smaller = 1,
-    /**
-     * @brief The query timestamp is great than all the pose timestamps.
-     * No interpolation could be performed.
+    /*!
+     * The query timestamp is greater than all the pose timestamps.  No
+     * interpolation could be performed.
      */
     query_greater = 2,
   };
 
 
 
-  /**
-   * @brief Copy the depth image message into the supereight buffer.
+  /*!
+   * \brief Copy the depth image message into the supereight buffer.
+   *
    * If needed, the input depth image is converted into uint16_t containing
    * millimiters.
    *
-   * @param[in]  input_depth  The depth message to copy.
-   * @param[out] output_depth The destination buffer.
+   * \param[in]  input_depth  The depth message to copy.
+   * \param[out] output_depth The destination buffer.
    */
   void to_supereight_depth(const sensor_msgs::Image& input_depth,
                            uint16_t*                 output_depth);
 
 
 
-  /**
-   * @brief Create an RGB image message from a buffer.
+  /*!
+   * \brief Create an RGB image message from a buffer.
    *
-   * @param[in] image_data    The data to copy into the new image.
-   * @param[in] image_size    The dimensions of the new image.
-   * @param[in] header_source The image to copy the header from.
+   * \param[in] image_data    The data to copy into the new image.
+   * \param[in] image_size    The dimensions of the new image.
+   * \param[in] header_source The image to copy the header from.
    */
   sensor_msgs::Image msg_from_RGB_image(
       const uint32_t*                   image_data,
@@ -76,12 +77,12 @@ namespace se {
   /*!
    * \brief Linear pose interpolation.
    *
-   * @param[in] prev_pose       The previous pose.
-   * @param[in] next_pose       The next pose.
-   * @param[in] query_timestamp The timestamp the pose should interpolated at in
+   * \param[in] prev_pose       The previous pose.
+   * \param[in] next_pose       The next pose.
+   * \param[in] query_timestamp The timestamp the pose should interpolated at in
    *                            seconds.
    *
-   * @return The interpolated pose.
+   * \return The interpolated pose.
    */
   Eigen::Matrix4f interpolate_pose(
       const geometry_msgs::TransformStamped& prev_pose,
@@ -96,18 +97,18 @@ namespace se {
 
 
 
-  /**
-   * @brief Find the two closest poses whose timestamps are before and after the
+  /*!
+   * \brief Find the two closest poses whose timestamps are before and after the
    * query timestamp.
    *
-   * @param[in]  buffer          The circular buffer containing all the poses.
-   * @param[in]  query_timestamp The timestamp to look for in seconds.
-   * @param[out] prev_pose       The pose whose timestamp is exactly before the
+   * \param[in]  buffer          The circular buffer containing all the poses.
+   * \param[in]  query_timestamp The timestamp to look for in seconds.
+   * \param[out] prev_pose       The pose whose timestamp is exactly before the
    *                             query timestamp.
-   * @param[out] next_pose       The pose whose timestamp is exactly after the
+   * \param[out] next_pose       The pose whose timestamp is exactly after the
    *                             query timestamp.
    *
-   * @return An se::InterpResult. See its documentation for details.
+   * \return An se::InterpResult.
    */
   InterpResult get_surrounding_poses(
       const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
@@ -117,18 +118,19 @@ namespace se {
 
 
 
-  /**
-   * @brief Find the image in the buffer that is closest to the query_timestamp.
+  /*!
+   * \brief Find the image in the buffer that is closest to the query_timestamp.
+   *
    * The difference between the query_timestamp and the image timestamp will be
    * at most threshold seconds.
    *
-   * @param[in]  buffer          The circular buffer containing the images.
-   * @param[in]  query_timestamp The timestamp in seconds to try and match.
-   * @param[in]  threshold       The maximum time difference in seconds for an
+   * \param[in]  buffer          The circular buffer containing the images.
+   * \param[in]  query_timestamp The timestamp in seconds to try and match.
+   * \param[in]  threshold       The maximum time difference in seconds for an
    *                             image to be considered a match.
-   * @param[out] closest_image   The matched image.
+   * \param[out] closest_image   The matched image.
    *
-   * @return true if a match was found, false otherwise.
+   * \return true if a match was found, false otherwise.
    */
   bool get_closest_image(
       const boost::circular_buffer<sensor_msgs::ImageConstPtr>& buffer,

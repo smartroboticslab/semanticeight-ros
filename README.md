@@ -1,5 +1,13 @@
 # supereight\_ros
+A ROS wrapper for supereight.
 
+
+
+## Documentation
+To compile the documentation in HTML format in the `doc` directory run
+``` bash
+rosdoc_lite .
+```
 
 
 ## License

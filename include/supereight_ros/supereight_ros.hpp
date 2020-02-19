@@ -32,6 +32,10 @@
 
 
 namespace se {
+
+  /*!
+   * \brief A ROS node that wraps a supereight pipeline.
+   */
   class SupereightNode {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -41,9 +45,10 @@ namespace se {
 
     ~SupereightNode();
 
-    /**
-     * @brief access for external packages
-     * @return pointer to supereight pipeline
+    /*!
+     * \brief Access the supereight pipeline directly if needed.
+     *
+     * \return An std::shared_ptr to the supereight pipeline.
      */
     std::shared_ptr<DenseSLAMSystem> getSupereightPipeline() {
       return pipeline_;
@@ -52,57 +57,87 @@ namespace se {
 
 
   private:
-    /**
-     * @brief sets configuration from YAML file to nodehandle
-     * definitions, see supereight/se/config.h
+    /*!
+     * \brief Read the supereight and se::SupereightNode YAML configuration
+     * files.
+     *
+     * See se::SupereightNodeConfig for details about the se::SupereightNode
+     * configuration.
      */
     void readConfig(const ros::NodeHandle& nh_private);
 
-    /**
-     * @brief Sets up publishing and subscribing, should only be called from
-     * constructor
+    /*!
+     * \brief Set up the ROS publishers and subscribers.
+     *
+     * This function should only be called from the constructor.
      **/
     void setupRos();
 
-    /**
-     * @brief adds images to image queue
-     * @param old_image_msg
+    /*!
+     * \brief ROS callback for depth image messages in topic
+     * `/camera/depth_image`.
+     *
+     * Append the depth image to se::SupereightNode::depth_buffer_. If tracking
+     * is enabled (`se::SupereightNode::enable_tracking == true`) also call
+     * se::SupereightNode::fusionCallback.
+     *
+     * \param[in] depth_msg The received depth image message.
      */
     void depthCallback(const sensor_msgs::ImageConstPtr& depth_msg);
 
-    /** Add an RGB image to the queue.
-     * \param[in] rgb_msg Pointer to the RGB image message.
+    /*!
+     * \brief ROS callback for RGB image messages in topic `/camera/rgb_image`.
+     *
+     * Appends the RGB image to se::SupereightNode::rgb_buffer_.
+     *
+     * \param[in] rgb_msg The received RGB image message.
      */
     void RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg);
 
-    /**
-     * @brief adds pose from ground truth file or recorded pose to pose buffer
-     * @param T_WR_msg
+    /*!
+     * \brief ROS callback for camera pose messages in topic `/pose`.
      *
-     * The supplied pose is the camera frame expressed in world coordinates.
-     * The camera frame is using the ROS convention of x forward, z up.
+     * Convert the camera pose from the ROS convention (x forward, y left, z up)
+     * to the supereight convention (x right, y down, z forward) and append it
+     * to se::SupereightNode::pose_buffer_. If tracking is disabled
+     * (`se::SupereightNode::enable_tracking == false`) also call
+     * se::SupereightNode::fusionCallback.
+     *
+     * \param[in] T_WR_msg The received camera pose message in the world frame
+     *                     with the ROS convention (x forward, y left, z up).
      */
     void poseCallback(const geometry_msgs::TransformStamped::ConstPtr& T_WR_msg);
 
-    /**
-     * @brief aligns the pose with the image and calls the supereight denseslam
-     * pipeline
+    /*!
+     * \brief Integrate the measurements using the supereight pipeline.
+     *
+     * First try to match an RGB image (if `se::SupereightNode::enable_rgb
+     * == true`) and a pose (if `se::SupereightNode::enable_tracking == false`)
+     * to the oldest depth image. If matching fails, the return
+     * without performing a map update.
+     *
+     * If matching is successful call the supereight pipeline `preprocess`,
+     * `track`, `integrate` and `raycast` stages to update the map. If rendering
+     * is enabled (if `se::SupereightNode::enable_rendering == true`) also
+     * generate the RGB, depth, tracking and volume renders and publish them in
+     * the `/supereight/rgb_render`, `/supereight/depth_render`,
+     * `/supereight/track_render` and `/supereight/volume_render` topics
+     * respectively.
      */
     void fusionCallback();
 
-    /**
-     * @brief loads the occpuancy map and publishs it to a ros topic
-     * @param updated_blocks
+    /*
+     * \brief loads the occpuancy map and publishes it to a ros topic
+     * \param updated_blocks
      */
     //void visualizeMapOFusion(vec3i &updated_blocks,
     //                         vec3i &frontier_blocks,
     //                         map3i &frontier_blocks_map,
     //                         vec3i &occlusion_blocks);
 
-    // TODO: change SDF visualization to be block based
-    /**
-     * @brief loads the SDF map and publishs it to a ros topic
-     * @param updated_blocks
+    /*
+     * \brief loads the SDF map and publishes it to a ros topic
+     * \param updated_blocks
      */
     //void visualizeMapSDF(vec3i &occupied_voxels,
     //                     vec3i &freed_voxels,
@@ -173,7 +208,7 @@ namespace se {
     // block based visualization
     //bool pub_map_update_ = false;
 
-    /**
+    /*!
      * Global/map coordinate frame. Will always look up TF transforms to this
      * frame.
      */
@@ -183,6 +218,7 @@ namespace se {
     std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;
     std::vector<std::string> timing_labels_;
   };
+
 } // namespace se
 
 #endif // SUPEREIGHT_ROS_HPP
