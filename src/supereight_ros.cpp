@@ -156,29 +156,23 @@ void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg) {
 
 
 void SupereightNode::poseCallback(
-    const geometry_msgs::TransformStamped::ConstPtr& T_WR_msg) {
+    const geometry_msgs::TransformStamped::ConstPtr& T_WB_msg) {
 
   // Convert the message to an Eigen matrix.
-  Eigen::Matrix4d T_WR = Eigen::Matrix4d::Identity();
-  Eigen::Quaterniond q_WR;
-  tf::quaternionMsgToEigen(T_WR_msg->transform.rotation, q_WR);
-  T_WR.topLeftCorner<3, 3>() = q_WR.toRotationMatrix();
-  Eigen::Vector3d t_WR;
-  tf::vectorMsgToEigen(T_WR_msg->transform.translation, t_WR);
-  T_WR.topRightCorner<3, 1>() = t_WR;
+  Eigen::Matrix4d T_WB = Eigen::Matrix4d::Identity();
+  Eigen::Quaterniond q_WB;
+  tf::quaternionMsgToEigen(T_WB_msg->transform.rotation, q_WB);
+  T_WB.topLeftCorner<3, 3>() = q_WB.toRotationMatrix();
+  Eigen::Vector3d t_WB;
+  tf::vectorMsgToEigen(T_WB_msg->transform.translation, t_WB);
+  T_WB.topRightCorner<3, 1>() = t_WB;
 
-  // Convert from the ROS x forward, z up to the supereight z forward, x right
-  // camera conventions.
-  Eigen::Matrix4d T_RC;
-  T_RC <<  0,  0, 1, 0,
-          -1,  0, 0, 0,
-           0, -1, 0, 0,
-           0,  0, 0, 1;
-  const Eigen::Matrix4d T_WC = T_WR * T_RC;
+  // Convert body pose to camera pose.
+  const Eigen::Matrix4d T_WC = T_WB * supereight_config_.T_BC.cast<double>();
 
   // Create a ROS message from T_WC.
   geometry_msgs::TransformStamped T_WC_msg;
-  T_WC_msg.header = T_WR_msg->header;
+  T_WC_msg.header = T_WB_msg->header;
   T_WC_msg.header.frame_id = frame_id_;
   const Eigen::Quaterniond q_WC (T_WC.topLeftCorner<3, 3>());
   tf::quaternionEigenToMsg(q_WC, T_WC_msg.transform.rotation);

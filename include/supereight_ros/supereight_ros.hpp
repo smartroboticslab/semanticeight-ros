@@ -95,18 +95,18 @@ namespace se {
     void RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg);
 
     /*!
-     * \brief ROS callback for camera pose messages in topic `/pose`.
+     * \brief ROS callback for body pose messages in topic `/pose`.
      *
-     * Convert the camera pose from the ROS convention (x forward, y left, z up)
-     * to the supereight convention (x right, y down, z forward) and append it
-     * to se::SupereightNode::pose_buffer_. If tracking is disabled
-     * (`se::SupereightNode::enable_tracking == false`) also call
+     * Convert the body pose (using the ROS convention x forward, y left, z up)
+     * to a camera pose (using the supereight convention x right, y down, z
+     * forward) and append it to se::SupereightNode::pose_buffer_. If tracking
+     * is disabled (`se::SupereightNode::enable_tracking == false`) also call
      * se::SupereightNode::fusionCallback.
      *
-     * \param[in] T_WR_msg The received camera pose message in the world frame
+     * \param[in] T_WB_msg The received body pose message in the world frame
      *                     with the ROS convention (x forward, y left, z up).
      */
-    void poseCallback(const geometry_msgs::TransformStamped::ConstPtr& T_WR_msg);
+    void poseCallback(const geometry_msgs::TransformStamped::ConstPtr& T_WB_msg);
 
     /*!
      * \brief Integrate the measurements using the supereight pipeline.
