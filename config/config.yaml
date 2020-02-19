@@ -26,15 +26,15 @@ compute_size_ratio: 2
 
 tracking_rate: 1
 
-integration_rate: 3
+integration_rate: 2
 
 rendering_rate: 4
 
 volume_resolution: [256, 256, 256]
 
-volume_size: [24.0, 24.0, 24.0]
+volume_size: [2.0, 2.0, 2.0]
 
-initial_pos_factor: [0.25, 0.25, 0.25]
+initial_pos_factor: [0.5, 0.5, 0.5]
 
 dump_volume_file: ""
 
