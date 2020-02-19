@@ -100,8 +100,6 @@ void SupereightNode::setupRos() {
     rgb_sub_ = nh_.subscribe("/camera/rgb_image",
         node_config_.rgb_buffer_size, &SupereightNode::RGBCallback, this);
   }
-  cam_info_sub_ = nh_.subscribe("/camera/camera_info",
-      2, &SupereightNode::camInfoCallback, this);
 
 
   // Publishers
@@ -153,18 +151,6 @@ void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg) {
   rgb_buffer_.push_back(rgb_msg);
   ROS_DEBUG("RGB image buffer:   %lu/%lu",
       rgb_buffer_.size(), rgb_buffer_.capacity());
-}
-
-
-
-void SupereightNode::camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn) {
-//  ROS_INFO("cam info callback %i", cam_info_ready_);
-  if (cam_info_ready_) return;
-  CamInfo = *camInfoIn;
-  CamModel.fromCameraInfo(camInfoIn);
-
-  cam_info_ready_ = true;
-  ROS_INFO("got camera model..");
 }
 
 
@@ -746,73 +732,60 @@ void SupereightNode::fusionCallback() {
 
 
 /* Taken from https://github.com/ethz-asl/volumetric_mapping */
-std_msgs::ColorRGBA SupereightNode::percentToColor(double h) {
-  /* Helen's note: direct copy from OctomapProvider. */
-  std_msgs::ColorRGBA color;
-  color.a = 1.0;
-  /* blend over HSV-values (more colors) */
+//std_msgs::ColorRGBA SupereightNode::percentToColor(double h) {
+//  /* Helen's note: direct copy from OctomapProvider. */
+//  std_msgs::ColorRGBA color;
+//  color.a = 1.0;
+//  /* blend over HSV-values (more colors) */
+//
+//  double s = 1.0;
+//  double v = 1.0;
+//
+//  h -= floor(h);
+//  h *= 6;
+//  int i;
+//  double m, n, f;
+//
+//  i = floor(h);
+//  f = h - i;
+//  if (!(i & 1)) f = 1 - f; /* if i is even */
+//  m = v * (1 - s);
+//  n = v * (1 - s * f);
+//
+//  switch (i) {
+//    case 6:
+//    case 0:color.r = v;
+//      color.g = n;
+//      color.b = m;
+//      break;
+//    case 1:color.r = n;
+//      color.g = v;
+//      color.b = m;
+//      break;
+//    case 2:color.r = m;
+//      color.g = v;
+//      color.b = n;
+//      break;
+//    case 3:color.r = m;
+//      color.g = n;
+//      color.b = v;
+//      break;
+//    case 4:color.r = n;
+//      color.g = m;
+//      color.b = v;
+//      break;
+//    case 5:color.r = v;
+//      color.g = m;
+//      color.b = n;
+//      break;
+//    default:color.r = 1;
+//      color.g = 0.5;
+//      color.b = 0.5;
+//      break;
+//  }
+//
+//  return color;
+//}
 
-  double s = 1.0;
-  double v = 1.0;
-
-  h -= floor(h);
-  h *= 6;
-  int i;
-  double m, n, f;
-
-  i = floor(h);
-  f = h - i;
-  if (!(i & 1)) f = 1 - f; /* if i is even */
-  m = v * (1 - s);
-  n = v * (1 - s * f);
-
-  switch (i) {
-    case 6:
-    case 0:color.r = v;
-      color.g = n;
-      color.b = m;
-      break;
-    case 1:color.r = n;
-      color.g = v;
-      color.b = m;
-      break;
-    case 2:color.r = m;
-      color.g = v;
-      color.b = n;
-      break;
-    case 3:color.r = m;
-      color.g = n;
-      color.b = v;
-      break;
-    case 4:color.r = n;
-      color.g = m;
-      color.b = v;
-      break;
-    case 5:color.r = v;
-      color.g = m;
-      color.b = n;
-      break;
-    default:color.r = 1;
-      color.g = 0.5;
-      color.b = 0.5;
-      break;
-  }
-
-  return color;
-}
-
-bool SupereightNode::setTFMapfromWorld(const Eigen::Vector3f &translation,
-                                          const Eigen::Vector3f &init_position_octree,
-                                          Eigen::Vector3f &const_translation,
-                                          Eigen::Matrix4f &tf_matrix) {
-  const_translation = init_position_octree;
-  const_translation(0) -= translation(0);
-  const_translation(1) -= translation(2);
-  const_translation(2) -= translation(1);
-  // x- axis 90, z-axis 90
-  tf_matrix << 0, -1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0, 0, 0, 1;
-  tf_matrix.block<3, 1>(0, 3) += init_position_octree;
-  return true;
-}
 }  // namespace se
 

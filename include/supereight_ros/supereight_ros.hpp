@@ -4,16 +4,6 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-/**
- * Coordinate Frames Definition
- * robot poses are in 'world frame'
- * 'octree frame' is positioned on the lower corner of the volume, so that the whole volume is
- * contained in the positive octant
- * transform from 'map frame' to 'world frame' is defined arbritrarily.
- * axes of the map and the octree frame are aligned at the origin of the 'map frame' in the
- * octree coordinates is at the point of the volume encoded in init_pose
- */
-
 #ifndef __SUPEREIGHT_ROS_HPP
 #define __SUPEREIGHT_ROS_HPP
 
@@ -32,8 +22,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <image_geometry/pinhole_camera_model.h>
-#include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -61,20 +49,6 @@ namespace se {
       return pipeline_;
     }
 
-    /**
-     * @brief set TF matrix supereight map from world
-     * @param[in] translation first pose from robot
-     * @param[in] init_position_octree: volume size vector * initial pos factor
-     * vector
-     * @param[out] const_translation: first pose intializet in the octree map
-     * @param[out] tf_matrix
-     * @return bool
-     */
-    bool setTFMapfromWorld(const Eigen::Vector3f &translation,
-                           const Eigen::Vector3f &init_position_octree,
-                           Eigen::Vector3f       &const_translation,
-                           Eigen::Matrix4f       &tf_matrix);
-
 
 
   private:
@@ -100,12 +74,6 @@ namespace se {
      * \param[in] rgb_msg Pointer to the RGB image message.
      */
     void RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg);
-
-    /**
-     * @brief reads camera info
-     * @param camInfoIn
-     */
-    void camInfoCallback(const sensor_msgs::CameraInfoConstPtr &camInfoIn);
 
     /**
      * @brief adds pose from ground truth file or recorded pose to pose buffer
@@ -141,7 +109,7 @@ namespace se {
     //                     vec3i &updated_blocks);
 
     /* Taken from https://github.com/ethz-asl/volumetric_mapping */
-    std_msgs::ColorRGBA percentToColor(double h);
+    //std_msgs::ColorRGBA percentToColor(double h);
 
 
 
@@ -167,16 +135,10 @@ namespace se {
     std::unique_ptr<uint32_t> track_render_;
     std::unique_ptr<uint32_t> volume_render_;
 
-    // Camera info
-    sensor_msgs::CameraInfo CamInfo;
-    image_geometry::PinholeCameraModel CamModel;
-    bool cam_info_ready_ = false;
-
     // Subscribers
     ros::Subscriber pose_sub_;
     ros::Subscriber depth_sub_;
     ros::Subscriber rgb_sub_;
-    ros::Subscriber cam_info_sub_;
 
     // Publishers
     ros::Publisher supereight_pose_pub_;
@@ -197,12 +159,11 @@ namespace se {
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;
     boost::circular_buffer<sensor_msgs::ImageConstPtr>      depth_buffer_;
     boost::circular_buffer<sensor_msgs::ImageConstPtr>      rgb_buffer_;
-    static constexpr size_t pose_buffer_size_  = 1000;
-    static constexpr size_t depth_buffer_size_ = 100;
-    static constexpr size_t rgb_buffer_size_   = 100;
     std::mutex pose_buffer_mutex_;
     std::mutex depth_buffer_mutex_;
     std::mutex rgb_buffer_mutex_;
+
+    std::mutex fusion_mutex_;
 
     // voxel blockwise update for visualization
     //mapvec3i voxel_block_map_;
@@ -212,18 +173,11 @@ namespace se {
     // block based visualization
     //bool pub_map_update_ = false;
 
-    std::mutex fusion_mutex_;
-
     /**
      * Global/map coordinate frame. Will always look up TF transforms to this
      * frame.
      */
     std::string frame_id_;
-
-    bool set_world_to_map_tf_ = false;
-    Eigen::Matrix4f tf_map_from_world_ = Eigen::Matrix4f::Identity();
-    Eigen::Matrix4f tf_world_from_map_ = Eigen::Matrix4f::Identity();
-    Eigen::Vector3f const_translation_;
 
     // Timings
     std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;
