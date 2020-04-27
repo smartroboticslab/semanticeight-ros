@@ -47,8 +47,8 @@ namespace se {
     Eigen::Vector2i input_size;
 
     /*!
-     * The type of the pose topic. Valid values are geometry_msgs::PoseStamped
-     * and geometry_msgs::TransformStamped.
+     * The type of the pose topic. Valid values are `geometry_msgs::PoseStamped`
+     * and `geometry_msgs::TransformStamped`.
      */
     std::string pose_topic_type;
 
@@ -62,10 +62,10 @@ namespace se {
     int pose_buffer_size;
 
     /*!
-     * The number of elements in the depth image circular buffer. A low
-     * value will resulting in integrating fairly recent frames into the map. A
-     * high value will result in integrating older frames into the map. A value
-     * of 1 will result in integrating the most recent depth frame into the map.
+     * The number of elements in the depth image circular buffer. A low value
+     * will result in integrating fairly recent frames into the map. A high
+     * value will result in integrating older frames into the map. A value of 1
+     * will result in integrating the most recent depth frame into the map.
      */
     int depth_buffer_size;
 

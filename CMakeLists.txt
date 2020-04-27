@@ -17,6 +17,7 @@ set(SE_ROS_VERSION
 set(CMAKE_CXX_STANDARD 14)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 
+# Select the supereight voxel implementation to use.
 set(field_type_macro SE_VOXEL_IMPLEMENTATION=OFusion)
 
 # ------------------------------------------------------------------------------
