@@ -2,5 +2,8 @@
 # SPDX-License-Identifier: CC0-1.0
 
 - builder: doxygen
+  file_patterns: '*.h *.hpp *.md *.dox'
+  exclude: './supereight'
   tab_size: 4
-  use_mdfile_as_mainpage: README.md
+  use_mdfile_as_mainpage: './README.md'
+
