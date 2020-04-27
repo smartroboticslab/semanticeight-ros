@@ -1,0 +1,3 @@
+[submodule "supereight"]
+	path = supereight
+	url = ../supereight-srl.git

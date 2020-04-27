@@ -26,7 +26,6 @@ set(field_type_macro SE_VOXEL_IMPLEMENTATION=OFusion)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(Eigen3 REQUIRED)
-find_package(supereight REQUIRED)
 find_package(Boost REQUIRED)
 
 # Find catkin macros and libraries
@@ -51,6 +50,9 @@ if (WITH_OPENMP)
     message(STATUS "Compiling with OpenMP support")
   endif ()
 endif ()
+
+# Compile supereight
+add_subdirectory(supereight)
 
 # ------------------------------------------------------------------------------
 # Catkin
