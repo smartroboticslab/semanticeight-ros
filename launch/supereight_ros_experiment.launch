@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
-<!--
-SPDX-FileCopyrightText: 2019 Anna Dai
-SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
-SPDX-License-Identifier: CC0-1.0
--->
+<!-- SPDX-FileCopyrightText: 2019 Anna Dai -->
+<!-- SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
   <include file="$(find supereight_ros)/launch/supereight_ros.launch">
     <!-- Use a different config file -->

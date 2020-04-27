@@ -1,12 +1,11 @@
 <?xml version="1.0"?>
-<!--
-SPDX-FileCopyrightText: 2019 Anna Dai
-SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
-SPDX-License-Identifier: CC0-1.0
--->
+<!-- SPDX-FileCopyrightText: 2019 Anna Dai -->
+<!-- SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
   <!-- Set the ROS log level in rosconsole.conf -->
-  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
+  <env name="ROSCONSOLE_CONFIG_FILE"
+       value="$(find supereight_ros)/config/rosconsole.conf"/>
 
   <!-- Node arguments -->
   <arg name="supereight_ros_config_file"
@@ -38,3 +37,4 @@ SPDX-License-Identifier: CC0-1.0
     <param name="pose_topic_type" value="$(arg pose_topic_type)"/>
   </node>
 </launch>
+
