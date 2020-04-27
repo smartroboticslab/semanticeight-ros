@@ -39,8 +39,6 @@ namespace se {
    */
   class SupereightNode {
   public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
     SupereightNode(const ros::NodeHandle& nh,
                    const ros::NodeHandle& nh_private);
 
@@ -54,6 +52,8 @@ namespace se {
     std::shared_ptr<DenseSLAMSystem> getSupereightPipeline() {
       return pipeline_;
     }
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 
 
