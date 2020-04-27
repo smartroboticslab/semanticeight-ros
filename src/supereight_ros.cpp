@@ -73,7 +73,11 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   // Allocate message circular buffers.
   pose_buffer_.set_capacity(node_config_.pose_buffer_size);
   depth_buffer_.set_capacity(node_config_.depth_buffer_size);
-  rgb_buffer_.set_capacity(node_config_.rgb_buffer_size);
+  if (node_config_.enable_rgb) {
+    rgb_buffer_.set_capacity(node_config_.rgb_buffer_size);
+  } else {
+    rgb_buffer_.set_capacity(0);
+  }
 
   setupRos();
 }
