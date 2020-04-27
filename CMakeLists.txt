@@ -15,7 +15,6 @@ set(SE_ROS_VERSION
 # Compilation options
 # ------------------------------------------------------------------------------
 set(CMAKE_CXX_STANDARD 14)
-add_compile_options(-march=native)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 
 set(field_type_macro SE_VOXEL_IMPLEMENTATION=OFusion)
