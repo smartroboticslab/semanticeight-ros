@@ -37,21 +37,21 @@ your current setup.
 
 #### Subscribed topics
 
-| Topic name            | Type                         | Description |
-| :-------------------- | :--------------------------- | :---------- |
-| `/camera/depth_image` | `sensor_msgs::Image`         | The input depth image. |
-| `/camera/rgb_image`   | `sensor_msgs::Image`         | The input RGB image. Optional, only subscribed to if `enable_rgb` is `true`. |
-| `/pose`               | `geometry_msgs::PoseStamped` | The external or ground truth camera pose. Its type can be changed to `geometry_msgs::TransformStamped` by changing the value of the `pose_topic_type` node argument. Optional, only subscribed to if `enable_tracking` is `false`. |
+| Topic name            | Type                                       | Description |
+| :-------------------- | :----------------------------------------- | :---------- |
+| `/camera/depth_image` | `sensor_msgs::Image` (`mono16` or `32FC1`) | The input depth image. |
+| `/camera/rgb_image`   | `sensor_msgs::Image` (`rgb8` or `rgba8`)   | The input RGB image. Optional, only subscribed to if `enable_rgb` is `true`. |
+| `/pose`               | `geometry_msgs::PoseStamped`               | The external or ground truth camera pose. Its type can be changed to `geometry_msgs::TransformStamped` by changing the value of the `pose_topic_type` node argument. Optional, only subscribed to if `enable_tracking` is `false`. |
 
 #### Published topics
 
-| Topic name                  | Type                         | Description |
-| :-------------------------- | :--------------------------- | :---------- |
-| `/supereight/pose`          | `geometry_msgs::PoseStamped` | The camera pose as computed by supereight's ICP tracking. Only published if `enable_tracking` is `true`. |
-| `/supereight/depth_render`  | `sensor_msgs::Image`         | The depth image received by supereight. Only published if `enable_rendering` is `true`. |
-| `/supereight/rgba_render`   | `sensor_msgs::Image`         | The RGBA image received by supereight. Only published if both `enable_rendering` and `enable_rgb` are `true`. |
-| `/supereight/track_render`  | `sensor_msgs::Image`         | The ICP tracking status as an image. Only published if both `enable_rendering` and `enable_tracking` are `true`. |
-| `/supereight/volume_render` | `sensor_msgs::Image`         | The map render from the current pose. Only published if `enable_rendering` is `true`. |
+| Topic name                  | Type                           | Description |
+| :-------------------------- | :----------------------------- | :---------- |
+| `/supereight/pose`          | `geometry_msgs::PoseStamped`   | The camera pose as computed by supereight's ICP tracking. Only published if `enable_tracking` is `true`. |
+| `/supereight/depth_render`  | `sensor_msgs::Image` (`rgba8`) | The depth image received by supereight. Only published if `enable_rendering` is `true`. |
+| `/supereight/rgba_render`   | `sensor_msgs::Image` (`rgba8`) | The RGBA image received by supereight. Only published if both `enable_rendering` and `enable_rgb` are `true`. |
+| `/supereight/track_render`  | `sensor_msgs::Image` (`rgba8`) | The ICP tracking status as an image. Only published if both `enable_rendering` and `enable_tracking` are `true`. |
+| `/supereight/volume_render` | `sensor_msgs::Image` (`rgba8`) | The map render from the current pose. Only published if `enable_rendering` is `true`. |
 
 #### Changing the voxel implementation
 supereight\_ros uses the `OFusion` (single-resolution occupancy mapping) voxel

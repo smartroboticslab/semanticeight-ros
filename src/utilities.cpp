@@ -48,6 +48,36 @@ namespace se {
 
 
 
+  void to_supereight_RGB(const sensor_msgs::Image& input_color,
+                         uint8_t*                  output_rgb) {
+
+    // Just copy the image data since this is already the correct format.
+    if ((input_color.encoding == "8UC3") || (input_color.encoding == "rgb8")) {
+      const size_t image_size_bytes = input_color.height * input_color.step;
+      std::memcpy(output_rgb, input_color.data.data(), image_size_bytes);
+
+    // Remove the alpha channel.
+    } else if ((input_color.encoding == "8UC4") || (input_color.encoding == "rgba8")) {
+      // Iterate over every pixel.
+      #pragma omp parallel for
+      for (size_t i = 0; i < input_color.width * input_color.height; ++i) {
+        // Skip the alpha channel (every 4th byte).
+        if (i % 4 == 0) {
+          continue;
+        }
+        output_rgb[i] = input_color.data[i];
+      }
+
+    // Invalid format.
+    } else {
+      ROS_FATAL("Invalid input depth format %s, expected rgb8, 8UC3, rgba8 or 8UC4",
+          input_color.encoding.c_str());
+      abort();
+    }
+  }
+
+
+
   sensor_msgs::Image RGBA_to_msg(const uint32_t*         image_data,
                                  const Eigen::Vector2i&  image_res,
                                  const std_msgs::Header& header) {

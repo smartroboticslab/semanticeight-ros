@@ -329,8 +329,7 @@ void SupereightNode::fusionCallback() {
   // Copy the depth and RGB images into the buffers used by supereight.
   to_supereight_depth(*current_depth_msg, input_depth_.get());
   if (node_config_.enable_rgb) {
-    const size_t image_size_bytes = current_rgb_msg->height * current_rgb_msg->step;
-    std::memcpy(input_rgb_.get(), current_rgb_msg->data.data(), image_size_bytes);
+    to_supereight_RGB(*current_rgb_msg, input_rgb_.get());
   }
   timings_[1] = std::chrono::steady_clock::now();
 

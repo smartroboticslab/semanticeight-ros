@@ -48,15 +48,25 @@ namespace se {
 
   /*!
    * \brief Copy the depth image message into the supereight buffer.
-   *
-   * If needed, the input depth image is converted into uint16_t containing
-   * millimiters.
+   * Valid input depth image pixel types are `mono16`, `16UC1` and `32FC1`.
    *
    * \param[in]  input_depth  The depth message to copy.
    * \param[out] output_depth The destination buffer.
    */
   void to_supereight_depth(const sensor_msgs::Image& input_depth,
                            uint16_t*                 output_depth);
+
+
+
+   /*!
+   * \brief Copy the color image message into the supereight buffer.
+   * Valid input color image pixel types are `rgb8`, `8UC3`, `rgba8` and `8UC4`.
+   *
+   * \param[in]  input_color The color message to copy.
+   * \param[out] output_rgb  The destination buffer.
+   */
+  void to_supereight_RGB(const sensor_msgs::Image& input_color,
+                         uint8_t*                  output_rgb);
 
 
 
