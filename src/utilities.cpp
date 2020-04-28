@@ -19,31 +19,28 @@ namespace se {
   void to_supereight_depth(const sensor_msgs::Image& input_depth,
                            uint16_t*                 output_depth) {
 
-    if (input_depth.encoding == "16UC1") {
-      // Just copy the image data since this is already the correct format.
+    // Just copy the image data since this is already the correct format.
+    if ((input_depth.encoding == "16UC1") || (input_depth.encoding == "mono16")) {
       const size_t image_size_bytes = input_depth.height * input_depth.step;
       std::memcpy(output_depth, input_depth.data.data(), image_size_bytes);
 
+    // The depth is in float meters, convert to uint16_t millimeters.
     } else if (input_depth.encoding == "32FC1") {
-      // The depth is in float meters, convert to uint16_t millimeters.
-      const size_t image_size_pixels = input_depth.width * input_depth.height;
-      // Cast the image data as a float pointer so that operator[] can be used
-      // to get the value of each pixel.
-      const float* input_ptr
-          = reinterpret_cast<const float*>(input_depth.data.data());
-#pragma omp parallel for
-      for (size_t i = 0; i < image_size_pixels; ++i) {
-        const float depth_mm = 1000.f * input_ptr[i];
-        // Test whether the depth value is NaN or if it would cause an overflow
-        // in a uint16_t. In that case store an invalid depth value.
+      #pragma omp parallel for
+      for (size_t i = 0; i < input_depth.width * input_depth.height; ++i) {
+        const float depth_mm = 1000.f * input_depth.data[i];
+        // If the depth value is NaN or if it would cause an overflow in a
+        // uint16_t store an invalid depth value.
         if (std::isnan(depth_mm) || (depth_mm > UINT16_MAX)) {
           output_depth[i] = 0;
         } else {
           output_depth[i] = static_cast<uint16_t>(depth_mm);
         }
       }
+
+    // Invalid format.
     } else {
-      ROS_FATAL("Invalid input depth format %s, expected 16UC1 or 32FC1",
+      ROS_FATAL("Invalid input depth format %s, expected mono16, 16UC1 or 32FC1",
           input_depth.encoding.c_str());
       abort();
     }
@@ -51,15 +48,14 @@ namespace se {
 
 
 
-  sensor_msgs::Image msg_from_RGBA_image(
-      const uint32_t*                   image_data,
-      const Eigen::Vector2i&            image_res,
-      const sensor_msgs::ImageConstPtr& header_source) {
+  sensor_msgs::Image RGBA_to_msg(const uint32_t*         image_data,
+                                 const Eigen::Vector2i&  image_res,
+                                 const std_msgs::Header& header) {
 
-    const size_t num_bytes = image_res.x() * image_res.y() * sizeof(uint32_t);
+    const size_t num_bytes = image_res.prod() * sizeof(uint32_t);
     sensor_msgs::Image image;
 
-    image.header       = header_source->header;
+    image.header       = header;
     image.height       = image_res.y();
     image.width        = image_res.x();
     image.encoding     = "rgba8";

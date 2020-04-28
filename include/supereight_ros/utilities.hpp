@@ -61,16 +61,15 @@ namespace se {
 
 
   /*!
-   * \brief Create an RGBA image message from a buffer.
+   * \brief Create an image message from an RGBA image.
    *
-   * \param[in] image_data    The RGBA image data to copy into the new image.
-   * \param[in] image_res     The resolution of the new image.
-   * \param[in] header_source The image to copy the header from.
+   * \param[in] image_data The RGBA image data to copy into the message.
+   * \param[in] image_res  The resolution of RGBA image.
+   * \param[in] header     The header to use for the resulting message.
    */
-  sensor_msgs::Image msg_from_RGBA_image(
-      const uint32_t*                   image_data,
-      const Eigen::Vector2i&            image_res,
-      const sensor_msgs::ImageConstPtr& header_source);
+  sensor_msgs::Image RGBA_to_msg(const uint32_t*         image_data,
+                                 const Eigen::Vector2i&  image_res,
+                                 const std_msgs::Header& header);
 
 
 

@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <queue>
 #include <string>
 #include <vector>
 
@@ -188,8 +187,6 @@ namespace se {
     Eigen::Vector3f init_position_octree_;
     Eigen::Vector2i computation_size_;
     int frame_;
-    float res_;
-    //std::shared_ptr<se::Octree<SE_VOXEL_IMPLEMENTATION> > octree_;
 
     // Image buffers
     std::unique_ptr<uint16_t> input_depth_;
@@ -208,16 +205,16 @@ namespace se {
     ros::Publisher supereight_pose_pub_;
 
     // Render publishers
-    ros::Publisher rgba_render_pub_;
     ros::Publisher depth_render_pub_;
+    ros::Publisher rgba_render_pub_;
     ros::Publisher volume_render_pub_;
     ros::Publisher track_render_pub_;
 
     // Visualization publishers
-    ros::Publisher map_marker_pub_;
-    ros::Publisher block_based_marker_pub_;
-    ros::Publisher boundary_marker_pub_;
-    ros::Publisher frontier_marker_pub_;
+    //ros::Publisher map_marker_pub_;
+    //ros::Publisher block_based_marker_pub_;
+    //ros::Publisher boundary_marker_pub_;
+    //ros::Publisher frontier_marker_pub_;
 
     // Circular buffers for incoming messages
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;
