@@ -39,12 +39,12 @@ namespace se {
     bool enable_rgb;
 
     /*!
-     * The dimensions of the input depth and RGB images (width, height).
+     * The resolution of the input depth and RGB images (width, height).
      *
-     * \warning This should be set to the correct image size since it is used to
-     * initialize supereight.
+     * \warning This should be set to the correct image resolution since it is
+     * used to initialize supereight.
      */
-    Eigen::Vector2i input_size;
+    Eigen::Vector2i input_res;
 
     /*!
      * The type of the pose topic. Valid values are `geometry_msgs::PoseStamped`

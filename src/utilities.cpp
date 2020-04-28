@@ -53,18 +53,18 @@ namespace se {
 
   sensor_msgs::Image msg_from_RGBA_image(
       const uint32_t*                   image_data,
-      const Eigen::Vector2i&            image_size,
+      const Eigen::Vector2i&            image_res,
       const sensor_msgs::ImageConstPtr& header_source) {
 
-    const size_t num_bytes = image_size.x() * image_size.y() * sizeof(uint32_t);
+    const size_t num_bytes = image_res.x() * image_res.y() * sizeof(uint32_t);
     sensor_msgs::Image image;
 
     image.header       = header_source->header;
-    image.height       = image_size.y();
-    image.width        = image_size.x();
+    image.height       = image_res.y();
+    image.width        = image_res.x();
     image.encoding     = "rgba8";
     image.is_bigendian = 0;
-    image.step         = sizeof(uint32_t) * image_size.x();
+    image.step         = sizeof(uint32_t) * image_res.x();
     image.data         = std::vector<uint8_t>(num_bytes);
     memcpy(image.data.data(), image_data, num_bytes);
 

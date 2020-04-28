@@ -9,7 +9,7 @@ enable_rendering: true
 
 enable_rgb: false
 
-input_size: [640, 480]
+input_res: [640, 480]
 
 pose_buffer_size: 600
 

@@ -32,12 +32,12 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   readConfig(nh_private);
 
   init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
-  computation_size_ = node_config_.input_size / supereight_config_.compute_size_ratio;
+  computation_size_ = node_config_.input_res / supereight_config_.compute_size_ratio;
 
   // Allocate image buffers.
-  const size_t input_size_pixels
-      = node_config_.input_size.x() * node_config_.input_size.y();
-  input_depth_ = std::unique_ptr<uint16_t>(new uint16_t[input_size_pixels]);
+  const size_t num_pixels
+      = node_config_.input_res.x() * node_config_.input_res.y();
+  input_depth_ = std::unique_ptr<uint16_t>(new uint16_t[num_pixels]);
   if (node_config_.enable_rgb) {
     input_rgb_ = std::unique_ptr<uint8_t>(new uint8_t[3 * input_size_pixels]);
   }
@@ -334,10 +334,10 @@ void SupereightNode::fusionCallback() {
 
 
   // Preprocessing
-  pipeline_->preprocessDepth(input_depth_.get(), node_config_.input_size,
+  pipeline_->preprocessDepth(input_depth_.get(), node_config_.input_res,
       supereight_config_.bilateral_filter);
   if (node_config_.enable_rgb) {
-    pipeline_->preprocessColor(input_rgb_.get(), node_config_.input_size);
+    pipeline_->preprocessColor(input_rgb_.get(), node_config_.input_res);
   }
   timings_[2] = std::chrono::steady_clock::now();
 
