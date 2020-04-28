@@ -117,10 +117,14 @@ void SupereightNode::setupRos() {
   // Publishers
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose", node_config_.pose_buffer_size);
   if (node_config_.enable_rendering) {
-    rgb_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/rgb_render", 30);
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
+    if (node_config_.enable_rgb) {
+      rgb_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/rgb_render", 30);
+    }
+    if (node_config_.enable_tracking) {
+      track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
+    }
     volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
-    track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
   }
 
   // Visualization
@@ -405,12 +409,16 @@ void SupereightNode::fusionCallback() {
 
   // Rendering
   if (node_config_.enable_rendering) {
-    pipeline_->renderRGBA(
-        (unsigned char*) rgb_render_.get(), computation_size_);
     pipeline_->renderDepth(
         (unsigned char*) depth_render_.get(), computation_size_);
-    pipeline_->renderTrack(
-        (unsigned char*) track_render_.get(), computation_size_);
+    if (node_config_.enable_rgb) {
+      pipeline_->renderRGBA(
+          (unsigned char*) rgb_render_.get(), computation_size_);
+    }
+    if (node_config_.enable_tracking) {
+      pipeline_->renderTrack(
+          (unsigned char*) track_render_.get(), computation_size_);
+    }
     if (frame_ % supereight_config_.rendering_rate == 0) {
       pipeline_->renderVolume(
           (unsigned char*) volume_render_.get(), computation_size_,
