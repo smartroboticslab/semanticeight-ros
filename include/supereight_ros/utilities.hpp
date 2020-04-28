@@ -61,13 +61,13 @@ namespace se {
 
 
   /*!
-   * \brief Create an RGB image message from a buffer.
+   * \brief Create an RGBA image message from a buffer.
    *
-   * \param[in] image_data    The data to copy into the new image.
+   * \param[in] image_data    The RGBA image data to copy into the new image.
    * \param[in] image_size    The dimensions of the new image.
    * \param[in] header_source The image to copy the header from.
    */
-  sensor_msgs::Image msg_from_RGB_image(
+  sensor_msgs::Image msg_from_RGBA_image(
       const uint32_t*                   image_data,
       const Eigen::Vector2i&            image_size,
       const sensor_msgs::ImageConstPtr& header_source);

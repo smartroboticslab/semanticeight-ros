@@ -51,7 +51,7 @@ namespace se {
 
 
 
-  sensor_msgs::Image msg_from_RGB_image(
+  sensor_msgs::Image msg_from_RGBA_image(
       const uint32_t*                   image_data,
       const Eigen::Vector2i&            image_size,
       const sensor_msgs::ImageConstPtr& header_source) {

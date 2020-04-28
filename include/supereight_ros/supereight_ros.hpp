@@ -148,8 +148,8 @@ namespace se {
      * If matching is successful call the supereight pipeline `preprocess`,
      * `track`, `integrate` and `raycast` stages to update the map. If rendering
      * is enabled (if `se::SupereightNode::enable_rendering == true`) also
-     * generate the RGB, depth, tracking and volume renders and publish them in
-     * the `/supereight/rgb_render`, `/supereight/depth_render`,
+     * generate the depth, RGBA, tracking and volume renders and publish them in
+     * the `/supereight/rgba_render`, `/supereight/depth_render`,
      * `/supereight/track_render` and `/supereight/volume_render` topics
      * respectively.
      */
@@ -193,8 +193,8 @@ namespace se {
 
     // Image buffers
     std::unique_ptr<uint16_t> input_depth_;
-    std::unique_ptr<uint32_t> input_rgb_;
-    std::unique_ptr<uint32_t> rgb_render_;
+    std::unique_ptr<uint8_t>  input_rgb_;
+    std::unique_ptr<uint32_t> rgba_render_;
     std::unique_ptr<uint32_t> depth_render_;
     std::unique_ptr<uint32_t> track_render_;
     std::unique_ptr<uint32_t> volume_render_;
@@ -208,7 +208,7 @@ namespace se {
     ros::Publisher supereight_pose_pub_;
 
     // Render publishers
-    ros::Publisher rgb_render_pub_;
+    ros::Publisher rgba_render_pub_;
     ros::Publisher depth_render_pub_;
     ros::Publisher volume_render_pub_;
     ros::Publisher track_render_pub_;

@@ -49,7 +49,7 @@ your current setup.
 | :-------------------------- | :--------------------------- | :---------- |
 | `/supereight/pose`          | `geometry_msgs::PoseStamped` | The camera pose as computed by supereight's ICP tracking. Only published if `enable_tracking` is `true`. |
 | `/supereight/depth_render`  | `sensor_msgs::Image`         | The depth image received by supereight. Only published if `enable_rendering` is `true`. |
-| `/supereight/rgb_render`    | `sensor_msgs::Image`         | The RGB image received by supereight. Only published if both `enable_rendering` and `enable_rgb` are `true`. |
+| `/supereight/rgba_render`   | `sensor_msgs::Image`         | The RGBA image received by supereight. Only published if both `enable_rendering` and `enable_rgb` are `true`. |
 | `/supereight/track_render`  | `sensor_msgs::Image`         | The ICP tracking status as an image. Only published if both `enable_rendering` and `enable_tracking` are `true`. |
 | `/supereight/volume_render` | `sensor_msgs::Image`         | The map render from the current pose. Only published if `enable_rendering` is `true`. |
 
