@@ -43,9 +43,13 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   }
   if (node_config_.enable_rendering) {
     const size_t render_size_pixels = computation_size_.x() * computation_size_.y();
-    rgb_render_    = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
-    depth_render_  = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
-    track_render_  = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
+    depth_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
+    if (node_config_.enable_rgb) {
+      rgb_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
+    }
+    if (node_config_.enable_tracking) {
+      track_render_  = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
+    }
     volume_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_size_pixels]);
   }
 
@@ -409,35 +413,40 @@ void SupereightNode::fusionCallback() {
 
   // Rendering
   if (node_config_.enable_rendering) {
+    // Depth
     pipeline_->renderDepth(
         (unsigned char*) depth_render_.get(), computation_size_);
+    const sensor_msgs::Image depth_render_msg = msg_from_RGB_image(
+        depth_render_.get(), computation_size_, current_depth_msg);
+    depth_render_pub_.publish(depth_render_msg);
+
+    // RGB
     if (node_config_.enable_rgb) {
       pipeline_->renderRGBA(
           (unsigned char*) rgb_render_.get(), computation_size_);
+      const sensor_msgs::Image rgb_render_msg = msg_from_RGB_image(
+          rgb_render_.get(), computation_size_, current_depth_msg);
+      rgb_render_pub_.publish(rgb_render_msg);
     }
+
+    // Track
     if (node_config_.enable_tracking) {
       pipeline_->renderTrack(
           (unsigned char*) track_render_.get(), computation_size_);
+      const sensor_msgs::Image track_render_msg = msg_from_RGB_image(
+          track_render_.get(), computation_size_, current_depth_msg);
+      track_render_pub_.publish(track_render_msg);
     }
+
+    // Volume
     if (frame_ % supereight_config_.rendering_rate == 0) {
       pipeline_->renderVolume(
           (unsigned char*) volume_render_.get(), computation_size_,
           camera, 0.75 * supereight_config_.mu);
+      const sensor_msgs::Image volume_render_msg = msg_from_RGB_image(
+          volume_render_.get(), computation_size_, current_depth_msg);
+      volume_render_pub_.publish(volume_render_msg);
     }
-
-    const sensor_msgs::Image rgb_render_msg = msg_from_RGB_image(
-        rgb_render_.get(), computation_size_, current_depth_msg);
-    const sensor_msgs::Image depth_render_msg = msg_from_RGB_image(
-        depth_render_.get(), computation_size_, current_depth_msg);
-    const sensor_msgs::Image track_render_msg = msg_from_RGB_image(
-        track_render_.get(), computation_size_, current_depth_msg);
-    const sensor_msgs::Image volume_render_msg = msg_from_RGB_image(
-        volume_render_.get(), computation_size_, current_depth_msg);
-
-    rgb_render_pub_.publish(rgb_render_msg);
-    depth_render_pub_.publish(depth_render_msg);
-    track_render_pub_.publish(track_render_msg);
-    volume_render_pub_.publish(volume_render_msg);
   }
   timings_[6] = std::chrono::steady_clock::now();
 
