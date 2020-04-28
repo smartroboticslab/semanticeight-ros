@@ -53,6 +53,12 @@ your current setup.
 | `/supereight/track_render`  | `sensor_msgs::Image`         | The ICP tracking status as an image. Only published if both `enable_rendering` and `enable_tracking` are `true`. |
 | `/supereight/volume_render` | `sensor_msgs::Image`         | The map render from the current pose. Only published if `enable_rendering` is `true`. |
 
+#### Changing the voxel implementation
+supereight\_ros uses the `OFusion` (single-resolution occupancy mapping) voxel
+implementation from supereight. To use a different voxel implementation change
+the value of the `SE_VOXEL_IMPLEMENTATION` from `OFusion` to `TSDF`,
+`MultiresTSDF` or `MultiresOFusion` in `CMakeLists.txt` and recompile.
+
 ### `rviz` Visualization
 
 Some `rviz` configuration files are provided in `config/`. Run one of the
