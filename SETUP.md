@@ -28,7 +28,7 @@ supereight has the following dependencies:
 To install them on Ubuntu 18.04 run the provided script
 
 ``` bash
-./scripts/install_supereight_dependencies.sh
+./misc/install_supereight_dependencies.sh
 ```
 
 
@@ -98,4 +98,7 @@ Section 4.2.
 ``` bash
 catkin build -DCMAKE_BUILD_TYPE=Release
 ```
+
+The above comamnd will first build a compatible version of supereight and then
+build supereight_ros.
 

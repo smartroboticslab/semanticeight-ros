@@ -23,7 +23,7 @@ namespace se {
    */
   struct SupereightNodeConfig {
     /*!
-     * Use the ICP tracking from supereight.
+     * Use the ICP tracking from supereight to compute the camera pose.
      */
     bool enable_tracking;
 
@@ -35,6 +35,9 @@ namespace se {
 
     /*!
      * Add RGB images to the supereight pipeline.
+     * This has no effect in the supereight map for the time being since
+     * supereight uses only depth images. The option is available to make it
+     * easier to use modified supereight versions that make use of RGB images.
      */
     bool enable_rgb;
 
