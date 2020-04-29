@@ -11,6 +11,8 @@ enable_rgb: false
 
 input_res: [640, 480]
 
+pose_topic_type: "geometry_msgs::PoseStamped"
+
 pose_buffer_size: 600
 
 depth_buffer_size: 60

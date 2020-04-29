@@ -14,8 +14,6 @@
          value="/camera/rgb/image_raw"/>
     <arg name="pose_topic"
          value="/vicon/f550/f550"/>
-    <arg name="pose_topic_type"
-         default="geometry_msgs::TransformStamped"/>
   </include>
 </launch>
 

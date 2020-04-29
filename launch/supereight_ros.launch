@@ -16,8 +16,6 @@
        default="/firefly/vi_sensor/camera_color/color/image_raw"/>
   <arg name="pose_topic"
        default="/firefly/vi_sensor/ground_truth/transform"/>
-  <arg name="pose_topic_type"
-       default="geometry_msgs::PoseStamped"/>
   <arg name="command_prefix"
        default=""/>
 
@@ -32,9 +30,6 @@
     <remap from="/camera/depth_image" to="$(arg depth_image_topic)"/>
     <remap from="/camera/rgb_image"   to="$(arg rgb_image_topic)"/>
     <remap from="/pose"               to="$(arg pose_topic)"/>
-
-    <!-- Set parameter values -->
-    <param name="pose_topic_type" value="$(arg pose_topic_type)"/>
   </node>
 </launch>
 
