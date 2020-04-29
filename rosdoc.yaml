@@ -3,7 +3,7 @@
 
 - builder: doxygen
   file_patterns: '*.h *.hpp *.md *.dox'
-  exclude: './supereight'
+  exclude: './supereight ./supereight_public'
   tab_size: 4
   use_mdfile_as_mainpage: './README.md'
 
