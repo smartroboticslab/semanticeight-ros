@@ -1,7 +1,8 @@
 # supereight_ros
 
-A ROS wrapper for
-[supereight](https://bitbucket.org/smartroboticslab/supereight-srl).
+A ROS wrapper for [supereight](https://github.com/emanuelev/supereight), a high
+performance template octree library and a dense volumetric SLAM pipeline
+implementation.
 
 
 
