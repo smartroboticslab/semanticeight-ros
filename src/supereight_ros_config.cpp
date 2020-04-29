@@ -38,7 +38,7 @@ constexpr bool default_enable_tracking = true;
 constexpr bool default_enable_rendering = true;
 constexpr bool default_process_rgb = false;
 const Eigen::Vector2i default_input_res (640, 480);
-const std::string default_pose_topic_type ("geometry_msgs::PoseStampedddddd");
+const std::string default_pose_topic_type ("geometry_msgs::PoseStamped");
 constexpr int default_pose_buffer_size = 600;
 constexpr int default_depth_buffer_size = 60;
 constexpr int default_rgb_buffer_size = 60;
