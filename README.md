@@ -2,11 +2,12 @@
 <!-- SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: BSD-3-Clause -->
 
-# supereight\_ros
+# supereight_ros
 
 A ROS wrapper for
 [supereight](https://bitbucket.org/smartroboticslab/supereight-srl).
 
+For a detailed setup guide see [SETUP.md](SETUP.md).
 
 
 ## Build
