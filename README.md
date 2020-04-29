@@ -1,7 +1,3 @@
-<!-- SPDX-FileCopyrightText: 2019 Anna Dai -->
-<!-- SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou -->
-<!-- SPDX-License-Identifier: BSD-3-Clause -->
-
 # supereight_ros
 
 A ROS wrapper for
