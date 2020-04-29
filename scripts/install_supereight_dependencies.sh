@@ -7,21 +7,24 @@
 set -eu
 IFS="$(printf '%b_' '\t\n')" ; IFS="${IFS%_}"
 
+echo 'This script requires root privileges to install packages on your system'
+
 # Install binary dependencies
-DEBIAN_FRONTEND=noninteractive apt-get -y install \
+DEBIAN_FRONTEND=noninteractive sudo apt-get -y install \
 	build-essential git cmake libeigen3-dev libopencv-dev
 
 # Find the temporary file directory
 tmpdir="${TMPDIR:-/tmp}"
 
 # Install Sophus from source
+rm -rf "${tmpdir}/Sophus";
 git clone https://github.com/strasdat/Sophus.git "${tmpdir}/Sophus";
 mkdir -p "${tmpdir}/Sophus/build";
 cd "${tmpdir}/Sophus/build";
 git checkout v1.0.0;
 sed -i \
 	's/option(BUILD_TESTS "Build tests." ON)/option(BUILD_TESTS "Build tests." OFF)/' \
-	"${tmpdir}/Sophus/build/CMakeLists.txt";
+	"${tmpdir}/Sophus/CMakeLists.txt";
 cmake -DCMAKE_BUILD_TYPE=Release ..;
-make install;
+sudo make install;
 
