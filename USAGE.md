@@ -14,8 +14,8 @@ parameter values.
 
 | Parameter name        | Type             | Default value                  | Description |
 | :-------------------- | :--------------: | :----------------------------: | :---------- |
-| `enable_tracking`     | boolean          | `true`                         | Use the ICP tracking from supereight to compute the camera pose. |
-| `enable_rendering`    | boolean          | `true`                         | Generate and publish the depth, RGB, tracking info and volume render images from supereight. |
+| `enable_tracking`     | boolean          | `true`                         | Use the ICP tracking from supereight to compute the camera pose. If set to `false` then the external camera pose from `/pose` will be used instead. |
+| `enable_rendering`    | boolean          | `true`                         | Generate and publish the depth, RGB, tracking info and volume render images from supereight. This is only for visualization purposes and doesn't affect the pipeline in any way. |
 | `enable_rgb`          | boolean          | `false`                        | Add RGB images to the supereight pipeline. This has no effect in the supereight map for the time being since supereight uses only depth images. The option is available to make it easier to use modified supereight versions that make use of RGB images. |
 | `input_res`           | list of integers | `[640, 480]`                   | The resolution of the input depth and RGB images (width, height). This should be set to the correct image resolution since it is used to initialize supereight. |
 | `pose_topic_type`     | string           | `"geometry_msgs::PoseStamped"` | The type of the pose topic. Valid values are `geometry_msgs::PoseStamped`  and `geometry_msgs::TransformStamped`. |
@@ -32,7 +32,7 @@ file.
 
 | Topic name            | Type                                       | Description |
 | :-------------------- | :----------------------------------------- | :---------- |
-| `/camera/depth_image` | `sensor_msgs::Image` (`mono16` or `32FC1`) | The input depth image. |
+| `/camera/depth_image` | `sensor_msgs::Image` (`mono16` or `32FC1`) | The input depth image. The units for `mono16` are millimeters and for `32FC1` they are meters. |
 | `/camera/rgb_image`   | `sensor_msgs::Image` (`rgb8` or `rgba8`)   | The input RGB image. Optional, only subscribed to if `enable_rgb` is `true`. |
 | `/pose`               | `geometry_msgs::PoseStamped`               | The external or ground truth camera pose. Optional, only subscribed to if `enable_tracking` is `false`. Its type can be changed to `geometry_msgs::TransformStamped` by changing the value of the `pose_topic_type` node argument. |
 
