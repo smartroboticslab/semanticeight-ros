@@ -39,10 +39,12 @@ For a detailed usage guide see [USAGE.md](USAGE.md).
 
 ## Documentation
 
-To compile the documentation in HTML format in the `doc` directory run
+To compile the documentation in HTML format and view it in you default browser
+run
 
 ``` bash
 rosdoc_lite .
+xdg-open doc/html/index.html
 ```
 
 
