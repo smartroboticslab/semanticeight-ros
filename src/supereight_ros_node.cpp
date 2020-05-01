@@ -5,6 +5,7 @@
  */
 
 #include <cstdlib>
+#include <memory>
 
 #include "supereight_ros/supereight_ros.hpp"
 
@@ -20,7 +21,7 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "supereight_ros_node");
   ros::NodeHandle nh;
   ros::NodeHandle nh_private("~");
-  se::SupereightNode node(nh, nh_private);
+  std::unique_ptr<se::SupereightNode> node (new se::SupereightNode(nh, nh_private));
   ROS_INFO("Initialization finished");
 
   ros::spin();
