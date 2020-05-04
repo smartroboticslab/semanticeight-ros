@@ -1,8 +1,7 @@
-/*
- * SPDX-FileCopyrightText: 2019 Anna Dai
- * SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
- * SPDX-License-Identifier: BSD-3-Clause
- */
+// SPDX-FileCopyrightText: 2019-2020 Smart Robotics Lab, Imperial College London
+// SPDX-FileCopyrightText: 2019 Anna Dai
+// SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou
+// SPDX-License-Identifier: BSD-3-Clause
 
 #ifndef __SUPEREIGHT_ROS_HPP
 #define __SUPEREIGHT_ROS_HPP

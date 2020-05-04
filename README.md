@@ -51,6 +51,8 @@ xdg-open doc/html/index.html
 
 ## License
 
+Copyright © 2019-2020 Smart Robotics Lab, Imperial College London
+
 Copyright © 2019 Anna Dai
 
 Copyright © 2019-2020 Sotiris Papatheodorou

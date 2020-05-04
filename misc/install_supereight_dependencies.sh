@@ -1,6 +1,7 @@
 #!/bin/sh
 # install_supereight_dependencies.sh
 #
+# SPDX-FileCopyrightText: 2020 Smart Robotics Lab, Imperial College London
 # SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
 # SPDX-License-Identifier: CC0-1.0
 
