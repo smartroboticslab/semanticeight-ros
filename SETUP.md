@@ -4,13 +4,13 @@
 
 Follow the ROS Melodic setup guide from
 [here](https://wiki.ros.org/melodic/Installation), depending on your OS. The
-recommended OS is Ubuntu 18.04 (Bionic), since this is the only OS where
-supereight_ros is tested.
+only officially supported OS is Ubuntu 18.04 (Bionic), since this is the only
+OS where supereight_ros is tested. The rest of the instructions will assume you
+are using ROS Melodic on Ubuntu 18.04.
 
-After installing ROS, install the Python `catkin_tools` package. To install
-it on Ubuntu 18.04 run
+After installing ROS, install the Python `catkin_tools` package
 
-``` bash
+```bash
 sudo apt install python-catkin-tools
 ```
 
@@ -25,9 +25,9 @@ supereight has the following dependencies:
 - `Sophus 1.0.0`
 - `OpenCV 3`
 
-To install them on Ubuntu 18.04 run the provided script
+To install them run the provided script
 
-``` bash
+```bash
 ./misc/install_supereight_dependencies.sh
 ```
 
@@ -39,7 +39,7 @@ To install them on Ubuntu 18.04 run the provided script
 
 In case you're not already doing so in your `.bashrc`
 
-``` bash
+```bash
 source /opt/ros/melodic/setup.bash
 ```
 
@@ -48,14 +48,14 @@ source /opt/ros/melodic/setup.bash
 Feel free to change `~/catkin_ws` to a directory of your choice, making sure to
 also change it in any following commands.
 
-``` bash
+```bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws
 ```
 
 ### 3.3 Initialize the workspace
 
-``` bash
+```bash
 catkin init
 ```
 
@@ -65,7 +65,7 @@ catkin init
 
 ### 4.1 Clone supereight_ros into the workspace
 
-``` bash
+```bash
 cd ~/catkin_ws/src
 git clone https://bitbucket.org/smartroboticslab/supereight_ros.git
 ```
@@ -79,13 +79,13 @@ If you don't have access to the supereight-srl repository (in which case the
 command in Section 4.3 will fail), change to the public supereight branch using
 the following command
 
-``` bash
+```bash
 git checkout public-supereight
 ```
 
 ### 4.3 Initialize and clone the supereight submodule
 
-``` bash
+```bash
 git submodule update --init
 ```
 
@@ -95,7 +95,7 @@ Section 4.2.
 
 ### 4.4 Build supereight and supereight_ros
 
-``` bash
+```bash
 catkin build -DCMAKE_BUILD_TYPE=Release
 ```
 

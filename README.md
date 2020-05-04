@@ -8,6 +8,9 @@ implementation.
 
 ## Build
 
+This package targets ROS Melodic on Ubuntu 18.04. Any other configuration is
+not tested and not officially supported.
+
 After cloning the repository, clone all the submodules using
 
 ``` bash
