@@ -17,6 +17,7 @@
 
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 
 
 
@@ -145,6 +146,28 @@ namespace se {
       const double                                              query_timestamp,
       const double                                              threshold,
       sensor_msgs::ImageConstPtr&                               closest_image);
+
+
+
+  /*!
+   * \brief Convert a transform message to an Eigen matrix.
+   *
+   * \param[in] tf_msg The transform message to convert.
+   *
+   * \return An Eigen matrix containing a homogeneous transform.
+   */
+  Eigen::Matrix4f transform_msg_to_eigen(const geometry_msgs::TransformStamped& tf_msg);
+
+
+
+  /*!
+   * \brief Convert a pose message to an Eigen matrix.
+   *
+   * \param[in] pose_msg The pose message to convert.
+   *
+   * \return An Eigen matrix containing the pose as homogeneous transform.
+   */
+  Eigen::Matrix4f pose_msg_to_eigen(const geometry_msgs::PoseStamped& pose_msg);
 
 } // namespace se
 

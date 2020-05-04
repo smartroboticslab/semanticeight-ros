@@ -228,5 +228,43 @@ namespace se {
     }
   }
 
+
+
+  Eigen::Matrix4f transform_msg_to_eigen(const geometry_msgs::TransformStamped& tf_msg) {
+    const Eigen::Vector3f translation (
+        tf_msg.transform.translation.x,
+        tf_msg.transform.translation.y,
+        tf_msg.transform.translation.z);
+    const Eigen::Quaternionf rotation (
+        tf_msg.transform.rotation.w,
+        tf_msg.transform.rotation.x,
+        tf_msg.transform.rotation.y,
+        tf_msg.transform.rotation.z);
+    // Combine into homogeneous transform
+    Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
+    tf.block<3, 1>(0, 3) = translation;
+    tf.block<3, 3>(0, 0) = rotation.toRotationMatrix();
+    return tf;
+  }
+
+
+
+  Eigen::Matrix4f pose_msg_to_eigen(const geometry_msgs::PoseStamped& pose_msg) {
+    const Eigen::Vector3f position (
+        pose_msg.pose.position.x,
+        pose_msg.pose.position.y,
+        pose_msg.pose.position.z);
+    const Eigen::Quaternionf orientation (
+        pose_msg.pose.orientation.w,
+        pose_msg.pose.orientation.x,
+        pose_msg.pose.orientation.y,
+        pose_msg.pose.orientation.z);
+    // Combine into homogeneous transform
+    Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
+    pose.block<3, 1>(0, 3) = position;
+    pose.block<3, 3>(0, 0) = orientation.toRotationMatrix();
+    return pose;
+  }
+
 } // namespace se
 
