@@ -41,7 +41,13 @@ namespace se {
     SupereightNode(const ros::NodeHandle& nh,
                    const ros::NodeHandle& nh_private);
 
-    ~SupereightNode();
+    /*!
+     * \brief Save the current supereight map to a `.vtk` file.
+     *
+     * \note The map is only saved if the value of
+     * se::Configuration::dump_volume_file has been set to a non-empty string.
+     */
+    void saveMap();
 
     /*!
      * \brief Access the supereight pipeline directly if needed.

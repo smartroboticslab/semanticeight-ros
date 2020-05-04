@@ -87,13 +87,16 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   }
 
   setupRos();
+
+  ROS_INFO("Initialization finished");
 }
 
 
 
-SupereightNode::~SupereightNode() {
+void SupereightNode::saveMap() {
   if (!supereight_config_.dump_volume_file.empty()) {
     pipeline_->dump_mesh(supereight_config_.dump_volume_file.c_str());
+    ROS_INFO("Map saved in %s\n", supereight_config_.dump_volume_file.c_str());
   }
 }
 
