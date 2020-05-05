@@ -92,164 +92,13 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
 
 
-void SupereightNode::saveMap() {
-  if (!supereight_config_.dump_volume_file.empty()) {
-    pipeline_->dump_mesh(supereight_config_.dump_volume_file.c_str());
-    ROS_INFO("Map saved in %s\n", supereight_config_.dump_volume_file.c_str());
+void SupereightNode::runPipelineOnce() {
+  // runPipelineOnce() should only be run by a single thread at a time. Return
+  // if the lock can't be acquired (another thread is already running).
+  std::unique_lock<std::mutex> fusion_lock (fusion_mutex_, std::defer_lock_t());
+  if (!fusion_lock.try_lock()) {
+    return;
   }
-}
-
-
-
-void SupereightNode::setupRos() {
-  // Pose subscriber
-  if (!node_config_.enable_tracking) {
-    if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
-      pose_sub_ = nh_.subscribe("/pose", node_config_.pose_buffer_size,
-          &SupereightNode::poseStampedCallback, this);
-
-    } else if (node_config_.pose_topic_type == "geometry_msgs::TransformStamped") {
-      pose_sub_ = nh_.subscribe("/pose", node_config_.pose_buffer_size,
-          &SupereightNode::transformStampedCallback, this);
-
-    } else {
-      ROS_FATAL("Invalid pose topic type %s", node_config_.pose_topic_type.c_str());
-      ROS_FATAL("Expected geometry_msgs::PoseStamped or geometry_msgs::TransformStamped");
-      abort();
-    }
-  }
-  // Depth subscriber
-  depth_sub_ = nh_.subscribe("/camera/depth_image",
-      node_config_.depth_buffer_size, &SupereightNode::depthCallback, this);
-  // RGB subscriber
-  if (node_config_.enable_rgb) {
-    rgb_sub_ = nh_.subscribe("/camera/rgb_image", node_config_.rgb_buffer_size,
-        &SupereightNode::RGBCallback, this);
-  }
-
-  // Publishers
-  supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose",
-      node_config_.pose_buffer_size);
-  // Render publishers
-  if (node_config_.enable_rendering) {
-    depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
-    if (node_config_.enable_rgb) {
-      rgba_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/rgba_render", 30);
-    }
-    if (node_config_.enable_tracking) {
-      track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
-    }
-    volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
-  }
-
-  // Visualization
-  //map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
-  //block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
-  //boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
-  //frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
-}
-
-
-
-void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
-  supereight_config_ = read_supereight_config(nh_private);
-  print_supereight_config(supereight_config_);
-
-  node_config_ = read_supereight_node_config(nh_private);
-  print_supereight_node_config(node_config_);
-};
-
-
-
-void SupereightNode::depthCallback(const sensor_msgs::ImageConstPtr& depth_msg) {
-  const std::lock_guard<std::mutex> depth_lock (depth_buffer_mutex_);
-  depth_buffer_.push_back(depth_msg);
-  ROS_DEBUG("Depth image buffer: %lu/%lu", depth_buffer_.size(), depth_buffer_.capacity());
-
-  // If tracking is enabled the fusion callback has to be called from here since
-  // the pose callback is never called.
-  if (node_config_.enable_tracking) {
-    std::thread fusion_thread (std::bind(&SupereightNode::fusionCallback, this));
-    fusion_thread.detach();
-  }
-}
-
-
-
-void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg) {
-  const std::lock_guard<std::mutex> rgb_lock (rgb_buffer_mutex_);
-  rgb_buffer_.push_back(rgb_msg);
-  ROS_DEBUG("RGB image buffer:   %lu/%lu", rgb_buffer_.size(), rgb_buffer_.capacity());
-}
-
-
-
-void SupereightNode::poseStampedCallback(
-    const geometry_msgs::PoseStamped::ConstPtr& T_WB_msg) {
-
-  // Convert the message to an Eigen matrix.
-  Eigen::Matrix4d T_WB = Eigen::Matrix4d::Identity();
-  Eigen::Quaterniond q_WB;
-  tf::quaternionMsgToEigen(T_WB_msg->pose.orientation, q_WB);
-  T_WB.topLeftCorner<3, 3>() = q_WB.toRotationMatrix();
-  Eigen::Vector3d t_WB;
-  tf::pointMsgToEigen(T_WB_msg->pose.position, t_WB);
-  T_WB.topRightCorner<3, 1>() = t_WB;
-
-  // Call the generic pose callback.
-  poseCallback(T_WB, T_WB_msg->header);
-}
-
-
-
-void SupereightNode::transformStampedCallback(
-    const geometry_msgs::TransformStamped::ConstPtr& T_WB_msg) {
-
-  // Convert the message to an Eigen matrix.
-  Eigen::Matrix4d T_WB = Eigen::Matrix4d::Identity();
-  Eigen::Quaterniond q_WB;
-  tf::quaternionMsgToEigen(T_WB_msg->transform.rotation, q_WB);
-  T_WB.topLeftCorner<3, 3>() = q_WB.toRotationMatrix();
-  Eigen::Vector3d t_WB;
-  tf::vectorMsgToEigen(T_WB_msg->transform.translation, t_WB);
-  T_WB.topRightCorner<3, 1>() = t_WB;
-
-  // Call the generic pose callback.
-  poseCallback(T_WB, T_WB_msg->header);
-}
-
-
-
-void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
-                                  const std_msgs::Header& header) {
-
-  // Convert body pose to camera pose.
-  const Eigen::Matrix4d T_WC = T_WB * supereight_config_.T_BC.cast<double>();
-
-  // Create a ROS message from T_WC.
-  geometry_msgs::TransformStamped T_WC_msg;
-  T_WC_msg.header = header;
-  T_WC_msg.header.frame_id = frame_id_;
-  const Eigen::Quaterniond q_WC (T_WC.topLeftCorner<3, 3>());
-  tf::quaternionEigenToMsg(q_WC, T_WC_msg.transform.rotation);
-  const Eigen::Vector3d t_WC = T_WC.topRightCorner<3, 1>();
-  tf::vectorEigenToMsg(t_WC, T_WC_msg.transform.translation);
-
-  // Put it into the buffer.
-  const std::lock_guard<std::mutex> pose_lock (pose_buffer_mutex_);
-  pose_buffer_.push_back(T_WC_msg);
-  ROS_DEBUG("Pose buffer:        %lu/%lu",
-      pose_buffer_.size(), pose_buffer_.capacity());
-
-  std::thread fusion_thread (std::bind(&SupereightNode::fusionCallback, this));
-  fusion_thread.detach();
-}
-
-
-
-void SupereightNode::fusionCallback() {
-  // fusionCallback() should only be run by a single thread at a time.
-  const std::lock_guard<std::mutex> fusion_lock (fusion_mutex_);
 
   timings_[0] = std::chrono::steady_clock::now();
 
@@ -450,6 +299,151 @@ void SupereightNode::fusionCallback() {
   print_timings(timings_, timing_labels_);
 
   frame_++;
+}
+
+
+
+void SupereightNode::saveMap() {
+  if (!supereight_config_.dump_volume_file.empty()) {
+    pipeline_->dump_mesh(supereight_config_.dump_volume_file.c_str());
+    ROS_INFO("Map saved in %s\n", supereight_config_.dump_volume_file.c_str());
+  }
+}
+
+
+
+void SupereightNode::setupRos() {
+  // Pose subscriber
+  if (!node_config_.enable_tracking) {
+    if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
+      pose_sub_ = nh_.subscribe("/pose", node_config_.pose_buffer_size,
+          &SupereightNode::poseStampedCallback, this);
+
+    } else if (node_config_.pose_topic_type == "geometry_msgs::TransformStamped") {
+      pose_sub_ = nh_.subscribe("/pose", node_config_.pose_buffer_size,
+          &SupereightNode::transformStampedCallback, this);
+
+    } else {
+      ROS_FATAL("Invalid pose topic type %s", node_config_.pose_topic_type.c_str());
+      ROS_FATAL("Expected geometry_msgs::PoseStamped or geometry_msgs::TransformStamped");
+      abort();
+    }
+  }
+  // Depth subscriber
+  depth_sub_ = nh_.subscribe("/camera/depth_image",
+      node_config_.depth_buffer_size, &SupereightNode::depthCallback, this);
+  // RGB subscriber
+  if (node_config_.enable_rgb) {
+    rgb_sub_ = nh_.subscribe("/camera/rgb_image", node_config_.rgb_buffer_size,
+        &SupereightNode::RGBCallback, this);
+  }
+
+  // Publishers
+  supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose",
+      node_config_.pose_buffer_size);
+  // Render publishers
+  if (node_config_.enable_rendering) {
+    depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
+    if (node_config_.enable_rgb) {
+      rgba_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/rgba_render", 30);
+    }
+    if (node_config_.enable_tracking) {
+      track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
+    }
+    volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
+  }
+
+  // Visualization
+  //map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
+  //block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
+  //boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
+  //frontier_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("frontier_marker", 1);
+}
+
+
+
+void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
+  supereight_config_ = read_supereight_config(nh_private);
+  print_supereight_config(supereight_config_);
+
+  node_config_ = read_supereight_node_config(nh_private);
+  print_supereight_node_config(node_config_);
+};
+
+
+
+void SupereightNode::depthCallback(const sensor_msgs::ImageConstPtr& depth_msg) {
+  const std::lock_guard<std::mutex> depth_lock (depth_buffer_mutex_);
+  depth_buffer_.push_back(depth_msg);
+  ROS_DEBUG("Depth image buffer: %lu/%lu", depth_buffer_.size(), depth_buffer_.capacity());
+}
+
+
+
+void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg) {
+  const std::lock_guard<std::mutex> rgb_lock (rgb_buffer_mutex_);
+  rgb_buffer_.push_back(rgb_msg);
+  ROS_DEBUG("RGB image buffer:   %lu/%lu", rgb_buffer_.size(), rgb_buffer_.capacity());
+}
+
+
+
+void SupereightNode::poseStampedCallback(
+    const geometry_msgs::PoseStamped::ConstPtr& T_WB_msg) {
+
+  // Convert the message to an Eigen matrix.
+  Eigen::Matrix4d T_WB = Eigen::Matrix4d::Identity();
+  Eigen::Quaterniond q_WB;
+  tf::quaternionMsgToEigen(T_WB_msg->pose.orientation, q_WB);
+  T_WB.topLeftCorner<3, 3>() = q_WB.toRotationMatrix();
+  Eigen::Vector3d t_WB;
+  tf::pointMsgToEigen(T_WB_msg->pose.position, t_WB);
+  T_WB.topRightCorner<3, 1>() = t_WB;
+
+  // Call the generic pose callback.
+  poseCallback(T_WB, T_WB_msg->header);
+}
+
+
+
+void SupereightNode::transformStampedCallback(
+    const geometry_msgs::TransformStamped::ConstPtr& T_WB_msg) {
+
+  // Convert the message to an Eigen matrix.
+  Eigen::Matrix4d T_WB = Eigen::Matrix4d::Identity();
+  Eigen::Quaterniond q_WB;
+  tf::quaternionMsgToEigen(T_WB_msg->transform.rotation, q_WB);
+  T_WB.topLeftCorner<3, 3>() = q_WB.toRotationMatrix();
+  Eigen::Vector3d t_WB;
+  tf::vectorMsgToEigen(T_WB_msg->transform.translation, t_WB);
+  T_WB.topRightCorner<3, 1>() = t_WB;
+
+  // Call the generic pose callback.
+  poseCallback(T_WB, T_WB_msg->header);
+}
+
+
+
+void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
+                                  const std_msgs::Header& header) {
+
+  // Convert body pose to camera pose.
+  const Eigen::Matrix4d T_WC = T_WB * supereight_config_.T_BC.cast<double>();
+
+  // Create a ROS message from T_WC.
+  geometry_msgs::TransformStamped T_WC_msg;
+  T_WC_msg.header = header;
+  T_WC_msg.header.frame_id = frame_id_;
+  const Eigen::Quaterniond q_WC (T_WC.topLeftCorner<3, 3>());
+  tf::quaternionEigenToMsg(q_WC, T_WC_msg.transform.rotation);
+  const Eigen::Vector3d t_WC = T_WC.topRightCorner<3, 1>();
+  tf::vectorEigenToMsg(t_WC, T_WC_msg.transform.translation);
+
+  // Put it into the buffer.
+  const std::lock_guard<std::mutex> pose_lock (pose_buffer_mutex_);
+  pose_buffer_.push_back(T_WC_msg);
+  ROS_DEBUG("Pose buffer:        %lu/%lu",
+      pose_buffer_.size(), pose_buffer_.capacity());
 }
 
 

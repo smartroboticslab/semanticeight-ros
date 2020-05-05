@@ -41,6 +41,24 @@ namespace se {
                    const ros::NodeHandle& nh_private);
 
     /*!
+     * \brief Integrate the measurements using the supereight pipeline.
+     *
+     * First try to match an RGB image (if `se::SupereightNode::enable_rgb
+     * == true`) and a pose (if `se::SupereightNode::enable_tracking == false`)
+     * to the oldest depth image. If matching fails, the return
+     * without performing a map update.
+     *
+     * If matching is successful call the supereight pipeline `preprocess`,
+     * `track`, `integrate` and `raycast` stages to update the map. If rendering
+     * is enabled (if `se::SupereightNode::enable_rendering == true`) also
+     * generate the depth, RGBA, tracking and volume renders and publish them in
+     * the `/supereight/rgba_render`, `/supereight/depth_render`,
+     * `/supereight/track_render` and `/supereight/volume_render` topics
+     * respectively.
+     */
+    void runPipelineOnce();
+
+    /*!
      * \brief Save the current supereight map to a `.vtk` file.
      *
      * \note The map is only saved if the value of
@@ -82,9 +100,7 @@ namespace se {
      * \brief ROS callback for depth image messages in topic
      * `/camera/depth_image`.
      *
-     * Append the depth image to se::SupereightNode::depth_buffer_. If tracking
-     * is enabled (`se::SupereightNode::enable_tracking == true`) also call
-     * se::SupereightNode::fusionCallback.
+     * Append the depth image to se::SupereightNode::depth_buffer_.     *
      *
      * \param[in] depth_msg The received depth image message.
      */
@@ -130,9 +146,7 @@ namespace se {
      * se::SupereightNode::poseStampedCallback, depending on the message type.
      * Convert the body pose (using the ROS convention x forward, y left, z up)
      * to a camera pose (using the supereight convention x right, y down, z
-     * forward) and append it to se::SupereightNode::pose_buffer_. If tracking
-     * is disabled (`se::SupereightNode::enable_tracking == false`) also call
-     * se::SupereightNode::fusionCallback.
+     * forward) and append it to se::SupereightNode::pose_buffer_.     *
      *
      * \param[in] T_WB   The received body pose in the world frame with the ROS
      *                   convention (x forward, y left, z up).
@@ -140,24 +154,6 @@ namespace se {
      */
     void poseCallback(const Eigen::Matrix4d&  T_WB,
                       const std_msgs::Header& header);
-
-    /*!
-     * \brief Integrate the measurements using the supereight pipeline.
-     *
-     * First try to match an RGB image (if `se::SupereightNode::enable_rgb
-     * == true`) and a pose (if `se::SupereightNode::enable_tracking == false`)
-     * to the oldest depth image. If matching fails, the return
-     * without performing a map update.
-     *
-     * If matching is successful call the supereight pipeline `preprocess`,
-     * `track`, `integrate` and `raycast` stages to update the map. If rendering
-     * is enabled (if `se::SupereightNode::enable_rendering == true`) also
-     * generate the depth, RGBA, tracking and volume renders and publish them in
-     * the `/supereight/rgba_render`, `/supereight/depth_render`,
-     * `/supereight/track_render` and `/supereight/volume_render` topics
-     * respectively.
-     */
-    void fusionCallback();
 
     /*
      * \brief loads the occpuancy map and publishes it to a ros topic
