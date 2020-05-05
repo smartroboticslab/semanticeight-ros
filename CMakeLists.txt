@@ -77,8 +77,6 @@ catkin_package(
 # ------------------------------------------------------------------------------
 # BUILD
 # ------------------------------------------------------------------------------
-
-
 ## Specify additional locations of header files
 ## your package locations should be listed before other locations
 ## all targets in this CMakeList will have the directories added to their
@@ -108,6 +106,23 @@ target_link_libraries(supereight_ros
   lodepng
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+)
+
+# ------------------------------------------------------------------------------
+# TEST
+# ------------------------------------------------------------------------------
+catkin_add_gtest(supereight_ros-unittests
+  src/utilities.cpp
+  test/utilities_unittest.cpp
+)
+target_include_directories(supereight_ros-unittests
+  PUBLIC
+    include
+)
+target_link_libraries(supereight_ros-unittests
+  ${catkin_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
