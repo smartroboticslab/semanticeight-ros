@@ -106,6 +106,12 @@ namespace se {
       const geometry_msgs::TransformStamped& next_pose,
       const double                           query_timestamp) {
 
+    // Return the prev_pose if both poses have the exact same timestamp
+    if    ((prev_pose.header.stamp.sec  == next_pose.header.stamp.sec)
+        && (prev_pose.header.stamp.nsec == next_pose.header.stamp.nsec)) {
+      return transform_msg_to_eigen(prev_pose);
+    }
+
     // Convert from ROS to Eigen
     const Eigen::Vector3f prev_translation(
         prev_pose.transform.translation.x,
