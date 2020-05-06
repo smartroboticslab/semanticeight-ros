@@ -1,0 +1,61 @@
+# SPDX-FileCopyrightText: 2019-2020 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2019 Anna Dai
+# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Supereight ROS node settings
+enable_tracking: true
+
+enable_rendering: true
+
+enable_rgb: true
+
+input_res: [320, 240]
+
+pose_topic_type: "geometry_msgs::PoseStamped"
+
+pose_buffer_size: 600
+
+depth_buffer_size: 60
+
+rgb_buffer_size: 60
+
+max_timestamp_diff: 0.02
+
+
+
+# Supereight settings
+compute_size_ratio: 1
+
+tracking_rate: 1
+
+integration_rate: 2
+
+rendering_rate: 4
+
+volume_resolution: [512, 512, 512]
+
+volume_size: [10.0, 10.0, 10.0]
+
+initial_pos_factor: [0.5, 0.5, 0.5]
+
+dump_volume_file: ""
+
+T_BC: [0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+camera: [277, 277, 160, 120]
+
+mu: 0.1
+
+fps: 0
+
+blocking_read: false
+
+icp_threshold: 0.00001
+
+no_gui: false
+
+render_volume_fullsize: false
+
+bilateral_filter: false
+

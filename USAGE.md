@@ -57,6 +57,7 @@ Several ROS launch files for different use cases are provided in `launch/`.
 | Filename                                    | Description |
 | :------------------------------------------ | :---------- |
 | `supereight_ros.launch`                     | The standard supereight_ros launch file. It is a good idea to include in in any custom supereight_ros launch files as it sets up most things. It sets the logging level, reads the configuration from `config/config.yml` and remaps some topic names to the subscribed ones.  |
+| `supereight_ros_gazebo_example.launch`      | Launch file to use with the Gazebo minimal example from [here](https://bitbucket.org/smartroboticslab/gazebo_minimal_example/). It includes `supereight_ros.launch`, reads the configuration from `config/config_gazebo_example.yml` and remaps the Gazebo topic names to the ones subscribed to by supereight_ros. |
 | `supereight_ros_tum.launch`                 | Launch file to use with the TUM RGBD datasets in ROS bag format. It includes `supereight_ros.launch`, reads the configuration from `config/config_tum.yml` and remaps the TUM topic names to the ones subscribed to by supereight_ros. |
 | `supereight_ros_gdb.launch`                 | Launches supereight_ros through GDB for debugging. It just included `supereight_ros.launch` and changes the command prefix to run it using GDB. |
 | `supereight_ros_valgrind.launch`            | Launches supereight_ros through valgrind for profiling. It just included `supereight_ros.launch` and changes the command prefix to run it using valgrind. |
