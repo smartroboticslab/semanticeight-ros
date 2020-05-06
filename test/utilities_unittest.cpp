@@ -71,7 +71,7 @@ class UtilitiesTest : public ::testing::Test {
       desired_interpolated_pose(1,1) =  std::sqrt(2.0) / 2.0;
 
       // Ensure the depth image parameters won't cause an overflow of a uint16_t
-      ASSERT_LT(scale * (w*h - 1), UINT16_MAX);
+      ASSERT_LT(depth_scale * (w*h - 1), UINT16_MAX);
       // Initialize the depth images
       depth_uint16_msg = init_image_msg(tf1_msg.header, w, h, "mono16");
       depth_float_msg = init_image_msg(tf1_msg.header, w, h, "32FC1");
@@ -82,10 +82,10 @@ class UtilitiesTest : public ::testing::Test {
       float* depth_float_data
           = reinterpret_cast<float*>(depth_float_msg.data.data());
       // Set the image data
-      for (int p = 0; p < w * h - 3; ++p) {
-        desired_se_depth.get()[p] = scale * p;
-        depth_uint16_data[p] = scale * p;
-        depth_float_data[p] = scale / 1000.f * p;
+      for (size_t p = 0; p < w * h - 3; ++p) {
+        desired_se_depth.get()[p] = depth_scale * p;
+        depth_uint16_data[p] = depth_scale * p;
+        depth_float_data[p] = depth_scale / 1000.f * p;
       }
       // Use the last pixels to test special float values
       // NaN
@@ -100,13 +100,28 @@ class UtilitiesTest : public ::testing::Test {
       desired_se_depth.get()[w * h - 1] = 0;
       depth_uint16_data[w * h - 1]      = 0;
       depth_float_data[w * h - 1]       = 70.f;
+
+      // Ensure the RGB image parameters won't cause an overflow of a uint8_t
+      ASSERT_LT((w*h - 1), UINT8_MAX);
+      // Initialize the RGB/RGBA images
+      rgb_msg = init_image_msg(tf1_msg.header, w, h, "rgb8");
+      rgba_msg = init_image_msg(tf1_msg.header, w, h, "rgba8");
+      desired_se_rgb = std::unique_ptr<uint8_t>(new uint8_t[w * h * 3]);
+      // Set the image data
+      for (size_t p = 0; p < w * h * 3; ++p) {
+        desired_se_rgb.get()[p] = p / 3;
+        rgb_msg.data[p] = p / 3;
+        // Skip the alpha channel of the RGBA image
+        const size_t rgba_idx = p + (p / 3);
+        rgba_msg.data[rgba_idx] = p / 3;
+      }
     }
 
 
 
     sensor_msgs::Image init_image_msg(const std_msgs::Header& header,
-                                      int                     width,
-                                      int                     height,
+                                      size_t                  width,
+                                      size_t                  height,
                                       const std::string&      encoding) {
       // Compute pixel size depending on encoding
       size_t pixel_size = 0;
@@ -141,13 +156,19 @@ class UtilitiesTest : public ::testing::Test {
     Eigen::Matrix4f desired_interpolated_pose;
 
     // Depth
-    const int w = 16;
-    const int h = 8;
-    const int scale = 100;
+    const size_t w = 16;
+    const size_t h = 8;
+    const int depth_scale = 100;
     sensor_msgs::Image depth_uint16_msg;
     sensor_msgs::Image depth_float_msg;
     std::unique_ptr<uint16_t> desired_se_depth;
     const size_t desired_se_depth_size = w * h * sizeof(uint16_t);
+
+    // RGB/RGBA
+    sensor_msgs::Image rgb_msg;
+    sensor_msgs::Image rgba_msg;
+    std::unique_ptr<uint8_t> desired_se_rgb;
+    const size_t desired_se_rgb_size = w * h * 3 * sizeof(uint8_t);
 };
 
 
@@ -170,9 +191,21 @@ TEST_F(UtilitiesTest, floatToSupereightDepth) {
 
 
 
-//TEST_F(UtilitiesTest, toSupereightRGB) {
-//  ASSERT_TRUE(false);
-//}
+TEST_F(UtilitiesTest, RGBToSupereightRGB) {
+  std::unique_ptr<uint8_t> converted_rgb (new uint8_t[w * h * 3]);
+  se::to_supereight_RGB(rgb_msg, converted_rgb.get());
+  ASSERT_FALSE(std::memcmp(converted_rgb.get(), desired_se_rgb.get(),
+        desired_se_rgb_size));
+}
+
+
+
+TEST_F(UtilitiesTest, RGBAToSupereightRGB) {
+  std::unique_ptr<uint8_t> converted_rgb (new uint8_t[w * h * 3]);
+  se::to_supereight_RGB(rgba_msg, converted_rgb.get());
+  ASSERT_FALSE(std::memcmp(converted_rgb.get(), desired_se_rgb.get(),
+        desired_se_rgb_size));
+}
 
 
 
