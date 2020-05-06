@@ -55,19 +55,16 @@ namespace se {
 
     // Just copy the image data since this is already the correct format.
     if ((input_color.encoding == "8UC3") || (input_color.encoding == "rgb8")) {
-      const size_t image_size_bytes = input_color.height * input_color.step;
-      std::memcpy(output_rgb, input_color.data.data(), image_size_bytes);
+      std::memcpy(output_rgb, input_color.data.data(), input_color.data.size());
 
     // Remove the alpha channel.
     } else if ((input_color.encoding == "8UC4") || (input_color.encoding == "rgba8")) {
-      // Iterate over every pixel.
+      // Iterate over every output byte.
       #pragma omp parallel for
-      for (size_t i = 0; i < input_color.width * input_color.height; ++i) {
+      for (size_t i = 0; i < input_color.width * input_color.height * 3; ++i) {
         // Skip the alpha channel (every 4th byte).
-        if (i % 4 == 0) {
-          continue;
-        }
-        output_rgb[i] = input_color.data[i];
+        const size_t rgba_idx = i + (i / 3);
+        output_rgb[i] = input_color.data[rgba_idx];
       }
 
     // Invalid format.
