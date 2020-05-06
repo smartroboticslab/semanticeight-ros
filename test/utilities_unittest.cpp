@@ -5,6 +5,9 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <cstring>
+#include <memory>
+#include <string>
 
 #include "supereight_ros/utilities.hpp"
 
@@ -31,59 +34,139 @@ class UtilitiesTest : public ::testing::Test {
       tf2_msg.header.seq = 1;
       tf2_msg.header.stamp.sec = 3;
       tf2_msg.header.stamp.nsec = 0;
-      tf2_msg.header.frame_id = "";
-      tf2_msg.child_frame_id = "world";
+      tf2_msg.header.frame_id = tf1_msg.header.frame_id;
+      tf2_msg.child_frame_id = tf1_msg.child_frame_id;
       tf2_msg.transform.translation = tf1_msg.transform.translation;
       tf2_msg.transform.translation.x += 1.0;
       tf2_msg.transform.rotation.x = 0.0;
       tf2_msg.transform.rotation.y = 0.0;
       tf2_msg.transform.rotation.z = std::sqrt(2.0) / 2.0;
       tf2_msg.transform.rotation.w = std::sqrt(2.0) / 2.0;
-      // Initialize the PoseStamped message
-      pose_msg.header.seq = 0;
-      pose_msg.header.stamp.sec = 0;
-      pose_msg.header.stamp.nsec = 0;
-      pose_msg.header.frame_id = "";
-      pose_msg.pose.position.x = 1.0;
-      pose_msg.pose.position.y = 2.0;
-      pose_msg.pose.position.z = 3.0;
-      pose_msg.pose.orientation.x = 0.0;
-      pose_msg.pose.orientation.y = 0.0;
-      pose_msg.pose.orientation.z = 0.0;
-      pose_msg.pose.orientation.w = 1.0;
-      // Initialize the Eigen pose/transform
+      // Initialize the PoseStamped message (same data as tf1_msg)
+      pose_msg.header = tf1_msg.header;
+      pose_msg.pose.position.x = tf1_msg.transform.translation.x;
+      pose_msg.pose.position.y = tf1_msg.transform.translation.y;
+      pose_msg.pose.position.z = tf1_msg.transform.translation.z;
+      pose_msg.pose.orientation.x = tf1_msg.transform.rotation.x;
+      pose_msg.pose.orientation.y = tf1_msg.transform.rotation.y;
+      pose_msg.pose.orientation.z = tf1_msg.transform.rotation.z;
+      pose_msg.pose.orientation.w = tf1_msg.transform.rotation.w;
+      // Initialize the Eigen pose/transform (same data as tf1_msg)
       tf1_eigen = Eigen::Matrix4f::Identity();
-      tf1_eigen(0,3) = 1.f;
-      tf1_eigen(1,3) = 2.f;
-      tf1_eigen(2,3) = 3.f;
+      tf1_eigen(0,3) = tf1_msg.transform.translation.x;
+      tf1_eigen(1,3) = tf1_msg.transform.translation.y;
+      tf1_eigen(2,3) = tf1_msg.transform.translation.z;
       // Initialize the Eigen interpolated pose. It should be translated by
       // [0.5 0 0] and rotated by 45 degrees around the z axis compared to
       // tf1_msg
       desired_interpolated_pose = Eigen::Matrix4f::Identity();
       // Position
-      desired_interpolated_pose(0,3) = 1.5f;
-      desired_interpolated_pose(1,3) = 2.f;
-      desired_interpolated_pose(2,3) = 3.f;
+      desired_interpolated_pose(0,3) = tf1_msg.transform.translation.x + 0.5f;
+      desired_interpolated_pose(1,3) = tf1_msg.transform.translation.y;
+      desired_interpolated_pose(2,3) = tf1_msg.transform.translation.z;
       // Orientation
       desired_interpolated_pose(0,0) =  std::sqrt(2.0) / 2.0;
       desired_interpolated_pose(0,1) = -std::sqrt(2.0) / 2.0;
       desired_interpolated_pose(1,0) =  std::sqrt(2.0) / 2.0;
       desired_interpolated_pose(1,1) =  std::sqrt(2.0) / 2.0;
+
+      // Ensure the depth image parameters won't cause an overflow of a uint16_t
+      ASSERT_LT(scale * (w*h - 1), UINT16_MAX);
+      // Initialize the depth images
+      depth_uint16_msg = init_image_msg(tf1_msg.header, w, h, "mono16");
+      depth_float_msg = init_image_msg(tf1_msg.header, w, h, "32FC1");
+      desired_se_depth = std::unique_ptr<uint16_t>(new uint16_t[w * h]);
+      // Pointers to access the uint8_t vectors pixel-by-pixel
+      uint16_t* depth_uint16_data
+          = reinterpret_cast<uint16_t*>(depth_uint16_msg.data.data());
+      float* depth_float_data
+          = reinterpret_cast<float*>(depth_float_msg.data.data());
+      // Set the image data
+      for (int p = 0; p < w * h - 3; ++p) {
+        desired_se_depth.get()[p] = scale * p;
+        depth_uint16_data[p] = scale * p;
+        depth_float_data[p] = scale / 1000.f * p;
+      }
+      // Use the last pixels to test special float values
+      // NaN
+      desired_se_depth.get()[w * h - 3] = 0;
+      depth_uint16_data[w * h - 3]      = 0;
+      depth_float_data[w * h - 3]       = std::nanf("");
+      // Less than 1 mm, the resolution of uint16_t
+      desired_se_depth.get()[w * h - 2] = 0;
+      depth_uint16_data[w * h - 2]      = 0;
+      depth_float_data[w * h - 2]       = 0.00001f;
+      // Will overflow uint16_t
+      desired_se_depth.get()[w * h - 1] = 0;
+      depth_uint16_data[w * h - 1]      = 0;
+      depth_float_data[w * h - 1]       = 70.f;
     }
 
-  geometry_msgs::TransformStamped tf1_msg;
-  geometry_msgs::TransformStamped tf2_msg;
-  geometry_msgs::PoseStamped pose_msg;
-  Eigen::Matrix4f tf1_eigen;
-  const Eigen::Matrix4f& pose_eigen = tf1_eigen;
-  Eigen::Matrix4f desired_interpolated_pose;
+
+
+    sensor_msgs::Image init_image_msg(const std_msgs::Header& header,
+                                      int                     width,
+                                      int                     height,
+                                      const std::string&      encoding) {
+      // Compute pixel size depending on encoding
+      size_t pixel_size = 0;
+      if ((encoding == "mono16") || (encoding == "16UC1")) {
+        pixel_size = sizeof(uint16_t);
+      } else if (encoding == "32FC1") {
+        pixel_size = sizeof(float);
+      } else if ((encoding == "rgb8") || (encoding == "8UC3")) {
+        pixel_size = 3 * sizeof(uint8_t);
+      } else if ((encoding == "rgba8") || (encoding == "8UC4")) {
+        pixel_size = sizeof(uint32_t);
+      }
+      sensor_msgs::Image img;
+      img.header = header;
+      img.width = width;
+      img.height = height;
+      img.encoding = encoding;
+      img.is_bigendian = 0;
+      img.step = width * pixel_size;
+      img.data.resize(width * height * pixel_size);
+      return img;
+    }
+
+
+
+    // Transform/Pose
+    geometry_msgs::TransformStamped tf1_msg;
+    geometry_msgs::TransformStamped tf2_msg;
+    geometry_msgs::PoseStamped pose_msg;
+    Eigen::Matrix4f tf1_eigen;
+    const Eigen::Matrix4f& pose_eigen = tf1_eigen;
+    Eigen::Matrix4f desired_interpolated_pose;
+
+    // Depth
+    const int w = 16;
+    const int h = 8;
+    const int scale = 100;
+    sensor_msgs::Image depth_uint16_msg;
+    sensor_msgs::Image depth_float_msg;
+    std::unique_ptr<uint16_t> desired_se_depth;
+    const size_t desired_se_depth_size = w * h * sizeof(uint16_t);
 };
 
 
 
-//TEST_F(UtilitiesTest, toSupereightDepth) {
-//  ASSERT_TRUE(false);
-//}
+TEST_F(UtilitiesTest, uint16ToSupereightDepth) {
+  std::unique_ptr<uint16_t> converted_depth (new uint16_t[w * h]);
+  se::to_supereight_depth(depth_uint16_msg, converted_depth.get());
+  ASSERT_FALSE(std::memcmp(converted_depth.get(), desired_se_depth.get(),
+        desired_se_depth_size));
+}
+
+
+
+TEST_F(UtilitiesTest, floatToSupereightDepth) {
+  std::unique_ptr<uint16_t> converted_depth (new uint16_t[w * h]);
+  se::to_supereight_depth(depth_float_msg, converted_depth.get());
+  ASSERT_FALSE(std::memcmp(converted_depth.get(), desired_se_depth.get(),
+        desired_se_depth_size));
+}
 
 
 
