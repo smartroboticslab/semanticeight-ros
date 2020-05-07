@@ -12,6 +12,8 @@
 
 #include <ros/ros.h>
 
+#include <se/constant_parameters.h>
+
 
 
 namespace se {
@@ -31,9 +33,13 @@ namespace se {
       #pragma omp parallel for
       for (size_t i = 0; i < input_depth.width * input_depth.height; ++i) {
         const float depth_mm = 1000.f * d[i];
-        // If the depth value is NaN or if it would cause an overflow in a
-        // uint16_t store an invalid depth value.
-        if (std::isnan(depth_mm) || (depth_mm > UINT16_MAX)) {
+        // Store an invalid depth value if the value is NaN, if it is greater or
+        // equal than the camera far plane or if it will cause an overflow in a
+        // uint16_t. Values equal to the camera far plane are ignored  because
+        // Gazebo camera plugins return the value of the far plane for rays that
+        // don't hit anything.
+        if (std::isnan(d[i]) || (d[i] >= farPlane)
+            || (depth_mm > UINT16_MAX)) {
           output_depth[i] = 0;
         } else {
           output_depth[i] = static_cast<uint16_t>(depth_mm);
