@@ -70,35 +70,18 @@ cd ~/catkin_ws/src
 git clone https://bitbucket.org/smartroboticslab/supereight_ros.git
 ```
 
-### 4.2 Use the appropriate supereight version
-
-If you have been given access to the supereight-srl repository, skip this
-section and go straight to Section 4.3.
-
-If you don't have access to the supereight-srl repository (in which case the
-command in Section 4.3 will fail), change to the public supereight branch using
-the following command
-
-```bash
-git checkout public-supereight
-```
-
-### 4.3 Initialize and clone the supereight submodule
+### 4.2 Initialize and clone the supereight submodule
 
 ```bash
 git submodule update --init
 ```
 
-If the above command failed, you probably don't have access to the
-supereight-srl repository, in which case you should follow the instructions of
-Section 4.2.
-
-### 4.4 Build supereight and supereight_ros
+### 4.3 Build supereight and supereight_ros
 
 ```bash
 catkin build -DCMAKE_BUILD_TYPE=Release
 ```
 
-The above comamnd will first build a compatible version of supereight and then
+The above command will first build a compatible version of supereight and then
 build supereight_ros.
 

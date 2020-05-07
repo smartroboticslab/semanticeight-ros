@@ -3,4 +3,4 @@
 
 [submodule "supereight"]
 	path = supereight
-	url = ../supereight-srl.git
+	url = https://bitbucket.org/smartroboticslab/supereight-public.git
