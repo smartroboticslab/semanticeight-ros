@@ -99,7 +99,7 @@ An `rviz` configuration file is provided in `config/supereight_ros.rviz`. To
 use it run
 
 ``` bash
-rviz -f config/supereight_ros.rviz
+rviz -d config/supereight_ros.rviz
 ```
 
 Something like the screenshot below should appear
