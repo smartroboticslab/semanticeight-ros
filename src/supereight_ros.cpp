@@ -13,7 +13,7 @@
 
 #include <eigen_conversions/eigen_msg.h>
 
-#include <se/config.h>
+#include "se/config.h"
 
 #include "supereight_ros/utilities.hpp"
 
@@ -30,8 +30,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
   readConfig(nh_private);
 
-  init_position_octree_ = supereight_config_.initial_pos_factor.cwiseProduct(supereight_config_.volume_size);
-  computation_size_ = node_config_.input_res / supereight_config_.compute_size_ratio;
+  init_position_octree_ = supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
+  computation_size_ = node_config_.input_res / supereight_config_.image_downsampling_factor;
 
   // Allocate input image buffers.
   const size_t input_num_pixels = node_config_.input_res.prod();
@@ -56,8 +56,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   // Initialize the supereight pipeline.
   pipeline_ = std::shared_ptr<DenseSLAMSystem>(new DenseSLAMSystem(
       computation_size_,
-      Eigen::Vector3i::Constant(supereight_config_.volume_resolution.x()),
-      Eigen::Vector3f::Constant(supereight_config_.volume_size.x()),
+      Eigen::Vector3i::Constant(supereight_config_.map_size.x()),
+      Eigen::Vector3f::Constant(supereight_config_.map_dim.x()),
       init_position_octree_,
       supereight_config_.pyramid,
       supereight_config_));
@@ -198,19 +198,26 @@ void SupereightNode::runPipelineOnce() {
 
   // Tracking
   bool tracked = false;
-  const Eigen::Vector4f camera = supereight_config_.camera / supereight_config_.compute_size_ratio;
+  const SensorImpl sensor({node_config_.input_res.x(), node_config_.input_res.y(), supereight_config_.left_hand_frame,
+                           nearPlane, farPlane, supereight_config_.mu,
+                           supereight_config_.camera[0] / supereight_config_.image_downsampling_factor,
+                           supereight_config_.camera[1] / supereight_config_.image_downsampling_factor,
+                           supereight_config_.camera[2] / supereight_config_.image_downsampling_factor,
+                           supereight_config_.camera[3] / supereight_config_.image_downsampling_factor,
+                           Eigen::VectorXf(0), Eigen::VectorXf(0)});
+
   if (node_config_.enable_tracking) {
     if (frame_ % supereight_config_.tracking_rate == 0) {
-      tracked = pipeline_->track(camera, supereight_config_.icp_threshold);
+      tracked = pipeline_->track(sensor, supereight_config_.icp_threshold);
     } else {
       tracked = false;
     }
   } else {
-    pipeline_->setPose(external_pose);
+    pipeline_->setT_WC(external_pose);
     tracked = true;
   }
 
-  const Eigen::Matrix4f tracked_pose = pipeline_->getPose();
+  const Eigen::Matrix4f tracked_pose = pipeline_->T_WC();
   geometry_msgs::PoseStamped supereight_pose;
   supereight_pose.header = current_depth_msg->header;
   supereight_pose.header.frame_id = frame_id_;
@@ -228,7 +235,7 @@ void SupereightNode::runPipelineOnce() {
   // frames.
   bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
-    integrated = pipeline_->integrate(camera, supereight_config_.mu, frame_);
+    integrated = pipeline_->integrate(sensor, frame_);
   } else {
     integrated = false;
   }
@@ -239,7 +246,7 @@ void SupereightNode::runPipelineOnce() {
   // Raycasting
   bool raycasted = false;
   if ((node_config_.enable_tracking || node_config_.enable_rendering) && frame_ > 2) {
-    raycasted = pipeline_->raycast(camera, supereight_config_.mu);
+    raycasted = pipeline_->raycast(sensor);
   }
   timings_[5] = std::chrono::steady_clock::now();
 
@@ -248,7 +255,7 @@ void SupereightNode::runPipelineOnce() {
   // Rendering
   if (node_config_.enable_rendering) {
     // Depth
-    pipeline_->renderDepth((unsigned char*) depth_render_.get(), computation_size_);
+    pipeline_->renderDepth((unsigned char*) depth_render_.get(), computation_size_, sensor);
     const sensor_msgs::Image depth_render_msg = RGBA_to_msg(depth_render_.get(),
         computation_size_, current_depth_msg->header);
     depth_render_pub_.publish(depth_render_msg);
@@ -271,8 +278,7 @@ void SupereightNode::runPipelineOnce() {
 
     // Volume
     if (frame_ % supereight_config_.rendering_rate == 0) {
-      pipeline_->renderVolume((unsigned char*) volume_render_.get(), computation_size_,
-          camera, 0.75 * supereight_config_.mu);
+      pipeline_->renderVolume((unsigned char*) volume_render_.get(), computation_size_, sensor);
       const sensor_msgs::Image volume_render_msg = RGBA_to_msg(volume_render_.get(),
           computation_size_, current_depth_msg->header);
       volume_render_pub_.publish(volume_render_msg);

@@ -24,7 +24,7 @@
 #include <sensor_msgs/Image.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include <se/DenseSLAMSystem.h>
+#include "se/DenseSLAMSystem.h"
 
 #include "supereight_ros/supereight_ros_config.hpp"
 

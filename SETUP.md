@@ -73,7 +73,7 @@ git clone https://bitbucket.org/smartroboticslab/supereight_ros.git
 ### 4.2 Initialize and clone the supereight submodule
 
 ```bash
-git submodule update --init
+git submodule update --init --recursive
 ```
 
 ### 4.3 Build supereight and supereight_ros

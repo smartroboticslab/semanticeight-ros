@@ -12,7 +12,7 @@
 
 #include <ros/ros.h>
 
-#include <se/config.h>
+#include "se/config.h"
 
 
 

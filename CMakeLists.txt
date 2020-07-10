@@ -18,8 +18,9 @@ set(SE_ROS_VERSION
 set(CMAKE_CXX_STANDARD 14)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 
-# Select the supereight voxel implementation to use.
-set(field_type_macro SE_VOXEL_IMPLEMENTATION=OFusion)
+# Select the supereight voxel and sensor implementations to use.
+set(voxel_impl OFusion)
+set(sensor_impl PinholeCamera)
 
 # ------------------------------------------------------------------------------
 # Dependencies
@@ -89,6 +90,11 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+# Compute the supereight library name from the voxel and sensor implementation
+# names.
+string(TOLOWER ${voxel_impl} voxel_impl_lc)
+string(TOLOWER ${sensor_impl} sensor_impl_lc)
+set(se_lib_name "se-denseslam-${voxel_impl_lc}-${sensor_impl_lc}")
 
 
 add_executable(supereight_ros
@@ -99,10 +105,14 @@ add_executable(supereight_ros
 )
 
 
-target_compile_definitions(supereight_ros PUBLIC ${field_type_macro})
+target_compile_definitions(supereight_ros
+  PUBLIC
+	SE_VOXEL_IMPLEMENTATION=${voxel_impl}
+	SE_SENSOR_IMPLEMENTATION=${sensor_impl}
+)
 
 target_link_libraries(supereight_ros
-  se-denseslam-ofusion
+  ${se_lib_name}
   lodepng
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}

@@ -13,17 +13,17 @@
 // Default supereight configuration.
 constexpr int default_iteration_count = 3;
 constexpr int default_iterations[default_iteration_count] = {10, 5, 4};
-constexpr int default_compute_size_ratio = 2;
+constexpr int default_image_downsampling_factor = 2;
 constexpr int default_tracking_rate = 1;
 constexpr int default_integration_rate = 3;
 constexpr int default_rendering_rate = 4;
-const Eigen::Vector3i default_volume_resolution(256, 256, 256);
-const Eigen::Vector3f default_volume_size(6.f, 6.f, 6.f);
-const Eigen::Vector3f default_initial_pos_factor(0.5f, 0.5f, 0.0f);
+const Eigen::Vector3i default_map_size(256, 256, 256);
+const Eigen::Vector3f default_map_dim(6.f, 6.f, 6.f);
+const Eigen::Vector3f default_t_MW_factor(0.5f, 0.5f, 0.0f);
 const std::string default_dump_volume_file = "";
 const Eigen::Matrix4f default_T_BC = Eigen::Matrix4f::Identity();
 constexpr float default_mu = 0.1f;
-constexpr int default_fps = 0;
+constexpr float default_fps = 0.0f;
 constexpr bool default_blocking_read = false;
 constexpr float default_icp_threshold = 1e-6;
 constexpr bool default_no_gui = false;
@@ -128,9 +128,9 @@ namespace se {
     config.groundtruth_file = "";
 
     // Read the other parameters.
-    nh.param<int>("compute_size_ratio",
-        config.compute_size_ratio,
-        default_compute_size_ratio);
+    nh.param<int>("image_downsampling_factor",
+        config.image_downsampling_factor,
+        default_image_downsampling_factor);
 
     nh.param<int>("tracking_rate",
         config.tracking_rate,
@@ -144,31 +144,31 @@ namespace se {
         config.rendering_rate,
         default_rendering_rate);
 
-    std::vector<int> volume_resolution_vector;
-    if (nh.getParam("volume_resolution", volume_resolution_vector)) {
-      for (size_t i = 0; i < volume_resolution_vector.size(); ++i) {
-        config.volume_resolution[i] = volume_resolution_vector[i];
+    std::vector<int> map_size_vector;
+    if (nh.getParam("map_size", map_size_vector)) {
+      for (size_t i = 0; i < map_size_vector.size(); ++i) {
+        config.map_size[i] = map_size_vector[i];
       }
     } else {
-      config.volume_resolution = default_volume_resolution;
+      config.map_size = default_map_size;
     }
 
-    std::vector<float> volume_size_vector;
-    if (nh.getParam("volume_size", volume_size_vector)) {
-      for (size_t i = 0; i < volume_size_vector.size(); ++i) {
-        config.volume_size[i] = volume_size_vector[i];
+    std::vector<float> map_dim_vector;
+    if (nh.getParam("map_dim", map_dim_vector)) {
+      for (size_t i = 0; i < map_dim_vector.size(); ++i) {
+        config.map_dim[i] = map_dim_vector[i];
       }
     } else {
-      config.volume_size = default_volume_size;
+      config.map_dim = default_map_dim;
     }
 
-    std::vector<float> initial_pos_factor_vector;
-    if (nh.getParam("initial_pos_factor", initial_pos_factor_vector)) {
-      for (size_t i = 0; i < initial_pos_factor_vector.size(); ++i) {
-        config.initial_pos_factor[i] = initial_pos_factor_vector[i];
+    std::vector<float> t_MW_factor_vector;
+    if (nh.getParam("t_MW_factor", t_MW_factor_vector)) {
+      for (size_t i = 0; i < t_MW_factor_vector.size(); ++i) {
+        config.t_MW_factor[i] = t_MW_factor_vector[i];
       }
     } else {
-      config.initial_pos_factor = default_initial_pos_factor;
+      config.t_MW_factor = default_t_MW_factor;
     }
 
     std::vector<int> pyramid;
@@ -208,7 +208,7 @@ namespace se {
         config.mu,
         default_mu);
 
-    nh.param<int>("fps",
+    nh.param<float>("fps",
         config.fps,
         default_fps);
 
@@ -239,26 +239,26 @@ namespace se {
 
   void print_supereight_config(const Configuration& config) {
     ROS_INFO("Supereight parameters:");
-    ROS_INFO("  compute_size_ratio:     %d",
-        config.compute_size_ratio);
+    ROS_INFO("  image_downsampling_factor:     %d",
+        config.image_downsampling_factor);
     ROS_INFO("  tracking_rate:          %d",
         config.tracking_rate);
     ROS_INFO("  integration_rate:       %d",
         config.integration_rate);
     ROS_INFO("  rendering_rate:         %d",
         config.rendering_rate);
-    ROS_INFO("  volume_resolution:      %d %d %d",
-        config.volume_resolution.x(),
-        config.volume_resolution.y(),
-        config.volume_resolution.z());
-    ROS_INFO("  volume_size:            %f %f %f",
-        config.volume_size.x(),
-        config.volume_size.y(),
-        config.volume_size.z());
-    ROS_INFO("  initial_pos_factor:     %f %f %f",
-        config.initial_pos_factor.x(),
-        config.initial_pos_factor.y(),
-        config.initial_pos_factor.z());
+    ROS_INFO("  map_size:      %d %d %d",
+        config.map_size.x(),
+        config.map_size.y(),
+        config.map_size.z());
+    ROS_INFO("  map_dim:            %f %f %f",
+        config.map_dim.x(),
+        config.map_dim.y(),
+        config.map_dim.z());
+    ROS_INFO("  t_MW_factor:     %f %f %f",
+        config.t_MW_factor.x(),
+        config.t_MW_factor.y(),
+        config.t_MW_factor.z());
     ROS_INFO("  pyramid:                %d %d %d",
         config.pyramid[0],
         config.pyramid[1],
@@ -282,7 +282,7 @@ namespace se {
         config.camera_overrided);
     ROS_INFO("  mu:                     %f",
         config.mu);
-    ROS_INFO("  fps:                    %d",
+    ROS_INFO("  fps:                    %f",
         config.fps);
     ROS_INFO("  blocking_read:          %d",
         config.blocking_read);

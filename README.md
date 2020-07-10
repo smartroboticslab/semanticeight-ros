@@ -14,7 +14,7 @@ not tested and not officially supported.
 After cloning the repository, clone all the submodules using
 
 ``` bash
-git submodule update --init
+git submodule update --init --recursive
 ```
 
 and then compile like any other ROS package.
