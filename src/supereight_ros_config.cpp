@@ -202,6 +202,7 @@ namespace se {
     for (size_t i = 0; i < camera_vector.size(); i++) {
       config.camera[i] = camera_vector[i];
     }
+    config.left_hand_frame = camera_vector[1] < 0;
     config.camera_overrided = true;
 
     nh.param<float>("mu",
