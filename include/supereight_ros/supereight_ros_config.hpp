@@ -114,15 +114,6 @@ namespace se {
    */
   Configuration read_supereight_config(const ros::NodeHandle& nh);
 
-
-
-  /*!
-   * \brief Print the values of an se::Configuration using ROS_INFO.
-   *
-   * \param[in] config The se::Configuration struct to print.
-   */
-  void print_supereight_config(const Configuration& config);
-
 } // namespace se
 
 #endif

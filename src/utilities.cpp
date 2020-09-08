@@ -12,43 +12,49 @@
 
 #include <ros/ros.h>
 
-#include "se/constant_parameters.h"
+#include "se/image_utils.hpp"
 
 
 
 namespace se {
   void to_supereight_depth(const sensor_msgs::Image& input_depth,
-                           uint16_t*                 output_depth) {
+                           const float               far_plane,
+                           float*                    output_depth) {
 
-    // Just copy the image data since this is already the correct format.
-    if ((input_depth.encoding == "16UC1") || (input_depth.encoding == "mono16")) {
-      const size_t image_size_bytes = input_depth.height * input_depth.step;
-      std::memcpy(output_depth, input_depth.data.data(), image_size_bytes);
+    // Values equal to the camera far plane should be ignored because Gazebo
+    // camera plugins return the value of the far plane for rays that don't hit
+    // anything.
 
-    // The depth is in float meters, convert to uint16_t millimeters.
-    } else if (input_depth.encoding == "32FC1") {
-      // Interpret the image data as float instead of uint8_t to allow using []
-      // for pixel access.
+    // The input depth is in float meters
+    if (input_depth.encoding == "32FC1" && !input_depth.is_bigendian) {
       const float* d = reinterpret_cast<const float*>(input_depth.data.data());
       #pragma omp parallel for
       for (size_t i = 0; i < input_depth.width * input_depth.height; ++i) {
-        const float depth_mm = 1000.f * d[i];
-        // Store an invalid depth value if the value is NaN, if it is greater or
-        // equal than the camera far plane or if it will cause an overflow in a
-        // uint16_t. Values equal to the camera far plane are ignored  because
-        // Gazebo camera plugins return the value of the far plane for rays that
-        // don't hit anything.
-        if (std::isnan(d[i]) || (d[i] >= farPlane)
-            || (depth_mm > UINT16_MAX)) {
-          output_depth[i] = 0;
+        const float depth_m = d[i];
+        if (depth_m >= far_plane) {
+          output_depth[i] = 0.0f;
         } else {
-          output_depth[i] = static_cast<uint16_t>(depth_mm);
+          output_depth[i] = depth_m;
+        }
+      }
+
+    // The depth is in uint16_t millimeters
+    } else if (((input_depth.encoding == "16UC1") || (input_depth.encoding == "mono16"))
+         && !input_depth.is_bigendian) {
+      const uint16_t* d = reinterpret_cast<const uint16_t*>(input_depth.data.data());
+      #pragma omp parallel for
+      for (size_t i = 0; i < input_depth.width * input_depth.height; ++i) {
+        const float depth_m = d[i] / 1000.0f;
+        if (depth_m >= far_plane) {
+          output_depth[i] = 0.0f;
+        } else {
+          output_depth[i] = depth_m;
         }
       }
 
     // Invalid format.
     } else {
-      ROS_FATAL("Invalid input depth format %s, expected mono16, 16UC1 or 32FC1",
+      ROS_FATAL("Invalid input depth format %s, expected little endian mono16, 16UC1 or 32FC1",
           input_depth.encoding.c_str());
       abort();
     }
@@ -57,20 +63,21 @@ namespace se {
 
 
   void to_supereight_RGB(const sensor_msgs::Image& input_color,
-                         uint8_t*                  output_rgb) {
+                         uint32_t*                 output_rgba) {
 
     // Just copy the image data since this is already the correct format.
-    if ((input_color.encoding == "8UC3") || (input_color.encoding == "rgb8")) {
-      std::memcpy(output_rgb, input_color.data.data(), input_color.data.size());
+    if ((input_color.encoding == "8UC4") || (input_color.encoding == "rgba8")) {
+      std::memcpy(output_rgba, input_color.data.data(), input_color.data.size());
 
-    // Remove the alpha channel.
-    } else if ((input_color.encoding == "8UC4") || (input_color.encoding == "rgba8")) {
-      // Iterate over every output byte.
+    // Add the alpha channel.
+    } else if ((input_color.encoding == "8UC3") || (input_color.encoding == "rgb8")) {
+      // Iterate over all pixels.
       #pragma omp parallel for
-      for (size_t i = 0; i < input_color.width * input_color.height * 3; ++i) {
-        // Skip the alpha channel (every 4th byte).
-        const size_t rgba_idx = i + (i / 3);
-        output_rgb[i] = input_color.data[rgba_idx];
+      for (size_t i = 0; i < input_color.width * input_color.height; ++i) {
+        const uint8_t r = input_color.data[3*i + 0];
+        const uint8_t g = input_color.data[3*i + 1];
+        const uint8_t b = input_color.data[3*i + 2];
+        output_rgba[i] = se::pack_rgba(r, g, b, 0xFF);
       }
 
     // Invalid format.

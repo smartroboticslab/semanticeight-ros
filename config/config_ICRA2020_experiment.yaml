@@ -4,58 +4,54 @@
 # SPDX-License-Identifier: CC0-1.0
 
 # Supereight ROS node settings
-enable_tracking: false
-
-enable_rendering: true
-
-enable_rgb: false
-
-input_res: [640, 480]
-
-pose_topic_type: "geometry_msgs::TransformStamped"
-
-pose_buffer_size: 600
-
-depth_buffer_size: 60
-
-rgb_buffer_size: 60
-
-max_timestamp_diff: 0.02
-
-
+supereight_ros:
+  enable_tracking: false
+  enable_rendering: true
+  enable_rgb: false
+  input_res: [640, 480]
+  pose_topic_type: "geometry_msgs::TransformStamped"
+  pose_buffer_size: 600
+  depth_buffer_size: 60
+  rgb_buffer_size: 60
+  max_timestamp_diff: 0.02
 
 # Supereight settings
-image_downsampling_factor: 2
+supereight:
+  general:
+    sequence_name:              ""
+    sequence_type:              "ros"
+    output_render_path:         ""
+    enable_meshing:             false
+    output_mesh_path:           ""
+    # Rates
+    tracking_rate:              1
+    integration_rate:           1
+    rendering_rate:             4
+    meshing_rate:               0
+    fps:                        0.0
+    # Other
+    drop_frames:                false
+    max_frame:                  -1
+    icp_threshold:              1e-5
+    bilateral_filter:           false
+    pyramid:                    [10, 5, 4]
 
-tracking_rate: 1
+  map:
+    size:                       256
+    dim:                        24.0
+    t_MW_factor:                [0.501, 0.501, 0.501]
 
-integration_rate: 2
-
-rendering_rate: 4
-
-map_size: [256, 256, 256]
-
-map_dim: [24.0, 24.0, 24.0]
-
-t_MW_factor: [0.5, 0.5, 0.5]
-
-dump_volume_file: ""
-
-T_BC: [0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-
-camera: [570.3422241210938, 570.3422241210938, 314.5, 235.5]
-
-mu: 0.1
-
-fps: 0
-
-blocking_read: false
-
-icp_threshold: 0.00001
-
-no_gui: false
-
-render_volume_fullsize: false
-
-bilateral_filter: false
+  sensor:
+    intrinsics:                 [570.3422241210938, 570.3422241210938, 314.5, 235.5]
+    downsampling_factor:        2
+    T_BC:                       [ 0.0,  0.0, 1.0, 0.0,
+                                 -1.0,  0.0, 0.0, 0.0,
+                                  0.0, -1.0, 0.0, 0.0,
+                                  0.0,  0.0, 0.0, 1.0]
+    init_T_WB:                  [1, 0, 0, 0,
+                                 0, 1, 0, 0,
+                                 0, 0, 1, 0,
+                                 0, 0, 0, 1]
+    near_plane:                 0.4
+    far_plane:                  4.0
 

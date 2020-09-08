@@ -8,34 +8,17 @@
 #include <string>
 #include <vector>
 
+#include <yaml-cpp/yaml.h>
 
-
-// Default supereight configuration.
-constexpr int default_iteration_count = 3;
-constexpr int default_iterations[default_iteration_count] = {10, 5, 4};
-constexpr int default_image_downsampling_factor = 2;
-constexpr int default_tracking_rate = 1;
-constexpr int default_integration_rate = 3;
-constexpr int default_rendering_rate = 4;
-const Eigen::Vector3i default_map_size(256, 256, 256);
-const Eigen::Vector3f default_map_dim(6.f, 6.f, 6.f);
-const Eigen::Vector3f default_t_MW_factor(0.5f, 0.5f, 0.0f);
-const std::string default_dump_volume_file = "";
-const Eigen::Matrix4f default_T_BC = Eigen::Matrix4f::Identity();
-constexpr float default_mu = 0.1f;
-constexpr float default_fps = 0.0f;
-constexpr bool default_blocking_read = false;
-constexpr float default_icp_threshold = 1e-6;
-constexpr bool default_no_gui = false;
-constexpr bool default_render_volume_fullsize = false;
-constexpr bool default_bilateral_filter = false;
+#include "se/sensor_implementation.hpp"
+#include "se/voxel_implementations.hpp"
 
 
 
 // Default supereight node configuration.
 constexpr bool default_enable_tracking = true;
 constexpr bool default_enable_rendering = true;
-constexpr bool default_process_rgb = false;
+constexpr bool default_enable_rgb = false;
 const Eigen::Vector2i default_input_res (640, 480);
 const std::string default_pose_topic_type ("geometry_msgs::PoseStamped");
 constexpr int default_pose_buffer_size = 600;
@@ -49,20 +32,17 @@ namespace se {
   SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh) {
     SupereightNodeConfig config;
 
-    nh.param<bool>("enable_tracking",
-        config.enable_tracking,
-        default_enable_tracking);
+    nh.param<bool>("supereight_ros/enable_tracking",
+        config.enable_tracking, default_enable_tracking);
 
-    nh.param<bool>("enable_rendering",
-        config.enable_rendering,
-        default_enable_rendering);
+    nh.param<bool>("supereight_ros/enable_rendering",
+        config.enable_rendering, default_enable_rendering);
 
-    nh.param<bool>("enable_rgb",
-        config.enable_rgb,
-        default_process_rgb);
+    nh.param<bool>("supereight_ros/enable_rgb",
+        config.enable_rgb, default_enable_rgb);
 
     std::vector<int> input_res_vector;
-    if (nh.getParam("input_res", input_res_vector)) {
+    if (nh.getParam("supereight_ros/input_res", input_res_vector)) {
       for (size_t i = 0; i < input_res_vector.size(); ++i) {
         config.input_res[i] = input_res_vector[i];
       }
@@ -70,25 +50,20 @@ namespace se {
       config.input_res = default_input_res;
     }
 
-    nh.param<std::string>("pose_topic_type",
-        config.pose_topic_type,
-        default_pose_topic_type);
+    nh.param<std::string>("supereight_ros/pose_topic_type",
+        config.pose_topic_type, default_pose_topic_type);
 
-    nh.param<int>("pose_buffer_size",
-        config.pose_buffer_size,
-        default_pose_buffer_size);
+    nh.param<int>("supereight_ros/pose_buffer_size",
+        config.pose_buffer_size, default_pose_buffer_size);
 
-    nh.param<int>("depth_buffer_size",
-        config.depth_buffer_size,
-        default_depth_buffer_size);
+    nh.param<int>("supereight_ros/depth_buffer_size",
+        config.depth_buffer_size, default_depth_buffer_size);
 
-    nh.param<int>("rgb_buffer_size",
-        config.rgb_buffer_size,
-        default_rgb_buffer_size);
+    nh.param<int>("supereight_ros/rgb_buffer_size",
+        config.rgb_buffer_size, default_rgb_buffer_size);
 
-    nh.param<double>("max_timestamp_diff",
-        config.max_timestamp_diff,
-        default_max_timestamp_diff);
+    nh.param<double>("supereight_ros/max_timestamp_diff",
+        config.max_timestamp_diff, default_max_timestamp_diff);
 
     return config;
   }
@@ -97,24 +72,15 @@ namespace se {
 
   void print_supereight_node_config(const SupereightNodeConfig& config) {
     ROS_INFO("Supereight Node parameters:");
-    ROS_INFO("  enable_tracking:        %d",
-        config.enable_tracking);
-    ROS_INFO("  enable_rendering:       %d",
-        config.enable_rendering);
-    ROS_INFO("  enable_rgb:             %d",
-        config.enable_rgb);
-    ROS_INFO("  input_res:              %d %d",
-        config.input_res.x(), config.input_res.y());
-    ROS_INFO("  pose_topic_type:        %s",
-        config.pose_topic_type.c_str());
-    ROS_INFO("  pose_buffer_size:       %d",
-        config.pose_buffer_size);
-    ROS_INFO("  depth_buffer_size:      %d",
-        config.depth_buffer_size);
-    ROS_INFO("  rgb_buffer_size:        %d",
-        config.rgb_buffer_size);
-    ROS_INFO("  max_timestamp_diff:     %f",
-        config.max_timestamp_diff);
+    ROS_INFO("  enable_tracking:        %d", config.enable_tracking);
+    ROS_INFO("  enable_rendering:       %d", config.enable_rendering);
+    ROS_INFO("  enable_rgb:             %d", config.enable_rgb);
+    ROS_INFO("  input_res:              %d %d", config.input_res.x(), config.input_res.y());
+    ROS_INFO("  pose_topic_type:        %s", config.pose_topic_type.c_str());
+    ROS_INFO("  pose_buffer_size:       %d", config.pose_buffer_size);
+    ROS_INFO("  depth_buffer_size:      %d", config.depth_buffer_size);
+    ROS_INFO("  rgb_buffer_size:        %d", config.rgb_buffer_size);
+    ROS_INFO("  max_timestamp_diff:     %f", config.max_timestamp_diff);
   }
 
 
@@ -122,179 +88,90 @@ namespace se {
   Configuration read_supereight_config(const ros::NodeHandle& nh) {
     Configuration config;
 
-    // Initialize unused parameters.
-    config.input_file = "";
-    config.log_file = "";
-    config.groundtruth_file = "";
+    // General
+    nh.getParam("supereight/general/sequence_name", config.sequence_name);
+    nh.getParam("supereight/general/sequence_type", config.sequence_type);
+    bool enable_tracking = false;
+    nh.getParam("supereight_ros/enable_tracking", enable_tracking);
+    config.enable_ground_truth = !enable_tracking;
+    nh.getParam("supereight_ros/enable_rendering", config.enable_render);
+    nh.getParam("supereight/general/output_render_path", config.output_render_file);
+    nh.getParam("supereight/general/enable_meshing", config.enable_meshing);
+    nh.getParam("supereight/general/output_mesh_path", config.output_mesh_file);
+    nh.getParam("supereight/general/tracking_rate", config.tracking_rate);
+    nh.getParam("supereight/general/integration_rate", config.integration_rate);
+    nh.getParam("supereight/general/rendering_rate", config.rendering_rate);
+    nh.getParam("supereight/general/meshing_rate", config.meshing_rate);
+    nh.getParam("supereight/general/fps", config.fps);
+    nh.getParam("supereight/general/drop_frames", config.drop_frames);
+    nh.getParam("supereight/general/max_frame", config.max_frame);
+    nh.getParam("supereight/general/icp_threshold", config.icp_threshold);
+    nh.getParam("supereight/general/bilateral_filter", config.bilateral_filter);
+    nh.getParam("supereight/general/pyramid", config.pyramid);
 
-    // Read the other parameters.
-    nh.param<int>("image_downsampling_factor",
-        config.image_downsampling_factor,
-        default_image_downsampling_factor);
+    // Map
+    int map_size;
+    nh.getParam("supereight/map/size", map_size);
+    config.map_size = Eigen::Vector3i::Constant(map_size);
 
-    nh.param<int>("tracking_rate",
-        config.tracking_rate,
-        default_tracking_rate);
-
-    nh.param<int>("integration_rate",
-        config.integration_rate,
-        default_integration_rate);
-
-    nh.param<int>("rendering_rate",
-        config.rendering_rate,
-        default_rendering_rate);
-
-    std::vector<int> map_size_vector;
-    if (nh.getParam("map_size", map_size_vector)) {
-      for (size_t i = 0; i < map_size_vector.size(); ++i) {
-        config.map_size[i] = map_size_vector[i];
-      }
-    } else {
-      config.map_size = default_map_size;
-    }
-
-    std::vector<float> map_dim_vector;
-    if (nh.getParam("map_dim", map_dim_vector)) {
-      for (size_t i = 0; i < map_dim_vector.size(); ++i) {
-        config.map_dim[i] = map_dim_vector[i];
-      }
-    } else {
-      config.map_dim = default_map_dim;
-    }
+    float map_dim;
+    nh.getParam("supereight/map/dim", map_dim);
+    config.map_dim = Eigen::Vector3f::Constant(map_dim);
 
     std::vector<float> t_MW_factor_vector;
-    if (nh.getParam("t_MW_factor", t_MW_factor_vector)) {
+    if (nh.getParam("supereight/map/t_MW_factor", t_MW_factor_vector)) {
       for (size_t i = 0; i < t_MW_factor_vector.size(); ++i) {
         config.t_MW_factor[i] = t_MW_factor_vector[i];
       }
-    } else {
-      config.t_MW_factor = default_t_MW_factor;
     }
 
-    std::vector<int> pyramid;
-    if (!nh.getParam("pyramid", pyramid)) {
-      config.pyramid.clear();
-      for (int i = 0; i < default_iteration_count; ++i) {
-        config.pyramid.push_back(default_iterations[i]);
-      }
-    }
+    // Sensor
+    config.sensor_type = SensorImpl::type();
 
-    nh.param<std::string>("dump_volume_file",
-        config.dump_volume_file,
-        default_dump_volume_file);
+    std::vector<float> sensor_intrinsics_vector;
+    if (!nh.getParam("supereight/sensor/intrinsics", sensor_intrinsics_vector)
+        || sensor_intrinsics_vector.empty()) {
+      ros::shutdown();
+    }
+    for (size_t i = 0; i < sensor_intrinsics_vector.size(); i++) {
+      config.sensor_intrinsics[i] = sensor_intrinsics_vector[i];
+    }
+    config.left_hand_frame = config.sensor_intrinsics[1] < 0;
+
+    nh.getParam("supereight/sensor/downsampling_factor", config.sensor_downsampling_factor);
 
     std::vector<float> T_BC_vector;
-    nh.getParam("T_BC", T_BC_vector);
-    if (nh.getParam("T_BC", T_BC_vector)) {
+    nh.getParam("supereight/sensor/T_BC", T_BC_vector);
+    if (nh.getParam("supereight/sensor/T_BC", T_BC_vector)) {
       for (size_t i = 0; i < std::sqrt(T_BC_vector.size()); ++i) {
         for (size_t j = 0; j < std::sqrt(T_BC_vector.size()); ++j) {
           config.T_BC(i, j) = T_BC_vector[i * 4 + j];
         }
       }
-    } else {
-      config.T_BC = default_T_BC;
     }
 
-    std::vector<float> camera_vector;
-    if (!nh.getParam("camera", camera_vector)) {
-      ros::shutdown();
+    std::vector<float> init_T_WB_vector;
+    nh.getParam("supereight/sensor/init_T_WB", init_T_WB_vector);
+    if (nh.getParam("supereight/sensor/init_T_WB", init_T_WB_vector)) {
+      for (size_t i = 0; i < std::sqrt(init_T_WB_vector.size()); ++i) {
+        for (size_t j = 0; j < std::sqrt(init_T_WB_vector.size()); ++j) {
+          config.init_T_WB(i, j) = init_T_WB_vector[i * 4 + j];
+        }
+      }
     }
-    for (size_t i = 0; i < camera_vector.size(); i++) {
-      config.camera[i] = camera_vector[i];
-    }
-    config.left_hand_frame = camera_vector[1] < 0;
-    config.camera_overrided = true;
 
-    nh.param<float>("mu",
-        config.mu,
-        default_mu);
+    nh.getParam("supereight/sensor/near_plane", config.near_plane);
 
-    nh.param<float>("fps",
-        config.fps,
-        default_fps);
+    nh.getParam("supereight/sensor/far_plane", config.far_plane);
 
-    nh.param<bool>("blocking_read",
-        config.blocking_read,
-        default_blocking_read);
-
-    nh.param<float>("icp_threshold",
-        config.icp_threshold,
-        default_icp_threshold);
-
-    nh.param<bool>("no_gui",
-        config.no_gui,
-        default_no_gui);
-
-    nh.param<bool>("render_volume_fullsize",
-        config.render_volume_fullsize,
-        default_render_volume_fullsize);
-
-    nh.param<bool>("bilateral_filter",
-        config.bilateral_filter,
-        default_bilateral_filter);
+    // Voxel Impl
+    config.voxel_impl_type = VoxelImpl::type();
+    const float voxel_dim = config.map_dim.x() / config.map_size.x();
+    VoxelImpl::configure(voxel_dim);
+    // TODO load the voxel implementation parameters from the YAML file.
+    // Couldn't find a way to get the filename of the YAML file loaded from ROS.
 
     return config;
-  }
-
-
-
-  void print_supereight_config(const Configuration& config) {
-    ROS_INFO("Supereight parameters:");
-    ROS_INFO("  image_downsampling_factor:     %d",
-        config.image_downsampling_factor);
-    ROS_INFO("  tracking_rate:          %d",
-        config.tracking_rate);
-    ROS_INFO("  integration_rate:       %d",
-        config.integration_rate);
-    ROS_INFO("  rendering_rate:         %d",
-        config.rendering_rate);
-    ROS_INFO("  map_size:      %d %d %d",
-        config.map_size.x(),
-        config.map_size.y(),
-        config.map_size.z());
-    ROS_INFO("  map_dim:            %f %f %f",
-        config.map_dim.x(),
-        config.map_dim.y(),
-        config.map_dim.z());
-    ROS_INFO("  t_MW_factor:     %f %f %f",
-        config.t_MW_factor.x(),
-        config.t_MW_factor.y(),
-        config.t_MW_factor.z());
-    ROS_INFO("  pyramid:                %d %d %d",
-        config.pyramid[0],
-        config.pyramid[1],
-        config.pyramid[2]);
-    ROS_INFO("  dump_volume_file:       \"%s\"",
-        config.dump_volume_file.c_str());
-    ROS_INFO("  T_BC:");
-    for (size_t i = 0; i < 4; ++i) {
-      ROS_INFO("                          %f %f %f %f",
-          config.T_BC(4 * i + 0),
-          config.T_BC(4 * i + 1),
-          config.T_BC(4 * i + 2),
-          config.T_BC(4 * i + 3));
-    }
-    ROS_INFO("  camera:                 %f %f %f %f",
-        config.camera.x(),
-        config.camera.y(),
-        config.camera.z(),
-        config.camera.w());
-    ROS_INFO("  camera_overrided:       %d",
-        config.camera_overrided);
-    ROS_INFO("  mu:                     %f",
-        config.mu);
-    ROS_INFO("  fps:                    %f",
-        config.fps);
-    ROS_INFO("  blocking_read:          %d",
-        config.blocking_read);
-    ROS_INFO("  icp_threshold:          %f",
-        config.icp_threshold);
-    ROS_INFO("  no_gui:                 %d",
-        config.no_gui);
-    ROS_INFO("  render_volume_fullsize: %d",
-        config.render_volume_fullsize);
-    ROS_INFO("  bilateral_filter:       %d",
-        config.bilateral_filter);
   }
 
 } // namespace se

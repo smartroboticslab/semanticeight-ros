@@ -51,10 +51,12 @@ namespace se {
    * Valid input depth image pixel types are `mono16`, `16UC1` and `32FC1`.
    *
    * \param[in]  input_depth  The depth message to copy.
+   * \param[in]  far_plane    The far plane of the depth sensor.
    * \param[out] output_depth The destination buffer.
    */
   void to_supereight_depth(const sensor_msgs::Image& input_depth,
-                           uint16_t*                 output_depth);
+                           const float               far_plane,
+                           float*                    output_depth);
 
 
 
@@ -63,10 +65,10 @@ namespace se {
    * Valid input color image pixel types are `rgb8`, `8UC3`, `rgba8` and `8UC4`.
    *
    * \param[in]  input_color The color message to copy.
-   * \param[out] output_rgb  The destination buffer.
+   * \param[out] output_rgba The destination buffer.
    */
   void to_supereight_RGB(const sensor_msgs::Image& input_color,
-                         uint8_t*                  output_rgb);
+                         uint32_t*                 output_rgba);
 
 
 

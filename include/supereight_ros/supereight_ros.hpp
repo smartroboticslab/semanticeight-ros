@@ -184,14 +184,15 @@ namespace se {
 
     // Supereight
     Configuration supereight_config_;
+    SensorImpl sensor_;
     std::shared_ptr<DenseSLAMSystem> pipeline_ = nullptr;
-    Eigen::Vector3f init_position_octree_;
-    Eigen::Vector2i computation_size_;
+    Eigen::Vector3f t_MW_;
+    Eigen::Vector2i image_res_;
     int frame_;
 
     // Image buffers
-    std::unique_ptr<uint16_t> input_depth_;
-    std::unique_ptr<uint8_t>  input_rgb_;
+    std::unique_ptr<float>    input_depth_;
+    std::unique_ptr<uint32_t> input_rgba_;
     std::unique_ptr<uint32_t> rgba_render_;
     std::unique_ptr<uint32_t> depth_render_;
     std::unique_ptr<uint32_t> track_render_;
