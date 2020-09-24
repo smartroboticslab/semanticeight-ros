@@ -99,6 +99,8 @@ namespace se {
 
     geometry_msgs::TransformStamped T_MW_Msg();
 
+    geometry_msgs::TransformStamped T_BC_Msg();
+
     /*!
      * \brief ROS callback for depth image messages in topic
      * `/camera/depth_image`.
@@ -246,6 +248,8 @@ namespace se {
      */
     const std::string world_frame_id_;
     const std::string map_frame_id_;
+    const std::string body_frame_id_;
+    const std::string camera_frame_id_;
 
     // Timings
     std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;

@@ -29,7 +29,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       sensor_({1, 1, false, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f}),
       frame_(0),
       world_frame_id_("world"),
-      map_frame_id_("map") {
+      map_frame_id_("map"),
+      body_frame_id_("body"),
+      camera_frame_id_("camera") {
 
   readConfig(nh_private);
 
@@ -378,6 +380,7 @@ void SupereightNode::setupRos() {
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose",
       node_config_.pose_buffer_size);
   static_tf_broadcaster_.sendTransform(T_MW_Msg());
+  static_tf_broadcaster_.sendTransform(T_BC_Msg());
   // Render publishers
   if (node_config_.enable_rendering) {
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
@@ -412,6 +415,24 @@ geometry_msgs::TransformStamped SupereightNode::T_MW_Msg() {
   tf.transform.rotation.y = 0.0;
   tf.transform.rotation.z = 0.0;
   tf.transform.rotation.w = 1.0;
+  return tf;
+}
+
+
+
+geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() {
+  // Transform from camera frame to body frame. ROS probably uses a different
+  // convention than us?
+  geometry_msgs::TransformStamped tf;
+  tf.header.seq = 0;
+  tf.header.stamp = ros::Time::now();
+  tf.header.frame_id = body_frame_id_;
+  tf.child_frame_id = camera_frame_id_;
+  const Eigen::Matrix4d T_BC = supereight_config_.T_BC.cast<double>();
+  const Eigen::Quaterniond q_BC (T_BC.topLeftCorner<3, 3>());
+  tf::quaternionEigenToMsg(q_BC, tf.transform.rotation);
+  const Eigen::Vector3d t_BC = T_BC.topRightCorner<3, 1>();
+  tf::vectorEigenToMsg(t_BC, tf.transform.translation);
   return tf;
 }
 
