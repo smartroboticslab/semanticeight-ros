@@ -58,7 +58,7 @@ set(SE_SENSOR_IMPLS ${SENSOR_IMPL} CACHE STRING "The camera implementations to c
 option(SE_BUILD_TESTS "Build the supereight unit tests" OFF)
 option(SE_BUILD_GLUT_GUI "Build the OpenGL-based GUI" OFF)
 option(SE_BUILD_QT_GUI "Build the Qt-based GUI" OFF)
-add_subdirectory(supereight)
+add_subdirectory(semanticeight)
 
 # ------------------------------------------------------------------------------
 # Catkin

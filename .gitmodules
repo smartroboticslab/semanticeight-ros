@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
 # SPDX-License-Identifier: CC0-1.0
 
-[submodule "supereight"]
-	path = supereight
-	url = https://bitbucket.org/smartroboticslab/supereight-public.git
+[submodule "semanticeight"]
+	path = semanticeight
+	url = ../semanticeight.git

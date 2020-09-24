@@ -334,7 +334,7 @@ void SupereightNode::runPipelineOnce() {
 
 void SupereightNode::saveMap() {
   if (!supereight_config_.output_mesh_file.empty()) {
-    pipeline_->dumpMesh(supereight_config_.output_mesh_file.c_str());
+    pipeline_->dumpMesh((supereight_config_.output_mesh_file + "_voxel.ply").c_str(), (supereight_config_.output_mesh_file + "_metre.ply").c_str());
     ROS_INFO("Map saved in %s\n", supereight_config_.output_mesh_file.c_str());
   }
 }
@@ -343,7 +343,7 @@ void SupereightNode::saveMap() {
 
 void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
   supereight_config_ = read_supereight_config(nh_private);
-  ROS_INFO_STREAM(supereight_config_);
+  //ROS_INFO_STREAM(supereight_config_);
 
   node_config_ = read_supereight_node_config(nh_private);
   print_supereight_node_config(node_config_);
