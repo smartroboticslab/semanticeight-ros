@@ -37,6 +37,9 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   sensor_msgs
   std_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
   visualization_msgs
 )
 

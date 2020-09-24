@@ -338,6 +338,16 @@ void SupereightNode::saveMap() {
 
 
 
+void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
+  supereight_config_ = read_supereight_config(nh_private);
+  ROS_INFO_STREAM(supereight_config_);
+
+  node_config_ = read_supereight_node_config(nh_private);
+  print_supereight_node_config(node_config_);
+};
+
+
+
 void SupereightNode::setupRos() {
   // Pose subscriber
   if (!node_config_.enable_tracking) {
@@ -367,6 +377,7 @@ void SupereightNode::setupRos() {
   // Publishers
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose",
       node_config_.pose_buffer_size);
+  static_tf_broadcaster_.sendTransform(T_MW_Msg());
   // Render publishers
   if (node_config_.enable_rendering) {
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
@@ -388,13 +399,21 @@ void SupereightNode::setupRos() {
 
 
 
-void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
-  supereight_config_ = read_supereight_config(nh_private);
-  ROS_INFO_STREAM(supereight_config_);
-
-  node_config_ = read_supereight_node_config(nh_private);
-  print_supereight_node_config(node_config_);
-};
+geometry_msgs::TransformStamped SupereightNode::T_MW_Msg() {
+  // Transform from world frame to map frame. ROS probably uses a different
+  // convention than us?
+  geometry_msgs::TransformStamped tf;
+  tf.header.seq = 0;
+  tf.header.stamp = ros::Time::now();
+  tf.header.frame_id = map_frame_id_;
+  tf.child_frame_id = world_frame_id_;
+  tf::vectorEigenToMsg(t_MW_.cast<double>(), tf.transform.translation);
+  tf.transform.rotation.x = 0.0;
+  tf.transform.rotation.y = 0.0;
+  tf.transform.rotation.z = 0.0;
+  tf.transform.rotation.w = 1.0;
+  return tf;
+}
 
 
 

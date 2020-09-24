@@ -17,11 +17,12 @@
 
 #include <boost/circular_buffer.hpp>
 
-#include <ros/ros.h>
-#include <std_msgs/Header.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <ros/ros.h>
 #include <sensor_msgs/Image.h>
+#include <std_msgs/Header.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include "se/DenseSLAMSystem.h"
@@ -95,6 +96,8 @@ namespace se {
      * This function should only be called from the constructor.
      **/
     void setupRos();
+
+    geometry_msgs::TransformStamped T_MW_Msg();
 
     /*!
      * \brief ROS callback for depth image messages in topic
@@ -205,6 +208,7 @@ namespace se {
 
     // Publishers
     ros::Publisher supereight_pose_pub_;
+    tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
 
     // Render publishers
     ros::Publisher depth_render_pub_;
