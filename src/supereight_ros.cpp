@@ -28,7 +28,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       nh_private_(nh_private),
       sensor_({1, 1, false, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f}),
       frame_(0),
-      frame_id_("map") {
+      world_frame_id_("world"),
+      map_frame_id_("map") {
 
   readConfig(nh_private);
 
@@ -241,7 +242,7 @@ void SupereightNode::runPipelineOnce() {
   Eigen::Quaterniond se_q_WC (se_T_WC.block<3, 3>(0, 0).cast<double>());
   geometry_msgs::PoseStamped supereight_pose;
   supereight_pose.header = current_depth_msg->header;
-  supereight_pose.header.frame_id = frame_id_;
+  supereight_pose.header.frame_id = world_frame_id_;
   tf::pointEigenToMsg(se_t_WC, supereight_pose.pose.position);
   tf::quaternionEigenToMsg(se_q_WC, supereight_pose.pose.orientation);
   supereight_pose_pub_.publish(supereight_pose);
@@ -458,7 +459,7 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   // Create a ROS message from T_WC.
   geometry_msgs::TransformStamped T_WC_msg;
   T_WC_msg.header = header;
-  T_WC_msg.header.frame_id = frame_id_;
+  T_WC_msg.header.frame_id = world_frame_id_;
   const Eigen::Quaterniond q_WC (T_WC.topLeftCorner<3, 3>());
   tf::quaternionEigenToMsg(q_WC, T_WC_msg.transform.rotation);
   const Eigen::Vector3d t_WC = T_WC.topRightCorner<3, 1>();
@@ -498,8 +499,8 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
 ////  if (!getExplorationArea) { ROS_ERROR("no exploration area received "); }
 //
 //  visualization_msgs::Marker voxel_block_marker;
-//  voxel_block_marker.header.frame_id = frame_id_;
-//  voxel_block_marker.ns = frame_id_;
+//  voxel_block_marker.header.frame_id = world_frame_id_;
+//  voxel_block_marker.ns = world_frame_id_;
 //  voxel_block_marker.type = visualization_msgs::Marker::CUBE_LIST;
 //  voxel_block_marker.scale.x = res_;
 //  voxel_block_marker.scale.y = res_;
@@ -671,8 +672,8 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
 //
 //    vec3i surface_voxels = node_it.getSurfaceVoxels();
 //
-//    map_marker_msg.header.frame_id = frame_id_;
-//    map_marker_msg.ns = frame_id_;
+//    map_marker_msg.header.frame_id = world_frame_id_;
+//    map_marker_msg.ns = world_frame_id_;
 //    map_marker_msg.id = 0;
 //    map_marker_msg.type = visualization_msgs::Marker::CUBE_LIST;
 //    map_marker_msg.scale.x = res_;
@@ -701,8 +702,8 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
 //    constexpr bool is_map_block_based = true;
 ////  if (is_map_block_based) {
 ////    visualization_msgs::Marker voxel_block_marker;
-////    voxel_block_marker.header.frame_id = frame_id_;
-////    voxel_block_marker.ns = frame_id_;
+////    voxel_block_marker.header.frame_id = world_frame_id_;
+////    voxel_block_marker.ns = world_frame_id_;
 ////    voxel_block_marker.type = visualization_msgs::Marker::CUBE_LIST;
 ////    voxel_block_marker.scale.x = res_;
 ////    voxel_block_marker.scale.y = res_;

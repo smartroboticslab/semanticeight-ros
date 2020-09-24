@@ -240,7 +240,8 @@ namespace se {
      * Global/map coordinate frame. Will always look up TF transforms to this
      * frame.
      */
-    std::string frame_id_;
+    const std::string world_frame_id_;
+    const std::string map_frame_id_;
 
     // Timings
     std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;
