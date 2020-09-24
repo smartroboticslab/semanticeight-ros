@@ -81,6 +81,13 @@ namespace se {
      * consider them matched.
      */
     double max_timestamp_diff;
+
+    /*!
+     * Whether to center the world frame to the position of the first received
+     * pose. This only has an effect if
+     * se::SupereightNodeConfig::enable_tracking is false.
+     */
+    bool center_at_first_position;
   };
 
 

@@ -12,17 +12,18 @@ The following node parameters can be set in a YAML configuration file and then
 loaded in a ROS launch file. `config/config.yaml` contains the default
 parameter values.
 
-| Parameter name        | Type             | Default value                  | Description |
-| :-------------------- | :--------------: | :----------------------------: | :---------- |
-| `enable_tracking`     | boolean          | `true`                         | Use the ICP tracking from supereight to compute the camera pose. If set to `false` then the external camera pose from `/pose` will be used instead. |
-| `enable_rendering`    | boolean          | `true`                         | Generate and publish the depth, RGB, tracking info and volume render images from supereight. This is only for visualization purposes and doesn't affect the pipeline in any way. |
-| `enable_rgb`          | boolean          | `false`                        | Add RGB images to the supereight pipeline. This has no effect in the supereight map for the time being since supereight uses only depth images. The option is available to make it easier to use modified supereight versions that make use of RGB images. |
-| `input_res`           | list of integers | `[640, 480]`                   | The resolution of the input depth and RGB images (width, height). This should be set to the correct image resolution since it is used to initialize supereight. |
-| `pose_topic_type`     | string           | `"geometry_msgs::PoseStamped"` | The type of the pose topic. Valid values are `geometry_msgs::PoseStamped`  and `geometry_msgs::TransformStamped`. |
-| `pose_buffer_size`    | integer          | `600`                          | The number of elements in the pose circular buffer. This should in general be at least an order of magnitude larger than `depth_buffer_size` and `rgb_buffer_size`. |
-| `depth_buffer_size`   | integer          | `60`                           | The number of elements in the depth image circular buffer. A low value will result in integrating fairly recent frames into the map. A high value will result in integrating older frames into the map. A value of 1 will result in integrating the most recent depth frame into the map. |
-| `rgb_buffer_size`     | integer          | `60`                           | The number of elements in the RGB image circular buffer. |
-| `max_timestamp_diff`  | double           | `0.02`                         | The maximum time difference in seconds between a depth and RGB image to consider them matched. |
+| Parameter name             | Type             | Default value                  | Description |
+| :------------------------- | :--------------: | :----------------------------: | :---------- |
+| `enable_tracking`          | boolean          | `true`                         | Use the ICP tracking from supereight to compute the camera pose. If set to `false` then the external camera pose from `/pose` will be used instead. |
+| `enable_rendering`         | boolean          | `true`                         | Generate and publish the depth, RGB, tracking info and volume render images from supereight. This is only for visualization purposes and doesn't affect the pipeline in any way. |
+| `enable_rgb`               | boolean          | `false`                        | Add RGB images to the supereight pipeline. This has no effect in the supereight map for the time being since supereight uses only depth images. The option is available to make it easier to use modified supereight versions that make use of RGB images. |
+| `input_res`                | list of integers | `[640, 480]`                   | The resolution of the input depth and RGB images (width, height). This should be set to the correct image resolution since it is used to initialize supereight. |
+| `pose_topic_type`          | string           | `"geometry_msgs::PoseStamped"` | The type of the pose topic. Valid values are `geometry_msgs::PoseStamped`  and `geometry_msgs::TransformStamped`. |
+| `pose_buffer_size`         | integer          | `600`                          | The number of elements in the pose circular buffer. This should in general be at least an order of magnitude larger than `depth_buffer_size` and `rgb_buffer_size`. |
+| `depth_buffer_size`        | integer          | `60`                           | The number of elements in the depth image circular buffer. A low value will result in integrating fairly recent frames into the map. A high value will result in integrating older frames into the map. A value of 1 will result in integrating the most recent depth frame into the map. |
+| `rgb_buffer_size`          | integer          | `60`                           | The number of elements in the RGB image circular buffer. |
+| `max_timestamp_diff`       | double           | `0.02`                         | The maximum time difference in seconds between a depth and RGB image to consider them matched. |
+| `center_at_first_position` | boolean          | `true`                         | Put the origin of the world frame at the position of the first received pose. This only has an effect if `enable_tracking` is `false`. |
 
 ### Subscribed topics
 

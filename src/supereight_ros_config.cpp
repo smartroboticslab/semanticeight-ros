@@ -25,6 +25,7 @@ constexpr int default_pose_buffer_size = 600;
 constexpr int default_depth_buffer_size = 60;
 constexpr int default_rgb_buffer_size = 60;
 constexpr double default_max_timestamp_diff = 0.001;
+constexpr bool default_center_at_first_position = true;
 
 
 
@@ -65,6 +66,9 @@ namespace se {
     nh.param<double>("supereight_ros/max_timestamp_diff",
         config.max_timestamp_diff, default_max_timestamp_diff);
 
+    nh.param<bool>("supereight_ros/center_at_first_position",
+        config.center_at_first_position, default_center_at_first_position);
+
     return config;
   }
 
@@ -72,15 +76,16 @@ namespace se {
 
   void print_supereight_node_config(const SupereightNodeConfig& config) {
     ROS_INFO("Supereight Node parameters:");
-    ROS_INFO("  enable_tracking:        %d", config.enable_tracking);
-    ROS_INFO("  enable_rendering:       %d", config.enable_rendering);
-    ROS_INFO("  enable_rgb:             %d", config.enable_rgb);
-    ROS_INFO("  input_res:              %d %d", config.input_res.x(), config.input_res.y());
-    ROS_INFO("  pose_topic_type:        %s", config.pose_topic_type.c_str());
-    ROS_INFO("  pose_buffer_size:       %d", config.pose_buffer_size);
-    ROS_INFO("  depth_buffer_size:      %d", config.depth_buffer_size);
-    ROS_INFO("  rgb_buffer_size:        %d", config.rgb_buffer_size);
-    ROS_INFO("  max_timestamp_diff:     %f", config.max_timestamp_diff);
+    ROS_INFO("  enable_tracking:          %d", config.enable_tracking);
+    ROS_INFO("  enable_rendering:         %d", config.enable_rendering);
+    ROS_INFO("  enable_rgb:               %d", config.enable_rgb);
+    ROS_INFO("  input_res:                %d %d", config.input_res.x(), config.input_res.y());
+    ROS_INFO("  pose_topic_type:          %s", config.pose_topic_type.c_str());
+    ROS_INFO("  pose_buffer_size:         %d", config.pose_buffer_size);
+    ROS_INFO("  depth_buffer_size:        %d", config.depth_buffer_size);
+    ROS_INFO("  rgb_buffer_size:          %d", config.rgb_buffer_size);
+    ROS_INFO("  max_timestamp_diff:       %f", config.max_timestamp_diff);
+    ROS_INFO("  center_at_first_position: %d", config.center_at_first_position);
   }
 
 

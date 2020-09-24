@@ -5,6 +5,7 @@
 
 #include "supereight_ros/supereight_ros.hpp"
 
+#include <cmath>
 #include <cstring>
 #include <functional>
 #include <thread>
@@ -37,6 +38,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
   t_MW_ = supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
   T_CB_ = supereight_config_.T_BC.inverse();
+  init_t_WB_ = Eigen::Vector3f::Constant(NAN);
   image_res_ = node_config_.input_res / supereight_config_.sensor_downsampling_factor;
 
   // Allocate input image buffers.
@@ -499,6 +501,15 @@ void SupereightNode::poseStampedCallback(
   tf::pointMsgToEigen(T_WB_msg->pose.position, t_WB);
   T_WB.topRightCorner<3, 1>() = t_WB;
 
+  if (node_config_.center_at_first_position) {
+    if (std::isnan(init_t_WB_.x())) {
+      // This is the first pose.
+      init_t_WB_ = T_WB.topRightCorner<3, 1>().cast<float>();
+    }
+    // Subtract the initial position.
+    T_WB.topRightCorner<3, 1>() -= init_t_WB_.cast<double>();
+  }
+
   // Call the generic pose callback.
   poseCallback(T_WB, T_WB_msg->header);
 }
@@ -516,6 +527,15 @@ void SupereightNode::transformStampedCallback(
   Eigen::Vector3d t_WB;
   tf::vectorMsgToEigen(T_WB_msg->transform.translation, t_WB);
   T_WB.topRightCorner<3, 1>() = t_WB;
+
+  if (node_config_.center_at_first_position) {
+    if (std::isnan(init_t_WB_.x())) {
+      // This is the first pose.
+      init_t_WB_ = T_WB.topRightCorner<3, 1>().cast<float>();
+    }
+    // Subtract the initial position.
+    T_WB.topRightCorner<3, 1>() -= init_t_WB_.cast<double>();
+  }
 
   // Call the generic pose callback.
   poseCallback(T_WB, T_WB_msg->header);
