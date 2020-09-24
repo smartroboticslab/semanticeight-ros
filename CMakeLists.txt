@@ -53,7 +53,11 @@ if (WITH_OPENMP)
 endif ()
 
 # Compile supereight
+set(SE_VOXEL_IMPLS ${VOXEL_IMPL} CACHE STRING "The voxel implementations to compile")
+set(SE_SENSOR_IMPLS ${SENSOR_IMPL} CACHE STRING "The camera implementations to compile")
 option(SE_BUILD_TESTS "Build the supereight unit tests" OFF)
+option(SE_BUILD_GLUT_GUI "Build the OpenGL-based GUI" OFF)
+option(SE_BUILD_QT_GUI "Build the Qt-based GUI" OFF)
 add_subdirectory(supereight)
 
 # ------------------------------------------------------------------------------
