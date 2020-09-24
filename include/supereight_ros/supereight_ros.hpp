@@ -194,6 +194,7 @@ namespace se {
     SensorImpl sensor_;
     std::shared_ptr<DenseSLAMSystem> pipeline_ = nullptr;
     Eigen::Vector3f t_MW_;
+    Eigen::Matrix4f T_CB_;
     Eigen::Vector2i image_res_;
     int frame_;
 

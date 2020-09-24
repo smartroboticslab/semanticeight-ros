@@ -36,6 +36,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   readConfig(nh_private);
 
   t_MW_ = supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
+  T_CB_ = supereight_config_.T_BC.inverse();
   image_res_ = node_config_.input_res / supereight_config_.sensor_downsampling_factor;
 
   // Allocate input image buffers.
@@ -239,14 +240,14 @@ void SupereightNode::runPipelineOnce() {
   }
 
   // Publish pose estimated/received by supereight.
-  const Eigen::Matrix4f se_T_WC = pipeline_->T_WC();
-  const Eigen::Vector3d se_t_WC = se_T_WC.block<3, 1>(0, 3).cast<double>();
-  Eigen::Quaterniond se_q_WC (se_T_WC.block<3, 3>(0, 0).cast<double>());
+  const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
+  const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
+  Eigen::Quaterniond se_q_WB (se_T_WB.block<3, 3>(0, 0).cast<double>());
   geometry_msgs::PoseStamped supereight_pose;
   supereight_pose.header = current_depth_msg->header;
   supereight_pose.header.frame_id = world_frame_id_;
-  tf::pointEigenToMsg(se_t_WC, supereight_pose.pose.position);
-  tf::quaternionEigenToMsg(se_q_WC, supereight_pose.pose.orientation);
+  tf::pointEigenToMsg(se_t_WB, supereight_pose.pose.position);
+  tf::quaternionEigenToMsg(se_q_WB, supereight_pose.pose.orientation);
   supereight_pose_pub_.publish(supereight_pose);
   timings_[3] = std::chrono::steady_clock::now();
 
