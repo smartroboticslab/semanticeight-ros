@@ -101,6 +101,8 @@ namespace se {
 
     geometry_msgs::TransformStamped T_BC_Msg();
 
+    visualization_msgs::Marker mapDimMsg();
+
     /*!
      * \brief ROS callback for depth image messages in topic
      * `/camera/depth_image`.
@@ -219,6 +221,7 @@ namespace se {
     ros::Publisher track_render_pub_;
 
     // Visualization publishers
+    ros::Publisher map_dim_pub_;
     //ros::Publisher map_marker_pub_;
     //ros::Publisher block_based_marker_pub_;
     //ros::Publisher boundary_marker_pub_;

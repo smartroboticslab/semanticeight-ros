@@ -393,7 +393,9 @@ void SupereightNode::setupRos() {
     volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
   }
 
-  // Visualization
+  // Visualization publishers
+  map_dim_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map_dim", 1, true);
+  map_dim_pub_.publish(mapDimMsg());
   //map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
   //block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
   //boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
@@ -434,6 +436,36 @@ geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() {
   const Eigen::Vector3d t_BC = T_BC.topRightCorner<3, 1>();
   tf::vectorEigenToMsg(t_BC, tf.transform.translation);
   return tf;
+}
+
+
+
+visualization_msgs::Marker SupereightNode::mapDimMsg() {
+  visualization_msgs::Marker m;
+  m.header.seq = 0;
+  m.header.stamp = ros::Time::now();
+  m.header.frame_id = map_frame_id_;
+  m.ns = "map_dim";
+  m.id = 0;
+  m.type = visualization_msgs::Marker::CUBE;
+  m.action = visualization_msgs::Marker::ADD;
+  m.pose.position.x = supereight_config_.map_dim.x() / 2.0f;
+  m.pose.position.y = supereight_config_.map_dim.x() / 2.0f;
+  m.pose.position.z = supereight_config_.map_dim.x() / 2.0f;
+  m.pose.orientation.x = 0.0;
+  m.pose.orientation.y = 0.0;
+  m.pose.orientation.z = 0.0;
+  m.pose.orientation.w = 1.0;
+  m.scale.x = supereight_config_.map_dim.x();
+  m.scale.y = supereight_config_.map_dim.x();
+  m.scale.z = supereight_config_.map_dim.x();
+  m.color.r = 1.0;
+  m.color.g = 1.0;
+  m.color.b = 1.0;
+  m.color.a = 0.1;
+  m.lifetime = ros::Duration(0.0);
+  m.frame_locked = true;
+  return m;
 }
 
 
