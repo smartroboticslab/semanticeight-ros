@@ -8,8 +8,7 @@ Panels:
     Help Height: 104
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Global Options1
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 257
   - Class: rviz/Selection
@@ -109,7 +108,7 @@ Visualization Manager:
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
       Color: 255; 25; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
       Name: SE Pose
@@ -119,16 +118,16 @@ Visualization Manager:
       Shape: Axes
       Topic: /supereight/pose
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
         body:
           Value: true
         camera:
-          Value: true
+          Value: false
         map:
           Value: true
         world:
@@ -142,7 +141,9 @@ Visualization Manager:
       Tree:
         map:
           world:
-            {}
+            body:
+              camera:
+                {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker

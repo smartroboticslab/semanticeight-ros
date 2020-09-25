@@ -246,12 +246,13 @@ void SupereightNode::runPipelineOnce() {
   const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
   const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
   Eigen::Quaterniond se_q_WB (se_T_WB.block<3, 3>(0, 0).cast<double>());
-  geometry_msgs::PoseStamped supereight_pose;
-  supereight_pose.header = current_depth_msg->header;
-  supereight_pose.header.frame_id = world_frame_id_;
-  tf::pointEigenToMsg(se_t_WB, supereight_pose.pose.position);
-  tf::quaternionEigenToMsg(se_q_WB, supereight_pose.pose.orientation);
-  supereight_pose_pub_.publish(supereight_pose);
+  geometry_msgs::PoseStamped se_T_WB_msg;
+  se_T_WB_msg.header = current_depth_msg->header;
+  se_T_WB_msg.header.frame_id = world_frame_id_;
+  tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
+  tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
+  supereight_pose_pub_.publish(se_T_WB_msg);
+  pose_tf_broadcaster_.sendTransform(poseToTransform(se_T_WB_msg));
   timings_[3] = std::chrono::steady_clock::now();
 
 
@@ -499,6 +500,25 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   pose_buffer_.push_back(T_WC_msg);
   ROS_DEBUG("Pose buffer:        %lu/%lu",
       pose_buffer_.size(), pose_buffer_.capacity());
+}
+
+
+
+geometry_msgs::TransformStamped SupereightNode::poseToTransform(const geometry_msgs::PoseStamped&  T_WB_msg) const {
+  static int seq = 0;
+  static geometry_msgs::TransformStamped tf;
+  tf.header.seq = seq++;
+  tf.header.stamp = ros::Time::now();
+  tf.header.frame_id = world_frame_id_;
+  tf.child_frame_id = body_frame_id_;
+  tf.transform.translation.x = T_WB_msg.pose.position.x;
+  tf.transform.translation.y = T_WB_msg.pose.position.y;
+  tf.transform.translation.z = T_WB_msg.pose.position.z;
+  tf.transform.rotation.x = T_WB_msg.pose.orientation.x;
+  tf.transform.rotation.y = T_WB_msg.pose.orientation.y;
+  tf.transform.rotation.z = T_WB_msg.pose.orientation.z;
+  tf.transform.rotation.w = T_WB_msg.pose.orientation.w;
+  return tf;
 }
 
 

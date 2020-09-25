@@ -23,6 +23,7 @@
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Header.h>
 #include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include "se/DenseSLAMSystem.h"
@@ -157,6 +158,8 @@ namespace se {
     void poseCallback(const Eigen::Matrix4d&  T_WB,
                       const std_msgs::Header& header);
 
+    geometry_msgs::TransformStamped poseToTransform(const geometry_msgs::PoseStamped&  T_WB_msg) const;
+
     void visualizeWholeMap();
 
     bool is_free(const se::Volume<VoxelImpl::VoxelType>& volume) const;
@@ -201,6 +204,7 @@ namespace se {
 
     // Publishers
     ros::Publisher supereight_pose_pub_;
+    tf2_ros::TransformBroadcaster pose_tf_broadcaster_;
     tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
 
     // Render publishers
