@@ -315,8 +315,9 @@ void SupereightNode::runPipelineOnce() {
 
 
   // Visualization
-  // TODO add config enable
-  visualizeWholeMap();
+  if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
+    visualizeWholeMap();
+  }
   timings_[7] = std::chrono::steady_clock::now();
 
 

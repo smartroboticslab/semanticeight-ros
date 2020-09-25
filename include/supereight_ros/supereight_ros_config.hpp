@@ -88,6 +88,12 @@ namespace se {
      * se::SupereightNodeConfig::enable_tracking is false.
      */
     bool center_at_first_position;
+
+    /*!
+     * The rate at which the 3D map visualization in rviz is updated. A value of
+     * 0 disables the 3D visualization completely.
+     */
+    int visualization_rate;
   };
 
 

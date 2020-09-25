@@ -26,6 +26,7 @@ constexpr int default_depth_buffer_size = 60;
 constexpr int default_rgb_buffer_size = 60;
 constexpr double default_max_timestamp_diff = 0.001;
 constexpr bool default_center_at_first_position = true;
+constexpr int default_visualization_rate = 4;
 
 
 
@@ -69,6 +70,9 @@ namespace se {
     nh.param<bool>("supereight_ros/center_at_first_position",
         config.center_at_first_position, default_center_at_first_position);
 
+    nh.param<int>("supereight_ros/visualization_rate",
+        config.visualization_rate, default_visualization_rate);
+
     return config;
   }
 
@@ -86,6 +90,7 @@ namespace se {
     ROS_INFO("  rgb_buffer_size:          %d", config.rgb_buffer_size);
     ROS_INFO("  max_timestamp_diff:       %f", config.max_timestamp_diff);
     ROS_INFO("  center_at_first_position: %d", config.center_at_first_position);
+    ROS_INFO("  visualization_rate:       %d", config.visualization_rate);
   }
 
 
