@@ -169,26 +169,6 @@ namespace se {
 
     bool is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const;
 
-    /*
-     * \brief loads the occpuancy map and publishes it to a ros topic
-     * \param updated_blocks
-     */
-    //void visualizeMapOFusion(vec3i &updated_blocks,
-    //                         vec3i &frontier_blocks,
-    //                         map3i &frontier_blocks_map,
-    //                         vec3i &occlusion_blocks);
-
-    /*
-     * \brief loads the SDF map and publishes it to a ros topic
-     * \param updated_blocks
-     */
-    //void visualizeMapSDF(vec3i &occupied_voxels,
-    //                     vec3i &freed_voxels,
-    //                     vec3i &updated_blocks);
-
-    /* Taken from https://github.com/ethz-asl/volumetric_mapping */
-    //std_msgs::ColorRGBA percentToColor(double h);
-
 
 
     // ROS node
@@ -235,11 +215,6 @@ namespace se {
     ros::Publisher map_occupied_pub_;
     ros::Publisher map_unknown_pub_;
 
-    //ros::Publisher map_marker_pub_;
-    //ros::Publisher block_based_marker_pub_;
-    //ros::Publisher boundary_marker_pub_;
-    //ros::Publisher frontier_marker_pub_;
-
     // Visualization colors
     const Eigen::Vector4f color_occupied_ = Eigen::Vector4f(0.0, 0.0, 1.0, 1.0);
     const Eigen::Vector4f color_free_ = Eigen::Vector4f(0.0, 1.0, 0.0, 0.5);
@@ -254,14 +229,6 @@ namespace se {
     std::mutex rgb_buffer_mutex_;
 
     std::mutex fusion_mutex_;
-
-    // voxel blockwise update for visualization
-    //mapvec3i voxel_block_map_;
-    //mapvec3i surface_voxel_map_;
-    //mapvec3i frontier_voxel_map_;
-    //mapvec3i occlusion_voxel_map_;
-    // block based visualization
-    //bool pub_map_update_ = false;
 
     /*!
      * Global/map coordinate frame. Will always look up TF transforms to this
