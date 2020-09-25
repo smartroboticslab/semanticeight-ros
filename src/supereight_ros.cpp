@@ -353,6 +353,9 @@ void SupereightNode::readConfig(const ros::NodeHandle& nh_private) {
 
 
 void SupereightNode::setupRos() {
+  // Initialize the constant messages
+  map_dim_msg_ = mapDimMsg();
+
   // Pose subscriber
   if (!node_config_.enable_tracking) {
     if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
@@ -397,76 +400,10 @@ void SupereightNode::setupRos() {
 
   // Visualization publishers
   map_dim_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/dim", 1, true);
-  map_dim_pub_.publish(mapDimMsg());
+  map_dim_pub_.publish(map_dim_msg_);
   map_free_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/free", 1);
   map_occupied_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/occupied", 1);
   map_unknown_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/unknown", 1);
-}
-
-
-
-geometry_msgs::TransformStamped SupereightNode::T_MW_Msg() {
-  // Transform from world frame to map frame. ROS probably uses a different
-  // convention than us?
-  geometry_msgs::TransformStamped tf;
-  tf.header.seq = 0;
-  tf.header.stamp = ros::Time::now();
-  tf.header.frame_id = map_frame_id_;
-  tf.child_frame_id = world_frame_id_;
-  tf::vectorEigenToMsg(t_MW_.cast<double>(), tf.transform.translation);
-  tf.transform.rotation.x = 0.0;
-  tf.transform.rotation.y = 0.0;
-  tf.transform.rotation.z = 0.0;
-  tf.transform.rotation.w = 1.0;
-  return tf;
-}
-
-
-
-geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() {
-  // Transform from camera frame to body frame. ROS probably uses a different
-  // convention than us?
-  geometry_msgs::TransformStamped tf;
-  tf.header.seq = 0;
-  tf.header.stamp = ros::Time::now();
-  tf.header.frame_id = body_frame_id_;
-  tf.child_frame_id = camera_frame_id_;
-  const Eigen::Matrix4d T_BC = supereight_config_.T_BC.cast<double>();
-  const Eigen::Quaterniond q_BC (T_BC.topLeftCorner<3, 3>());
-  tf::quaternionEigenToMsg(q_BC, tf.transform.rotation);
-  const Eigen::Vector3d t_BC = T_BC.topRightCorner<3, 1>();
-  tf::vectorEigenToMsg(t_BC, tf.transform.translation);
-  return tf;
-}
-
-
-
-visualization_msgs::Marker SupereightNode::mapDimMsg() {
-  visualization_msgs::Marker m;
-  m.header.seq = 0;
-  m.header.stamp = ros::Time::now();
-  m.header.frame_id = map_frame_id_;
-  m.ns = "map_dim";
-  m.id = 0;
-  m.type = visualization_msgs::Marker::CUBE;
-  m.action = visualization_msgs::Marker::ADD;
-  m.pose.position.x = supereight_config_.map_dim.x() / 2.0f;
-  m.pose.position.y = supereight_config_.map_dim.x() / 2.0f;
-  m.pose.position.z = supereight_config_.map_dim.x() / 2.0f;
-  m.pose.orientation.x = 0.0;
-  m.pose.orientation.y = 0.0;
-  m.pose.orientation.z = 0.0;
-  m.pose.orientation.w = 1.0;
-  m.scale.x = supereight_config_.map_dim.x();
-  m.scale.y = supereight_config_.map_dim.x();
-  m.scale.z = supereight_config_.map_dim.x();
-  m.color.r = 1.0;
-  m.color.g = 1.0;
-  m.color.b = 1.0;
-  m.color.a = 0.1;
-  m.lifetime = ros::Duration(0.0);
-  m.frame_locked = true;
-  return m;
 }
 
 
@@ -655,6 +592,72 @@ bool SupereightNode::is_free(const se::Volume<VoxelImpl::VoxelType>& volume) con
 bool SupereightNode::is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const {
   constexpr bool is_tsdf = VoxelImpl::invert_normals;
   return (is_tsdf && volume.data.x < 0.0f) || (!is_tsdf && volume.data.x > 0.0f);
+}
+
+
+
+geometry_msgs::TransformStamped SupereightNode::T_MW_Msg() const {
+  // Transform from world frame to map frame. ROS probably uses a different
+  // convention than us?
+  static geometry_msgs::TransformStamped tf;
+  tf.header.seq = 0;
+  tf.header.stamp = ros::Time::now();
+  tf.header.frame_id = map_frame_id_;
+  tf.child_frame_id = world_frame_id_;
+  tf::vectorEigenToMsg(t_MW_.cast<double>(), tf.transform.translation);
+  tf.transform.rotation.x = 0.0;
+  tf.transform.rotation.y = 0.0;
+  tf.transform.rotation.z = 0.0;
+  tf.transform.rotation.w = 1.0;
+  return tf;
+}
+
+
+
+geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() const {
+  // Transform from camera frame to body frame. ROS probably uses a different
+  // convention than us?
+  static geometry_msgs::TransformStamped tf;
+  tf.header.seq = 0;
+  tf.header.stamp = ros::Time::now();
+  tf.header.frame_id = body_frame_id_;
+  tf.child_frame_id = camera_frame_id_;
+  const Eigen::Matrix4d T_BC = supereight_config_.T_BC.cast<double>();
+  const Eigen::Quaterniond q_BC (T_BC.topLeftCorner<3, 3>());
+  tf::quaternionEigenToMsg(q_BC, tf.transform.rotation);
+  const Eigen::Vector3d t_BC = T_BC.topRightCorner<3, 1>();
+  tf::vectorEigenToMsg(t_BC, tf.transform.translation);
+  return tf;
+}
+
+
+
+visualization_msgs::Marker SupereightNode::mapDimMsg() const {
+  static visualization_msgs::Marker m;
+  m.header.seq = 0;
+  m.header.stamp = ros::Time::now();
+  m.header.frame_id = map_frame_id_;
+  m.ns = "map_dim";
+  m.id = 0;
+  m.type = visualization_msgs::Marker::CUBE;
+  m.action = visualization_msgs::Marker::ADD;
+  m.pose.position.x = supereight_config_.map_dim.x() / 2.0f;
+  m.pose.position.y = supereight_config_.map_dim.x() / 2.0f;
+  m.pose.position.z = supereight_config_.map_dim.x() / 2.0f;
+  m.pose.orientation.x = 0.0;
+  m.pose.orientation.y = 0.0;
+  m.pose.orientation.z = 0.0;
+  m.pose.orientation.w = 1.0;
+  m.scale.x = supereight_config_.map_dim.x();
+  m.scale.y = supereight_config_.map_dim.x();
+  m.scale.z = supereight_config_.map_dim.x();
+  m.color.r = 1.0;
+  m.color.g = 1.0;
+  m.color.b = 1.0;
+  m.color.a = 0.1;
+  m.lifetime = ros::Duration(0.0);
+  m.frame_locked = true;
+  return m;
 }
 
 }  // namespace se

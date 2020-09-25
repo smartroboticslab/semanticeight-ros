@@ -98,12 +98,6 @@ namespace se {
      **/
     void setupRos();
 
-    geometry_msgs::TransformStamped T_MW_Msg();
-
-    geometry_msgs::TransformStamped T_BC_Msg();
-
-    visualization_msgs::Marker mapDimMsg();
-
     /*!
      * \brief ROS callback for depth image messages in topic
      * `/camera/depth_image`.
@@ -168,6 +162,12 @@ namespace se {
     bool is_free(const se::Volume<VoxelImpl::VoxelType>& volume) const;
 
     bool is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const;
+
+    geometry_msgs::TransformStamped T_MW_Msg() const;
+
+    geometry_msgs::TransformStamped T_BC_Msg() const;
+
+    visualization_msgs::Marker mapDimMsg() const;
 
 
 
@@ -238,6 +238,9 @@ namespace se {
     const std::string map_frame_id_;
     const std::string body_frame_id_;
     const std::string camera_frame_id_;
+
+    // Constant messages
+    visualization_msgs::Marker map_dim_msg_;
 
     // Timings
     std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;
