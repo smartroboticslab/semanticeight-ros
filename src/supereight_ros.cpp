@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstring>
 #include <functional>
+#include <map>
 #include <thread>
 
 #include <lodepng.h>
@@ -314,6 +315,8 @@ void SupereightNode::runPipelineOnce() {
 
 
   // Visualization
+  // TODO add config enable
+  visualizeWholeMap();
   //if (std::is_same<FieldType, OFusion>::value) {
   //  visualizeMapOFusion(updated_blocks, frontier_blocks, frontier_blocks_map, occlusion_blocks);
   //} else if (std::is_same<FieldType, SDF>::value) {
@@ -397,8 +400,11 @@ void SupereightNode::setupRos() {
   }
 
   // Visualization publishers
-  map_dim_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map_dim", 1, true);
+  map_dim_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/dim", 1, true);
   map_dim_pub_.publish(mapDimMsg());
+  map_free_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/free", 1);
+  map_occupied_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/occupied", 1);
+  map_unknown_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/unknown", 1);
   //map_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("map_based_marker", 1);
   //block_based_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("block_based_marker", 1);
   //boundary_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("boundary_marker", 1);
@@ -563,6 +569,100 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   pose_buffer_.push_back(T_WC_msg);
   ROS_DEBUG("Pose buffer:        %lu/%lu",
       pose_buffer_.size(), pose_buffer_.capacity());
+}
+
+
+
+void SupereightNode::visualizeWholeMap() {
+  // Initialize the message header
+  static uint32_t seq = 0;
+  std_msgs::Header header;
+  header.seq = seq++;
+  header.stamp = ros::Time::now();
+  header.frame_id = map_frame_id_;
+  // Iterate over the octree, creating a different CUBE_LIST marker for each
+  // volume size and state.
+  std::map<int, visualization_msgs::Marker> markers_free;
+  std::map<int, visualization_msgs::Marker> markers_occupied;
+  std::map<int, visualization_msgs::Marker> markers_unknown;
+  for (const auto& volume : *(pipeline_->getMap())) {
+    // Select a marker list and color depending on the volume state.
+    std::map<int, visualization_msgs::Marker>* markers = nullptr;
+    std::string ns;
+    std_msgs::ColorRGBA volume_color;
+    if (is_free(volume)) {
+      markers = &markers_free;
+      ns = "map_free";
+      volume_color.r = color_free_.x();
+      volume_color.g = color_free_.y();
+      volume_color.b = color_free_.z();
+      volume_color.a = color_free_.w();
+    } else if (is_occupied(volume)) {
+      markers = &markers_occupied;
+      ns = "map_occupied";
+      volume_color.r = color_occupied_.x();
+      volume_color.g = color_occupied_.y();
+      volume_color.b = color_occupied_.z();
+      volume_color.a = color_occupied_.w();
+    } else {
+      markers = &markers_unknown;
+      ns = "map_unknown";
+      volume_color.r = color_unknown_.x();
+      volume_color.g = color_unknown_.y();
+      volume_color.b = color_unknown_.z();
+      volume_color.a = color_unknown_.w();
+    }
+    const int size = volume.size;
+    if (markers->count(size) == 0) {
+      // Initialize the Marker message for this cube size.
+      (*markers)[size] = visualization_msgs::Marker();
+      (*markers)[size].header = header;
+      (*markers)[size].ns = ns;
+      (*markers)[size].id = size;
+      (*markers)[size].type = visualization_msgs::Marker::CUBE_LIST;
+      (*markers)[size].action = visualization_msgs::Marker::ADD;
+      (*markers)[size].pose.orientation.x = 0.0;
+      (*markers)[size].pose.orientation.y = 0.0;
+      (*markers)[size].pose.orientation.z = 0.0;
+      (*markers)[size].pose.orientation.w = 1.0;
+      (*markers)[size].scale.x = volume.dim;
+      (*markers)[size].scale.y = volume.dim;
+      (*markers)[size].scale.z = volume.dim;
+      (*markers)[size].color = volume_color;
+      (*markers)[size].lifetime = ros::Duration(0.0);
+      (*markers)[size].frame_locked = true;
+    }
+    // Append the current volume.
+    geometry_msgs::Point p;
+    p.x = volume.centre_M.x();
+    p.y = volume.centre_M.y();
+    p.z = volume.centre_M.z();
+    (*markers)[size].points.push_back(p);
+  }
+  // Publish all markers.
+  for (const auto& marker : markers_free) {
+    map_free_pub_.publish(marker.second);
+  }
+  for (const auto& marker : markers_occupied) {
+    map_occupied_pub_.publish(marker.second);
+  }
+  for (const auto& marker : markers_unknown) {
+    map_unknown_pub_.publish(marker.second);
+  }
+}
+
+
+
+bool SupereightNode::is_free(const se::Volume<VoxelImpl::VoxelType>& volume) const {
+  constexpr bool is_tsdf = VoxelImpl::invert_normals;
+  return (is_tsdf && volume.data.x > 0.0f) || (!is_tsdf && volume.data.x < 0.0f);
+}
+
+
+
+bool SupereightNode::is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const {
+  constexpr bool is_tsdf = VoxelImpl::invert_normals;
+  return (is_tsdf && volume.data.x < 0.0f) || (!is_tsdf && volume.data.x > 0.0f);
 }
 
 

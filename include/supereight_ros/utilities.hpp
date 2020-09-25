@@ -7,6 +7,7 @@
 #define __UTILITIES_HPP
 
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -43,6 +44,18 @@ namespace se {
      */
     query_greater = 2,
   };
+
+
+
+  static float to_log_odds(const float probability) {
+    return std::log2f(probability / (1.0f - probability));
+  }
+
+
+
+  static float to_probability(const float log_odds) {
+    return std::pow(2.0f, log_odds) / (1.0f + std::pow(2.0f, log_odds));
+  }
 
 
 

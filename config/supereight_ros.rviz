@@ -147,12 +147,36 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /supereight/map_dim
-      Name: Marker
+      Marker Topic: /supereight/map/dim
+      Name: Map Dimensions
       Namespaces:
         map_dim: true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /supereight/map/occupied
+      Name: Occupied Volume
+      Namespaces:
+        map_occupied: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/free
+      Name: Free Volume
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/unknown
+      Name: Unknown Volume
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
