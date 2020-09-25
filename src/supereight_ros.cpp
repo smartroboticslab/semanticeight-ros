@@ -315,6 +315,7 @@ void SupereightNode::runPipelineOnce() {
 
 
   // Visualization
+  map_dim_pub_.publish(map_dim_msg_);
   if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
     visualizeWholeMap();
   }
