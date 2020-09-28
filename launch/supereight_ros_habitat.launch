@@ -11,6 +11,8 @@
     <arg name="depth_image_topic" value="/habitat/depth/image_raw"/>
     <arg name="rgb_image_topic"   value="/habitat/rgb/image_raw"/>
     <arg name="pose_topic"        value="/habitat/pose"/>
+    <arg name="semantic_class_topic" value="/habitat/semantic_class/image_raw"/>
+    <arg name="semantic_instance_topic" value="/habitat/semantic_instance/image_raw"/>
   </include>
 </launch>
 

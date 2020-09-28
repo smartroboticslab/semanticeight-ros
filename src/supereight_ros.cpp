@@ -117,8 +117,12 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   depth_buffer_.set_capacity(node_config_.depth_buffer_size);
   if (node_config_.enable_rgb) {
     rgb_buffer_.set_capacity(node_config_.rgb_buffer_size);
+    class_buffer_.set_capacity(node_config_.rgb_buffer_size);
+    instance_buffer_.set_capacity(node_config_.rgb_buffer_size);
   } else {
     rgb_buffer_.set_capacity(0);
+    class_buffer_.set_capacity(0);
+    instance_buffer_.set_capacity(0);
   }
 
   setupRos();
@@ -178,6 +182,8 @@ void SupereightNode::runPipelineOnce() {
       // images will never be associated to poses.
       depth_buffer_.clear();
       rgb_buffer_.clear(); // OK to call even when RGB images are not used
+      class_buffer_.clear(); // OK to call even when class images are not used
+      instance_buffer_.clear(); // OK to call even when instance images are not used
       return;
     } else {
       // Find the two closest poses and interpolate to the depth timestamp.
@@ -378,6 +384,10 @@ void SupereightNode::setupRos() {
   if (node_config_.enable_rgb) {
     rgb_sub_ = nh_.subscribe("/camera/rgb_image", node_config_.rgb_buffer_size,
         &SupereightNode::RGBCallback, this);
+    class_sub_ = nh_.subscribe("/camera/class", node_config_.rgb_buffer_size,
+        &SupereightNode::SemClassCallback, this);
+    instance_sub_ = nh_.subscribe("/camera/instance", node_config_.rgb_buffer_size,
+        &SupereightNode::SemInstanceCallback, this);
   }
 
   // Publishers
@@ -497,6 +507,22 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   pose_buffer_.push_back(T_WC_msg);
   ROS_DEBUG("Pose buffer:        %lu/%lu",
       pose_buffer_.size(), pose_buffer_.capacity());
+}
+
+
+
+void SupereightNode::SemClassCallback(const sensor_msgs::ImageConstPtr& class_msg) {
+  const std::lock_guard<std::mutex> class_lock (class_buffer_mutex_);
+  class_buffer_.push_back(class_msg);
+  ROS_DEBUG("Class image buffer: %lu/%lu", class_buffer_.size(), class_buffer_.capacity());
+}
+
+
+
+void SupereightNode::SemInstanceCallback(const sensor_msgs::ImageConstPtr& instance_msg) {
+  const std::lock_guard<std::mutex> instance_lock (instance_buffer_mutex_);
+  instance_buffer_.push_back(instance_msg);
+  ROS_DEBUG("Inst. image buffer: %lu/%lu", instance_buffer_.size(), instance_buffer_.capacity());
 }
 
 

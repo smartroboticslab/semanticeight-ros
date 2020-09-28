@@ -17,6 +17,10 @@
        default="/firefly/vi_sensor/camera_color/color/image_raw"/>
   <arg name="pose_topic"
        default="/firefly/vi_sensor/ground_truth/transform"/>
+  <arg name="semantic_class_topic"
+       default="/habitat/semantic_class/image_raw"/>
+  <arg name="semantic_instance_topic"
+       default="/habitat/semantic_instance/image_raw"/>
   <arg name="command_prefix"
        default=""/>
 
@@ -31,6 +35,8 @@
     <remap from="/camera/depth_image" to="$(arg depth_image_topic)"/>
     <remap from="/camera/rgb_image"   to="$(arg rgb_image_topic)"/>
     <remap from="/pose"               to="$(arg pose_topic)"/>
+    <remap from="/camera/class"       to="$(arg semantic_class_topic)"/>
+    <remap from="/camera/instance"    to="$(arg semantic_instance_topic)"/>
   </node>
 </launch>
 

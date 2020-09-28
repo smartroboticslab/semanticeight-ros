@@ -158,6 +158,10 @@ namespace se {
     void poseCallback(const Eigen::Matrix4d&  T_WB,
                       const std_msgs::Header& header);
 
+    void SemClassCallback(const sensor_msgs::ImageConstPtr& class_msg);
+
+    void SemInstanceCallback(const sensor_msgs::ImageConstPtr& instance_msg);
+
     geometry_msgs::TransformStamped poseToTransform(const geometry_msgs::PoseStamped&  T_WB_msg) const;
 
     void visualizeWholeMap();
@@ -201,6 +205,8 @@ namespace se {
     ros::Subscriber pose_sub_;
     ros::Subscriber depth_sub_;
     ros::Subscriber rgb_sub_;
+    ros::Subscriber class_sub_;
+    ros::Subscriber instance_sub_;
 
     // Publishers
     ros::Publisher supereight_pose_pub_;
@@ -228,9 +234,13 @@ namespace se {
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;
     boost::circular_buffer<sensor_msgs::ImageConstPtr>      depth_buffer_;
     boost::circular_buffer<sensor_msgs::ImageConstPtr>      rgb_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr>      class_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr>      instance_buffer_;
     std::mutex pose_buffer_mutex_;
     std::mutex depth_buffer_mutex_;
     std::mutex rgb_buffer_mutex_;
+    std::mutex class_buffer_mutex_;
+    std::mutex instance_buffer_mutex_;
 
     std::mutex fusion_mutex_;
 
