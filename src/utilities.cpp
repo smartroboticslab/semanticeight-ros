@@ -17,19 +17,19 @@
 
 
 namespace se {
-  void to_supereight_depth(const sensor_msgs::Image& input_depth,
-                           const float               far_plane,
-                           float*                    output_depth) {
+  void to_supereight_depth(const sensor_msgs::ImageConstPtr& input_depth,
+                           const float                       far_plane,
+                           float*                            output_depth) {
 
     // Values equal to the camera far plane should be ignored because Gazebo
     // camera plugins return the value of the far plane for rays that don't hit
     // anything.
 
     // The input depth is in float meters
-    if (input_depth.encoding == "32FC1" && !input_depth.is_bigendian) {
-      const float* d = reinterpret_cast<const float*>(input_depth.data.data());
+    if (input_depth->encoding == "32FC1" && !input_depth->is_bigendian) {
+      const float* d = reinterpret_cast<const float*>(input_depth->data.data());
       #pragma omp parallel for
-      for (size_t i = 0; i < input_depth.width * input_depth.height; ++i) {
+      for (size_t i = 0; i < input_depth->width * input_depth->height; ++i) {
         const float depth_m = d[i];
         if (depth_m >= far_plane) {
           output_depth[i] = 0.0f;
@@ -39,11 +39,11 @@ namespace se {
       }
 
     // The depth is in uint16_t millimeters
-    } else if (((input_depth.encoding == "16UC1") || (input_depth.encoding == "mono16"))
-         && !input_depth.is_bigendian) {
-      const uint16_t* d = reinterpret_cast<const uint16_t*>(input_depth.data.data());
+    } else if (((input_depth->encoding == "16UC1") || (input_depth->encoding == "mono16"))
+         && !input_depth->is_bigendian) {
+      const uint16_t* d = reinterpret_cast<const uint16_t*>(input_depth->data.data());
       #pragma omp parallel for
-      for (size_t i = 0; i < input_depth.width * input_depth.height; ++i) {
+      for (size_t i = 0; i < input_depth->width * input_depth->height; ++i) {
         const float depth_m = d[i] / 1000.0f;
         if (depth_m >= far_plane) {
           output_depth[i] = 0.0f;
@@ -55,35 +55,35 @@ namespace se {
     // Invalid format.
     } else {
       ROS_FATAL("Invalid input depth format %s, expected little endian mono16, 16UC1 or 32FC1",
-          input_depth.encoding.c_str());
+          input_depth->encoding.c_str());
       abort();
     }
   }
 
 
 
-  void to_supereight_RGB(const sensor_msgs::Image& input_color,
-                         uint32_t*                 output_rgba) {
+  void to_supereight_RGB(const sensor_msgs::ImageConstPtr& input_color,
+                         uint32_t*                         output_rgba) {
 
     // Just copy the image data since this is already the correct format.
-    if ((input_color.encoding == "8UC4") || (input_color.encoding == "rgba8")) {
-      std::memcpy(output_rgba, input_color.data.data(), input_color.data.size());
+    if ((input_color->encoding == "8UC4") || (input_color->encoding == "rgba8")) {
+      std::memcpy(output_rgba, input_color->data.data(), input_color->data.size());
 
     // Add the alpha channel.
-    } else if ((input_color.encoding == "8UC3") || (input_color.encoding == "rgb8")) {
+    } else if ((input_color->encoding == "8UC3") || (input_color->encoding == "rgb8")) {
       // Iterate over all pixels.
       #pragma omp parallel for
-      for (size_t i = 0; i < input_color.width * input_color.height; ++i) {
-        const uint8_t r = input_color.data[3*i + 0];
-        const uint8_t g = input_color.data[3*i + 1];
-        const uint8_t b = input_color.data[3*i + 2];
+      for (size_t i = 0; i < input_color->width * input_color->height; ++i) {
+        const uint8_t r = input_color->data[3*i + 0];
+        const uint8_t g = input_color->data[3*i + 1];
+        const uint8_t b = input_color->data[3*i + 2];
         output_rgba[i] = se::pack_rgba(r, g, b, 0xFF);
       }
 
     // Invalid format.
     } else {
       ROS_FATAL("Invalid input depth format %s, expected rgb8, 8UC3, rgba8 or 8UC4",
-          input_color.encoding.c_str());
+          input_color->encoding.c_str());
       abort();
     }
   }

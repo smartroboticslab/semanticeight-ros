@@ -67,9 +67,9 @@ namespace se {
    * \param[in]  far_plane    The far plane of the depth sensor.
    * \param[out] output_depth The destination buffer.
    */
-  void to_supereight_depth(const sensor_msgs::Image& input_depth,
-                           const float               far_plane,
-                           float*                    output_depth);
+  void to_supereight_depth(const sensor_msgs::ImageConstPtr& input_depth,
+                           const float                       far_plane,
+                           float*                            output_depth);
 
 
 
@@ -80,8 +80,8 @@ namespace se {
    * \param[in]  input_color The color message to copy.
    * \param[out] output_rgba The destination buffer.
    */
-  void to_supereight_RGB(const sensor_msgs::Image& input_color,
-                         uint32_t*                 output_rgba);
+  void to_supereight_RGB(const sensor_msgs::ImageConstPtr& input_color,
+                         uint32_t*                         output_rgba);
 
 
 

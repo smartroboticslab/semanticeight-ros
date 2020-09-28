@@ -205,9 +205,9 @@ void SupereightNode::runPipelineOnce() {
     depth_buffer_.pop_front();
   }
   // Copy the depth and RGB images into the buffers used by supereight.
-  to_supereight_depth(*current_depth_msg, sensor_.far_plane, input_depth_.get());
+  to_supereight_depth(current_depth_msg, sensor_.far_plane, input_depth_.get());
   if (node_config_.enable_rgb) {
-    to_supereight_RGB(*current_rgb_msg, input_rgba_.get());
+    to_supereight_RGB(current_rgb_msg, input_rgba_.get());
   }
   timings_[1] = std::chrono::steady_clock::now();
 
