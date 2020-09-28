@@ -144,7 +144,6 @@ void SupereightNode::runPipelineOnce() {
   { // Block to reduce the scope of depth_lock.
     const std::lock_guard<std::mutex> depth_lock (depth_buffer_mutex_);
     if (depth_buffer_.empty()) {
-      ROS_DEBUG("Aborted fusion: depth buffer empty");
       return;
     } else {
       current_depth_msg = depth_buffer_.front();
@@ -157,13 +156,11 @@ void SupereightNode::runPipelineOnce() {
   if (node_config_.enable_rgb) {
     const std::lock_guard<std::mutex> rgb_lock (rgb_buffer_mutex_);
     if (rgb_buffer_.empty()) {
-      ROS_DEBUG("Aborted fusion: RGB buffer empty");
       return;
     } else {
       const bool found = get_closest_image(rgb_buffer_, depth_timestamp,
           node_config_.max_timestamp_diff, current_rgb_msg);
       if (!found) {
-        ROS_DEBUG("Aborted fusion: could not find matching RGB");
         return;
       }
     }
@@ -178,7 +175,6 @@ void SupereightNode::runPipelineOnce() {
       // images will never be associated to poses.
       depth_buffer_.clear();
       rgb_buffer_.clear(); // OK to call even when RGB images are not used
-      ROS_DEBUG("Aborted fusion: pose buffer empty");
       return;
     } else {
       // Find the two closest poses and interpolate to the depth timestamp.
@@ -190,12 +186,10 @@ void SupereightNode::runPipelineOnce() {
         // Remove the depth image, it will never be matched to poses.
         const std::lock_guard<std::mutex> depth_lock (depth_buffer_mutex_);
         depth_buffer_.pop_front();
-        ROS_DEBUG("Aborted fusion: query smaller than all poses");
         return;
       } else if (result == InterpResult::query_greater) {
         // Remove the first poses, they will never be matched to depth images.
         pose_buffer_.erase_begin(pose_buffer_.size() - 1);
-        ROS_DEBUG("Aborted fusion: query greater than all poses");
         return;
       }
 
