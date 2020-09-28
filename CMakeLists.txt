@@ -28,6 +28,7 @@ find_package(Boost REQUIRED)
 
 # Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
   roscpp
   roslib
   eigen_conversions

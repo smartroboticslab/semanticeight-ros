@@ -9,7 +9,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <map>
 
+#include <cv_bridge/cv_bridge.h>
 #include <ros/ros.h>
 
 #include "se/image_utils.hpp"
@@ -78,6 +80,52 @@ namespace se {
           input_color->encoding.c_str());
       abort();
     }
+  }
+
+
+
+  se::SegmentationResult to_supereight_segmentation(const sensor_msgs::ImageConstPtr& input_class,
+                                                    const sensor_msgs::ImageConstPtr& input_instance) {
+    // Ensure the image types are correct
+    if ((input_class->encoding != "8UC1") && (input_class->encoding != "mono8")) {
+      ROS_FATAL("Invalid input class format %s, expected mono8 or 8UC1",
+          input_class->encoding.c_str());
+      abort();
+    }
+    if ((input_instance->encoding != "16UC1") && (input_instance->encoding != "mono16")) {
+      ROS_FATAL("Invalid input class format %s, expected mono16 or 16UC1",
+          input_instance->encoding.c_str());
+      abort();
+    }
+    const uint32_t w = input_class->width;
+    const uint32_t h = input_class->height;
+    // Convert to OpenCV images
+    cv_bridge::CvImageConstPtr class_img = cv_bridge::toCvShare(input_class);
+    cv_bridge::CvImageConstPtr instance_img = cv_bridge::toCvShare(input_instance);
+    // Create a map from instance IDs to segmentations
+    std::map<uint16_t, se::InstanceSegmentation> m;
+    // Iterate over each pixel in the instance image
+    for (int y = 0; y < instance_img->image.rows; ++y) {
+      for (int x = 0; x < instance_img->image.cols; ++x) {
+        const uint16_t instance_id = instance_img->image.at<uint16_t>(y, x);
+        // Test if we've seen this ID before
+        if (m.find(instance_id) == m.end()) {
+          // Get the corresponding class ID
+          const uint8_t class_id = class_img->image.at<uint8_t>(y, x);
+          // Initialize an InstanceSegmentation for this ID
+          m[instance_id] = se::InstanceSegmentation(instance_id, class_id, cv::Mat::zeros(h, w, se::mask_t));
+        }
+        // Set the instance mask value
+        m[instance_id].instance_mask.at<se::mask_elem_t>(y, x) = 255;
+      }
+    }
+    // Convert the std::map to an se::SegmentationResult
+    se::SegmentationResult segm (w, h);
+    segm.object_instances.reserve(m.size());
+    for (const auto& instance : m) {
+      segm.object_instances.push_back(instance.second);
+    }
+    return segm;
   }
 
 

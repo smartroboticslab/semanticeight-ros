@@ -32,6 +32,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       nh_private_(nh_private),
       sensor_({1, 1, false, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f}),
       frame_(0),
+      input_segmentation_(0, 0),
       world_frame_id_("world"),
       map_frame_id_("map"),
       body_frame_id_("body"),
@@ -173,6 +174,46 @@ void SupereightNode::runPipelineOnce() {
     }
   }
 
+  bool semantics_found = true;
+  // Class
+  sensor_msgs::ImageConstPtr current_class_msg;
+  if (node_config_.enable_rgb) {
+    const std::lock_guard<std::mutex> class_lock (class_buffer_mutex_);
+    if (class_buffer_.empty()) {
+      semantics_found = false;
+    } else {
+      const bool found = get_closest_element(class_buffer_, depth_timestamp,
+          node_config_.max_timestamp_diff, get_image_timestamp, current_class_msg);
+      if (!found) {
+        semantics_found = false;
+        ROS_WARN_ONCE("No matching semantic class images found");
+      }
+    }
+  }
+
+  // Instance
+  sensor_msgs::ImageConstPtr current_instance_msg;
+  if (node_config_.enable_rgb) {
+    const std::lock_guard<std::mutex> instance_lock (instance_buffer_mutex_);
+    if (instance_buffer_.empty()) {
+      semantics_found = false;
+    } else {
+      const bool found = get_closest_element(instance_buffer_, depth_timestamp,
+          node_config_.max_timestamp_diff, get_image_timestamp, current_instance_msg);
+      if (!found) {
+        semantics_found = false;
+        ROS_WARN_ONCE("No matching semantic instance images found");
+      }
+    }
+  }
+
+  // Copy the semantics into the appropriate buffer.
+  if (node_config_.enable_rgb) {
+    if (semantics_found) {
+      input_segmentation_ = to_supereight_segmentation(current_class_msg, current_instance_msg);
+    }
+  }
+
   // Pose
   Eigen::Matrix4f external_T_WC;
   if (!node_config_.enable_tracking) {
@@ -227,6 +268,9 @@ void SupereightNode::runPipelineOnce() {
       supereight_config_.bilateral_filter);
   if (node_config_.enable_rgb) {
     pipeline_->preprocessColor(input_rgba_.get(), node_config_.input_res);
+    if (semantics_found) {
+      pipeline_->preprocessSegmentation(input_segmentation_);
+    }
   }
   timings_[2] = std::chrono::steady_clock::now();
 

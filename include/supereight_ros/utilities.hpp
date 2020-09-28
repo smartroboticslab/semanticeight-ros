@@ -21,6 +21,7 @@
 #include <geometry_msgs/PoseStamped.h>
 
 #include "supereight_ros/eigen_ros_conversions.hpp"
+#include "se/segmentation_result.hpp"
 
 
 namespace se {
@@ -83,6 +84,11 @@ namespace se {
    */
   void to_supereight_RGB(const sensor_msgs::ImageConstPtr& input_color,
                          uint32_t*                         output_rgba);
+
+
+
+  SegmentationResult to_supereight_segmentation(const sensor_msgs::ImageConstPtr& input_class,
+                                                const sensor_msgs::ImageConstPtr& input_instance);
 
 
 

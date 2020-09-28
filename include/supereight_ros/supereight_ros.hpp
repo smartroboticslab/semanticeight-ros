@@ -201,6 +201,9 @@ namespace se {
     std::unique_ptr<uint32_t> track_render_;
     std::unique_ptr<uint32_t> volume_render_;
 
+    // Semantics
+    se::SegmentationResult input_segmentation_;
+
     // Subscribers
     ros::Subscriber pose_sub_;
     ros::Subscriber depth_sub_;
