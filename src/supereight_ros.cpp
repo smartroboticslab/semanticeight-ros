@@ -288,6 +288,10 @@ void SupereightNode::runPipelineOnce() {
     pipeline_->setT_WC(external_T_WC);
     tracked = true;
   }
+  // Call object tracking.
+  if (semantics_found) {
+    pipeline_->trackObjects(sensor_);
+  }
 
   // Publish pose estimated/received by supereight.
   const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
@@ -310,6 +314,9 @@ void SupereightNode::runPipelineOnce() {
   bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
     integrated = pipeline_->integrate(sensor_, frame_);
+    if (semantics_found) {
+      integrated = pipeline_->integrateObjects(sensor_, frame_);
+    }
   } else {
     integrated = false;
   }
@@ -317,11 +324,6 @@ void SupereightNode::runPipelineOnce() {
 
 
 
-  // Raycasting
-  bool raycasted = false;
-  if ((node_config_.enable_tracking || node_config_.enable_rendering) && frame_ > 2) {
-    raycasted = pipeline_->raycast(sensor_);
-  }
   timings_[5] = std::chrono::steady_clock::now();
 
 
@@ -352,7 +354,8 @@ void SupereightNode::runPipelineOnce() {
 
     // Volume
     if (frame_ % supereight_config_.rendering_rate == 0) {
-      pipeline_->renderVolume(volume_render_.get(), image_res_, sensor_);
+      (void) pipeline_->raycastObjectsAndBg(sensor_);
+      pipeline_->renderObjects(volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID);
       const sensor_msgs::Image volume_render_msg = RGBA_to_msg(volume_render_.get(),
           image_res_, current_depth_msg->header);
       volume_render_pub_.publish(volume_render_msg);
@@ -373,8 +376,7 @@ void SupereightNode::runPipelineOnce() {
 
   ROS_INFO("-----------------------------------------");
   ROS_INFO("Frame %d", frame_);
-  ROS_INFO("Tracked: %d   Integrated: %d   Raycasted: %d",
-      tracked, integrated, raycasted);
+  ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
   print_timings(timings_, timing_labels_);
 
   frame_++;
@@ -385,6 +387,7 @@ void SupereightNode::runPipelineOnce() {
 void SupereightNode::saveMap() {
   if (!supereight_config_.output_mesh_file.empty()) {
     pipeline_->dumpMesh((supereight_config_.output_mesh_file + "_voxel.ply").c_str(), (supereight_config_.output_mesh_file + "_metre.ply").c_str());
+    pipeline_->dumpObjectMeshes(supereight_config_.output_mesh_file, false);
     ROS_INFO("Map saved in %s\n", supereight_config_.output_mesh_file.c_str());
   }
 }
