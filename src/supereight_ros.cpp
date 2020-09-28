@@ -369,6 +369,7 @@ void SupereightNode::runPipelineOnce() {
   map_dim_pub_.publish(map_dim_msg_);
   if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
     visualizeWholeMap();
+    visualizeObjects();
   }
   timings_[7] = std::chrono::steady_clock::now();
 
@@ -460,6 +461,7 @@ void SupereightNode::setupRos() {
   map_free_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/free", 1);
   map_occupied_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/occupied", 1);
   map_unknown_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/unknown", 1);
+  map_object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/objects", 1);
 }
 
 
@@ -649,6 +651,52 @@ void SupereightNode::visualizeWholeMap() {
   }
   for (const auto& marker : markers_unknown) {
     map_unknown_pub_.publish(marker.second);
+  }
+}
+
+
+
+void SupereightNode::visualizeObjects() {
+  // Initialize the message header
+  std_msgs::Header header;
+  header.stamp = ros::Time::now();
+  header.frame_id = map_frame_id_;
+  // Publish the object maps
+  const Objects objects = pipeline_->getObjectMaps();
+  std::map<int, visualization_msgs::Marker> markers_objects;
+  for (size_t i = 0; i < objects.size(); ++i) {
+    for (const auto& volume : *(objects[i]->map_)) {
+      if (is_occupied(volume)) {
+        const int size = volume.size;
+        if (markers_objects.count(size) == 0) {
+          // Initialize the Marker message for this cube size.
+          markers_objects[size] = visualization_msgs::Marker();
+          markers_objects[size].header = header;
+          markers_objects[size].ns = "map objects";
+          markers_objects[size].id = size;
+          markers_objects[size].type = visualization_msgs::Marker::CUBE_LIST;
+          markers_objects[size].action = visualization_msgs::Marker::ADD;
+          markers_objects[size].pose.orientation = make_quaternion();
+          markers_objects[size].scale = make_vector3(volume.dim);
+          markers_objects[size].lifetime = ros::Duration(0.0);
+          markers_objects[size].frame_locked = true;
+        }
+        // Set the cube centre
+        // centre_M is actually centre_O
+        const Eigen::Vector3f centre_M = (objects[i]->T_MO_ * volume.centre_M.homogeneous()).head<3>();
+        const float voxel_top_height_W = centre_M.z() + volume.dim / 2.0f - t_MW_.z();
+        if (voxel_top_height_W <= node_config_.visualization_max_z) {
+          markers_objects[size].points.push_back(eigen_to_point(centre_M));
+          // Set the cube color based on the instance ID
+          const int instance_id = objects[i]->instance_id;
+          const Eigen::Vector3f c = se::internal::color_map[instance_id % se::internal::color_map.size()] / 255.0f;
+          markers_objects[size].colors.push_back(eigen_to_color(c.homogeneous()));
+        }
+      }
+    }
+  }
+  for (const auto& marker : markers_objects) {
+    map_object_pub_.publish(marker.second);
   }
 }
 
