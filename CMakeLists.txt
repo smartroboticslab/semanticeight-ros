@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD 14)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 
 # Select the supereight voxel and sensor implementations to use.
-set(VOXEL_IMPL OFusion)
+set(VOXEL_IMPL MultiresOFusion)
 set(SENSOR_IMPL PinholeCamera)
 
 # ------------------------------------------------------------------------------

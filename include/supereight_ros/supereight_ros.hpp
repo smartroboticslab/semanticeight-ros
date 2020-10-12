@@ -168,6 +168,8 @@ namespace se {
 
     void visualizeObjects();
 
+    void visualizeFrontiers();
+
     bool is_free(const se::Volume<VoxelImpl::VoxelType>& volume) const;
 
     bool is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const;
@@ -230,12 +232,14 @@ namespace se {
     ros::Publisher map_occupied_pub_;
     ros::Publisher map_unknown_pub_;
     ros::Publisher map_object_pub_;
+    ros::Publisher map_frontier_pub_;
 
     // Visualization colors
     const Eigen::Vector4f color_occupied_ = Eigen::Vector4f(1.0, 1.0, 1.0, 1.0);
     const Eigen::Vector4f color_free_ = Eigen::Vector4f(0.0, 1.0, 0.0, 0.5);
     const Eigen::Vector4f color_unknown_ = Eigen::Vector4f(0.0, 0.0, 0.0, 0.5);
     const Eigen::Vector4f color_object_ = Eigen::Vector4f(1.0, 0.0, 0.0, 1.0);
+    const Eigen::Vector4f color_frontier_ = Eigen::Vector4f(1.0, 0.5, 0.0, 0.5);
 
     // Circular buffers for incoming messages
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;

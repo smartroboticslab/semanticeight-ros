@@ -10,9 +10,9 @@ supereight_ros:
   enable_rgb: true
   input_res: [640, 480]
   pose_topic_type: "geometry_msgs::PoseStamped"
-  pose_buffer_size: 1000
-  depth_buffer_size: 100
-  rgb_buffer_size: 100
+  pose_buffer_size: 100
+  depth_buffer_size: 10
+  rgb_buffer_size: 10
   max_timestamp_diff: 0.02
   center_at_first_position: true
   visualization_rate: 4

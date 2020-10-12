@@ -370,6 +370,7 @@ void SupereightNode::runPipelineOnce() {
   if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
     visualizeWholeMap();
     visualizeObjects();
+    visualizeFrontiers();
   }
   timings_[7] = std::chrono::steady_clock::now();
 
@@ -462,6 +463,7 @@ void SupereightNode::setupRos() {
   map_occupied_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/occupied", 1);
   map_unknown_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/unknown", 1);
   map_object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/objects", 1);
+  map_frontier_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/frontiers", 1);
 }
 
 
@@ -697,6 +699,44 @@ void SupereightNode::visualizeObjects() {
   }
   for (const auto& marker : markers_objects) {
     map_object_pub_.publish(marker.second);
+  }
+}
+
+
+
+void SupereightNode::visualizeFrontiers() {
+  // Initialize the message header
+  std_msgs::Header header;
+  header.stamp = ros::Time::now();
+  header.frame_id = map_frame_id_;
+  // Publish the frontiers
+  std::map<int, visualization_msgs::Marker> markers_frontiers;
+  for (const auto& volume : pipeline_->frontierVolumes()) {
+    const int size = volume.size;
+    if (markers_frontiers.count(size) == 0) {
+      // Initialize the Marker message for this cube size.
+      std_msgs::ColorRGBA volume_color;
+      volume_color = eigen_to_color(color_frontier_);
+      markers_frontiers[size] = visualization_msgs::Marker();
+      markers_frontiers[size].header = header;
+      markers_frontiers[size].ns = "frontiers";
+      markers_frontiers[size].id = size;
+      markers_frontiers[size].type = visualization_msgs::Marker::CUBE_LIST;
+      markers_frontiers[size].action = visualization_msgs::Marker::ADD;
+      markers_frontiers[size].pose.orientation = make_quaternion();
+      markers_frontiers[size].scale = make_vector3(volume.dim);
+      markers_frontiers[size].color = volume_color;
+      markers_frontiers[size].lifetime = ros::Duration(0.0);
+      markers_frontiers[size].frame_locked = true;
+    }
+    // Append the current volume.
+    const float voxel_top_height_W = volume.centre_M.z() + volume.dim / 2.0f - t_MW_.z();
+    if (voxel_top_height_W <= node_config_.visualization_max_z) {
+      markers_frontiers[size].points.push_back(eigen_to_point(volume.centre_M));
+    }
+  }
+  for (const auto& marker : markers_frontiers) {
+    map_frontier_pub_.publish(marker.second);
   }
 }
 
