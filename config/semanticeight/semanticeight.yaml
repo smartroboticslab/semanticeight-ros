@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: 2019-2020 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2019 Anna Dai
+# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Supereight ROS node settings
+supereight_ros:
+  enable_tracking: false
+  enable_rendering: true
+  enable_rgb: true
+  input_res: [640, 480]
+  pose_topic_type: "geometry_msgs::PoseStamped"
+  pose_buffer_size: 100
+  depth_buffer_size: 10
+  rgb_buffer_size: 10
+  max_timestamp_diff: 0.02
+  center_at_first_position: true
+  visualization_rate: 4
+  visualization_max_z: 3.5
+
+# Supereight settings
+supereight:
+  general:
+    sequence_name:              ""
+    sequence_type:              "ros"
+    output_render_path:         ""
+    enable_meshing:             false
+    output_mesh_path:           ""
+    # Rates
+    tracking_rate:              1
+    integration_rate:           1
+    rendering_rate:             4
+    meshing_rate:               0
+    fps:                        0.0
+    # Other
+    drop_frames:                false
+    max_frame:                  -1
+    icp_threshold:              1e-5
+    bilateral_filter:           false
+    pyramid:                    [10, 5, 4]
+
+  map:
+    size:                       256
+    dim:                        40.96
+    t_MW_factor:                [0.501, 0.501, 0.501]
+
+  sensor:
+    intrinsics:                 [525, 525, 319.5, 239.5]
+    downsampling_factor:        2
+    T_BC:                       [ 0.0,  0.0, 1.0, 0.0,
+                                 -1.0,  0.0, 0.0, 0.0,
+                                  0.0, -1.0, 0.0, 0.0,
+                                  0.0,  0.0, 0.0, 1.0]
+    init_T_WB:                  [1, 0, 0, 0,
+                                 0, 1, 0, 0,
+                                 0, 0, 1, 0,
+                                 0, 0, 0, 1]
+    near_plane:                 0.1
+    far_plane:                  15.0
+
+# WARNING: Any voxel parameters added in this file will be ignored. Change the
+# defaults if you need different values.
+

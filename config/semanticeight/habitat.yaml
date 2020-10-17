@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2019-2020 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2019 Anna Dai
+# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Habitat-ROS node settings
+habitat_ros:
+  # Sensor settings
+  width: 640
+  height: 480
+  near_plane: 0.1
+  far_plane: 20.0
+  fx: 525.0
+  fps: 30
+  enable_semantics: true
+  allowed_classes: []
+
+  # Scene settings
+  scene_file: "habitat_sim/data/scene_datasets/habitat-test-scenes/skokloster-castle.glb"
+  #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/1LXtFkjw3qL/1LXtFkjw3qL.glb"
+  #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/2t7WUuJeko7/2t7WUuJeko7.glb"
+  #initial_T_WB: [2.079, -0.098, 0.163]
+  #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/2azQ1b91cZZ/2azQ1b91cZZ.glb"
+  #initial_T_WB: [17.543, -6.348, 0.663]
+  #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/1pXnuDYAj8r/1pXnuDYAj8r.glb"
+  #initial_T_WB: [11.438, -1.796, 0.364]
+  world_frame_id: "world"
+
+  # Visualization settings
+  visualize_semantics: true
+
