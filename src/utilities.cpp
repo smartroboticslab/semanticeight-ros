@@ -28,15 +28,7 @@ namespace se {
     // The input depth is in float meters
     if (input_depth->encoding == "32FC1" && !input_depth->is_bigendian) {
       const float* d = reinterpret_cast<const float*>(input_depth->data.data());
-      #pragma omp parallel for
-      for (size_t i = 0; i < input_depth->width * input_depth->height; ++i) {
-        const float depth_m = d[i];
-        if (depth_m >= far_plane) {
-          output_depth[i] = 0.0f;
-        } else {
-          output_depth[i] = depth_m;
-        }
-      }
+      memcpy(output_depth, d, sizeof(float) * input_depth->width * input_depth->height);
 
     // The depth is in uint16_t millimeters
     } else if (((input_depth->encoding == "16UC1") || (input_depth->encoding == "mono16"))
