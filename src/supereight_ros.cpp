@@ -63,6 +63,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   }
 
   // Initialize the sensor.
+  const Eigen::Vector2i downsampled_res = node_config_.input_res / supereight_config_.sensor_downsampling_factor;
   const Eigen::VectorXf elevation_angles = (Eigen::VectorXf(64) <<
       17.74400, 17.12000, 16.53600, 15.98200, 15.53000, 14.93600, 14.37300, 13.82300,
       13.37300, 12.78600, 12.23000, 11.68700, 11.24100, 10.67000, 10.13200, 9.57400,
@@ -78,7 +79,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
       0.0, 0.0, 0.0, 0.0).finished();
-  sensor_ = SensorImpl({node_config_.input_res.x(), node_config_.input_res.y(),
+  sensor_ = SensorImpl({downsampled_res.x(), downsampled_res.y(),
       supereight_config_.left_hand_frame, supereight_config_.near_plane, supereight_config_.far_plane,
       supereight_config_.sensor_intrinsics[0] / supereight_config_.sensor_downsampling_factor,
       supereight_config_.sensor_intrinsics[1] / supereight_config_.sensor_downsampling_factor,
