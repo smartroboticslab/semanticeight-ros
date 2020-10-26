@@ -56,7 +56,20 @@ supereight:
                                  0, 0, 1, 0,
                                  0, 0, 0, 1]
     near_plane:                 0.1
-    far_plane:                  15.0
+    far_plane:                  20.0
+
+  exploration:
+    num_candidates:            10
+    raycast_width:             36
+    raycast_height:            10
+    linear_velocity:           1.0
+    angular_velocity:          0.1
+    robot_radius:              0.3
+    safety_radius:             0.0
+    min_control_point_radius:  0.1
+    skeleton_sample_precision: 0.05
+    solving_time:              0.1
+
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.

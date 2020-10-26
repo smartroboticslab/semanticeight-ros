@@ -17,9 +17,10 @@
 
 #include <boost/circular_buffer.hpp>
 
+#include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <ros/ros.h>
+#include <nav_msgs/Path.h>
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Header.h>
 #include <tf2_ros/static_transform_broadcaster.h>
@@ -170,6 +171,16 @@ namespace se {
 
     void visualizeFrontiers();
 
+    void visualizeCandidates();
+
+    void visualizeCandidatePaths();
+
+    void visualizeRejectedCandidates();
+
+    void visualizeGoal();
+
+    void visualizeMAV();
+
     bool is_free(const se::Volume<VoxelImpl::VoxelType>& volume) const;
 
     bool is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const;
@@ -196,6 +207,7 @@ namespace se {
     Eigen::Vector3f init_t_WB_;
     Eigen::Vector2i image_res_;
     int frame_;
+    int num_planning_iterations_;
 
     // Image buffers
     std::unique_ptr<float>    input_depth_;
@@ -219,6 +231,7 @@ namespace se {
     ros::Publisher supereight_pose_pub_;
     tf2_ros::TransformBroadcaster pose_tf_broadcaster_;
     tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
+    ros::Publisher path_pub_;
 
     // Render publishers
     ros::Publisher depth_render_pub_;
@@ -233,6 +246,11 @@ namespace se {
     ros::Publisher map_unknown_pub_;
     ros::Publisher map_object_pub_;
     ros::Publisher map_frontier_pub_;
+    ros::Publisher map_candidate_pub_;
+    ros::Publisher map_candidate_path_pub_;
+    ros::Publisher map_rejected_candidate_pub_;
+    ros::Publisher map_goal_pub_;
+    ros::Publisher mav_sphere_pub_;
 
     // Visualization colors
     const Eigen::Vector4f color_occupied_ = Eigen::Vector4f(1.0, 1.0, 1.0, 1.0);
@@ -240,6 +258,11 @@ namespace se {
     const Eigen::Vector4f color_unknown_ = Eigen::Vector4f(0.0, 0.0, 0.0, 0.5);
     const Eigen::Vector4f color_object_ = Eigen::Vector4f(1.0, 0.0, 0.0, 1.0);
     const Eigen::Vector4f color_frontier_ = Eigen::Vector4f(1.0, 0.5, 0.0, 0.5);
+    const Eigen::Vector4f color_candidate_ = Eigen::Vector4f(1.0, 1.0, 0.0, 1.0);
+    const Eigen::Vector4f color_candidate_path_ = Eigen::Vector4f(1.0, 1.0, 0.0, 1.0);
+    const Eigen::Vector4f color_rejected_candidate_ = Eigen::Vector4f(1.0, 0.0, 0.0, 0.5);
+    const Eigen::Vector4f color_goal_ = Eigen::Vector4f(1.0, 0.0, 1.0, 1.0);
+    const Eigen::Vector4f color_mav_sphere_ = Eigen::Vector4f(0.0, 0.0, 1.0, 0.5);
 
     // Circular buffers for incoming messages
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;

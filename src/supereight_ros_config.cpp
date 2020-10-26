@@ -186,6 +186,18 @@ namespace se {
     // TODO load the voxel implementation parameters from the YAML file.
     // Couldn't find a way to get the filename of the YAML file loaded from ROS.
 
+    // Exploration only ///////////////////////////////////////////////////////
+    nh.getParam("supereight/exploration/num_candidates", config.num_candidates);
+    nh.getParam("supereight/exploration/raycast_width", config.raycast_width);
+    nh.getParam("supereight/exploration/raycast_height", config.raycast_height);
+    nh.getParam("supereight/exploration/linear_velocity", config.linear_velocity);
+    nh.getParam("supereight/exploration/angular_velocity", config.angular_velocity);
+    nh.getParam("supereight/exploration/robot_radius", config.robot_radius);
+    nh.getParam("supereight/exploration/safety_radius", config.safety_radius);
+    nh.getParam("supereight/exploration/min_control_point_radius", config.min_control_point_radius);
+    nh.getParam("supereight/exploration/skeleton_sample_precision", config.skeleton_sample_precision);
+    nh.getParam("supereight/exploration/solving_time", config.solving_time);
+
     return config;
   }
 

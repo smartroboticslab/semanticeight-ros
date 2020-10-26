@@ -19,6 +19,8 @@
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Path.h>
+#include <std_msgs/ColorRGBA.h>
 
 #include "supereight_ros/eigen_ros_conversions.hpp"
 #include "se/segmentation_result.hpp"
@@ -46,6 +48,10 @@ namespace se {
      */
     query_greater = 2,
   };
+
+
+
+  typedef std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> Path;
 
 
 
@@ -102,6 +108,12 @@ namespace se {
   sensor_msgs::Image RGBA_to_msg(const uint32_t*         image_data,
                                  const Eigen::Vector2i&  image_res,
                                  const std_msgs::Header& header);
+
+
+
+  nav_msgs::Path path_to_msg(const se::Path&         path_WC,
+                             const Eigen::Matrix4f&  T_CB,
+                             const std_msgs::Header& header);
 
 
 
