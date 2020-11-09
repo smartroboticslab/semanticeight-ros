@@ -3,6 +3,11 @@
 <!-- SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
+  <!-- gazebo minimal example node -->
+  <include file="$(find gazebo_minimal_example)/launch/sim_depth_camera.launch">
+  </include>
+
+  <!-- supereight-ros node -->
   <include file="$(find supereight_ros)/launch/supereight_ros.launch">
     <!-- Use a different config file -->
     <arg name="supereight_ros_config_file"
@@ -15,5 +20,8 @@
     <arg name="pose_topic"
          value="/my_depth_camera/pose"/>
   </include>
+
+  <!-- rviz with appropriate config -->
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find supereight_ros)/config/supereight_ros.rviz" />
 </launch>
 
