@@ -22,7 +22,6 @@ supereight has the following dependencies:
 
 - `CMake 3.10+`
 - `Eigen 3`
-- `Sophus 1.0.0`
 - `OpenCV 3`
 
 To install them run the provided script
