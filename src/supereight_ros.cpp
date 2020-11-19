@@ -534,24 +534,15 @@ void SupereightNode::visualizeWholeMap() {
     if (is_free(volume)) {
       markers = &markers_free;
       ns = "map_free";
-      volume_color.r = color_free_.x();
-      volume_color.g = color_free_.y();
-      volume_color.b = color_free_.z();
-      volume_color.a = color_free_.w();
+      volume_color = eigen_to_color(color_free_);
     } else if (is_occupied(volume)) {
       markers = &markers_occupied;
       ns = "map_occupied";
-      volume_color.r = color_occupied_.x();
-      volume_color.g = color_occupied_.y();
-      volume_color.b = color_occupied_.z();
-      volume_color.a = color_occupied_.w();
+      volume_color = eigen_to_color(color_occupied_);
     } else {
       markers = &markers_unknown;
       ns = "map_unknown";
-      volume_color.r = color_unknown_.x();
-      volume_color.g = color_unknown_.y();
-      volume_color.b = color_unknown_.z();
-      volume_color.a = color_unknown_.w();
+      volume_color = eigen_to_color(color_unknown_);
     }
     const int size = volume.size;
     if (markers->count(size) == 0) {
@@ -562,23 +553,14 @@ void SupereightNode::visualizeWholeMap() {
       (*markers)[size].id = size;
       (*markers)[size].type = visualization_msgs::Marker::CUBE_LIST;
       (*markers)[size].action = visualization_msgs::Marker::ADD;
-      (*markers)[size].pose.orientation.x = 0.0;
-      (*markers)[size].pose.orientation.y = 0.0;
-      (*markers)[size].pose.orientation.z = 0.0;
-      (*markers)[size].pose.orientation.w = 1.0;
-      (*markers)[size].scale.x = volume.dim;
-      (*markers)[size].scale.y = volume.dim;
-      (*markers)[size].scale.z = volume.dim;
+      (*markers)[size].pose.orientation = make_quaternion();
+      (*markers)[size].scale = make_vector3(volume.dim);
       (*markers)[size].color = volume_color;
       (*markers)[size].lifetime = ros::Duration(0.0);
       (*markers)[size].frame_locked = true;
     }
     // Append the current volume.
-    geometry_msgs::Point p;
-    p.x = volume.centre_M.x();
-    p.y = volume.centre_M.y();
-    p.z = volume.centre_M.z();
-    (*markers)[size].points.push_back(p);
+    (*markers)[size].points.push_back(eigen_to_point(volume.centre_M));
   }
   // Publish all markers.
   for (const auto& marker : markers_free) {
@@ -616,10 +598,7 @@ geometry_msgs::TransformStamped SupereightNode::T_MW_Msg() const {
   tf.header.frame_id = map_frame_id_;
   tf.child_frame_id = world_frame_id_;
   tf::vectorEigenToMsg(t_MW_.cast<double>(), tf.transform.translation);
-  tf.transform.rotation.x = 0.0;
-  tf.transform.rotation.y = 0.0;
-  tf.transform.rotation.z = 0.0;
-  tf.transform.rotation.w = 1.0;
+  tf.transform.rotation = make_quaternion();
   return tf;
 }
 
@@ -650,20 +629,10 @@ visualization_msgs::Marker SupereightNode::mapDimMsg() const {
   m.id = 0;
   m.type = visualization_msgs::Marker::CUBE;
   m.action = visualization_msgs::Marker::ADD;
-  m.pose.position.x = supereight_config_.map_dim.x() / 2.0f;
-  m.pose.position.y = supereight_config_.map_dim.x() / 2.0f;
-  m.pose.position.z = supereight_config_.map_dim.x() / 2.0f;
-  m.pose.orientation.x = 0.0;
-  m.pose.orientation.y = 0.0;
-  m.pose.orientation.z = 0.0;
-  m.pose.orientation.w = 1.0;
-  m.scale.x = supereight_config_.map_dim.x();
-  m.scale.y = supereight_config_.map_dim.x();
-  m.scale.z = supereight_config_.map_dim.x();
-  m.color.r = 1.0;
-  m.color.g = 1.0;
-  m.color.b = 1.0;
-  m.color.a = 0.1;
+  m.pose.position = make_point(supereight_config_.map_dim.x() / 2.0f);
+  m.pose.orientation = make_quaternion();
+  m.scale = make_vector3(supereight_config_.map_dim.x());
+  m.color = make_color(1.0f, 1.0f, 1.0f, 0.1f);
   m.lifetime = ros::Duration(0.0);
   m.frame_locked = true;
   return m;

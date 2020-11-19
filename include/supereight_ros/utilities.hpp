@@ -20,6 +20,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 
+#include "supereight_ros/eigen_ros_conversions.hpp"
 
 
 namespace se {
