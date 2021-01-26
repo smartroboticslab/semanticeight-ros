@@ -28,6 +28,7 @@ constexpr double default_max_timestamp_diff = 0.001;
 constexpr bool default_center_at_first_position = true;
 constexpr int default_visualization_rate = 4;
 constexpr float default_visualization_max_z = INFINITY;
+constexpr int default_real_world_experiment = false;
 
 
 
@@ -77,6 +78,9 @@ namespace se {
     nh.param<float>("supereight_ros/visualization_max_z",
         config.visualization_max_z, default_visualization_max_z);
 
+    nh.param<bool>("supereight_ros/real_world_experiment",
+        config.real_world_experiment, default_real_world_experiment);
+
     return config;
   }
 
@@ -96,6 +100,7 @@ namespace se {
     ROS_INFO("  center_at_first_position: %d", config.center_at_first_position);
     ROS_INFO("  visualization_rate:       %d", config.visualization_rate);
     ROS_INFO("  visualization_max_z:      %f", config.visualization_max_z);
+    ROS_INFO("  real_world_experiment:    %d", config.real_world_experiment);
   }
 
 

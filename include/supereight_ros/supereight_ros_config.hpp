@@ -100,6 +100,12 @@ namespace se {
      * Useful to remove the roof of the generated map. The default value is INFINITY, no limit.
      */
     float visualization_max_z;
+
+    /*!
+     * Whether a real world experiment is being performed. This changes the type of topic being
+     * published for the current goal. And maybe some other things too.
+     */
+    bool real_world_experiment;
   };
 
 
