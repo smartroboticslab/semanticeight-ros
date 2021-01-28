@@ -500,9 +500,7 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
 
 
 geometry_msgs::TransformStamped SupereightNode::poseToTransform(const geometry_msgs::PoseStamped&  T_WB_msg) const {
-  static int seq = 0;
   static geometry_msgs::TransformStamped tf;
-  tf.header.seq = seq++;
   tf.header.stamp = ros::Time::now();
   tf.header.frame_id = world_frame_id_;
   tf.child_frame_id = body_frame_id_;
@@ -520,9 +518,7 @@ geometry_msgs::TransformStamped SupereightNode::poseToTransform(const geometry_m
 
 void SupereightNode::visualizeWholeMap() {
   // Initialize the message header
-  static uint32_t seq = 0;
   std_msgs::Header header;
-  header.seq = seq++;
   header.stamp = ros::Time::now();
   header.frame_id = map_frame_id_;
   // Iterate over the octree, creating a different CUBE_LIST marker for each
@@ -616,7 +612,6 @@ geometry_msgs::TransformStamped SupereightNode::T_MW_Msg() const {
   // Transform from world frame to map frame. ROS probably uses a different
   // convention than us?
   static geometry_msgs::TransformStamped tf;
-  tf.header.seq = 0;
   tf.header.stamp = ros::Time::now();
   tf.header.frame_id = map_frame_id_;
   tf.child_frame_id = world_frame_id_;
@@ -634,7 +629,6 @@ geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() const {
   // Transform from camera frame to body frame. ROS probably uses a different
   // convention than us?
   static geometry_msgs::TransformStamped tf;
-  tf.header.seq = 0;
   tf.header.stamp = ros::Time::now();
   tf.header.frame_id = body_frame_id_;
   tf.child_frame_id = camera_frame_id_;
@@ -650,7 +644,6 @@ geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() const {
 
 visualization_msgs::Marker SupereightNode::mapDimMsg() const {
   static visualization_msgs::Marker m;
-  m.header.seq = 0;
   m.header.stamp = ros::Time::now();
   m.header.frame_id = map_frame_id_;
   m.ns = "map_dim";
