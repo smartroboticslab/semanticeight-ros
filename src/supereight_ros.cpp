@@ -560,7 +560,10 @@ void SupereightNode::visualizeWholeMap() {
       (*markers)[size].frame_locked = true;
     }
     // Append the current volume.
-    (*markers)[size].points.push_back(eigen_to_point(volume.centre_M));
+    const float voxel_top_height_W = volume.centre_M.z() + volume.dim / 2.0f - t_MW_.z();
+    if (voxel_top_height_W <= node_config_.visualization_max_z) {
+      (*markers)[size].points.push_back(eigen_to_point(volume.centre_M));
+    }
   }
   // Publish all markers.
   for (const auto& marker : markers_free) {

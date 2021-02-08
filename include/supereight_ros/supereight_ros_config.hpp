@@ -94,6 +94,12 @@ namespace se {
      * 0 disables the 3D visualization completely.
      */
     int visualization_rate;
+
+    /*!
+     * The maximum z coordinates of voxels that are being published as visualization messages.
+     * Useful to remove the roof of the generated map. The default value is INFINITY, no limit.
+     */
+    float visualization_max_z;
   };
 
 
