@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2021 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2021 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<launch>
+  <!-- Set the ROS log level in rosconsole.conf -->
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
+
+  <!-- supereight-ros node -->
+  <node pkg="supereight_ros"
+        name="semanticeight"
+        type="supereight_ros"
+        clear_params="true"
+        output="screen"
+        launch-prefix="">
+    <rosparam command="load" file="$(find supereight_ros)/test/test_semanticeight/test_semanticeight.yaml"/>
+    <remap from="/camera/depth_image" to="/test_depth"/>
+    <remap from="/pose"               to="/test_pose" />
+  </node>
+
+  <!-- rviz with appropriate config -->
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find supereight_ros)/test/test_semanticeight/test_semanticeight.rviz" />
+
+  <!-- Node -->
+  <node pkg="supereight_ros"
+      name="test_frontier"
+      type="test_frontiers.py"
+      output="screen">
+  </node>
+</launch>
+
