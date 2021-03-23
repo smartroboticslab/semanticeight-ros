@@ -562,6 +562,10 @@ void SupereightNode::setupRos() {
   path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", node_config_.pose_buffer_size);
   static_tf_broadcaster_.sendTransform(T_MW_Msg());
   static_tf_broadcaster_.sendTransform(T_BC_Msg());
+  // Don't set-up the Habitat-Sim to supereight translation if we're doing an experiment
+  if (!node_config_.real_world_experiment) {
+    static_tf_broadcaster_.sendTransform(T_WWh_Msg());
+  }
   // Render publishers
   if (node_config_.enable_rendering) {
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
@@ -1114,6 +1118,24 @@ geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() const {
   tf::quaternionEigenToMsg(q_BC, tf.transform.rotation);
   const Eigen::Vector3d t_BC = T_BC.topRightCorner<3, 1>();
   tf::vectorEigenToMsg(t_BC, tf.transform.translation);
+  return tf;
+}
+
+
+
+geometry_msgs::TransformStamped SupereightNode::T_WWh_Msg() const {
+  static geometry_msgs::TransformStamped tf;
+  tf.header.stamp = ros::Time::now();
+  tf.header.frame_id = world_frame_id_;
+  tf.child_frame_id = "habitat_world";
+  // Wait for a pose from Habitat-Sim and use its translation
+  // Don't use the rotation because it messes stuff up
+  ROS_INFO("Waiting for pose from Habitat-Sim");
+  geometry_msgs::PoseStampedConstPtr msg = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/pose");
+  tf.transform.translation.x = msg->pose.position.x;
+  tf.transform.translation.y = msg->pose.position.y;
+  tf.transform.translation.z = msg->pose.position.z;
+  tf.transform.rotation = make_quaternion();
   return tf;
 }
 

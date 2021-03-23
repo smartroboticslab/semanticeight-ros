@@ -154,9 +154,6 @@ namespace se {
   nav_msgs::Path path_to_msg(const se::Path&         path_WC,
                              const Eigen::Matrix4f&  T_CB,
                              const std_msgs::Header& header) {
-    // TODO SEM do this automatically
-    static const Eigen::Vector3f offset (-1.7926958799362183, -19.255245208740234, 0.11083889007568787);
-    //static const Eigen::Vector3f offset (0.56742668, -14.07933807, -2.91558886);
     nav_msgs::Path path_msg;
     path_msg.header = header;
     path_msg.poses.resize(path_WC.size());
@@ -165,9 +162,9 @@ namespace se {
       const Eigen::Matrix4f T_WB = path_WC[i] * T_CB;
       const Eigen::Vector3f t_WB = T_WB.topRightCorner<3,1>();
       const Eigen::Quaternionf q_WB (T_WB.topLeftCorner<3,3>());
-      path_msg.poses[i].pose.position.x = t_WB.x() + offset.x();
-      path_msg.poses[i].pose.position.y = t_WB.y() + offset.y();
-      path_msg.poses[i].pose.position.z = t_WB.z() + offset.z();
+      path_msg.poses[i].pose.position.x = t_WB.x();
+      path_msg.poses[i].pose.position.y = t_WB.y();
+      path_msg.poses[i].pose.position.z = t_WB.z();
       path_msg.poses[i].pose.orientation.x = q_WB.x();
       path_msg.poses[i].pose.orientation.y = q_WB.y();
       path_msg.poses[i].pose.orientation.z = q_WB.z();

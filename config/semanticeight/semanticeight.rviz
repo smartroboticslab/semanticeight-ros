@@ -46,6 +46,8 @@ Visualization Manager:
           Value: true
         camera:
           Value: false
+        habitat_world:
+          Value: false
         map:
           Value: true
         world:
@@ -62,6 +64,8 @@ Visualization Manager:
             body:
               camera:
                 {}
+            habitat_world:
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker

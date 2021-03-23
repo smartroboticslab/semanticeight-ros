@@ -24,7 +24,7 @@ habitat_ros:
   #initial_T_WB: [17.543, -6.348, 0.663]
   #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/1pXnuDYAj8r/1pXnuDYAj8r.glb"
   #initial_T_WB: [11.438, -1.796, 0.364]
-  world_frame_id: "world"
+  world_frame_id: "habitat_world"
 
   # Visualization settings
   visualize_semantics: true
