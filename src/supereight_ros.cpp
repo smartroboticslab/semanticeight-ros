@@ -191,6 +191,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       t_MW_,
       supereight_config_.pyramid,
       supereight_config_));
+  pipeline_->freeInitialPosition(sensor_);
 
   // Initialize the timings.
   timings_.resize(9);
