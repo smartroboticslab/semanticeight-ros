@@ -29,6 +29,7 @@ constexpr bool default_center_at_first_position = true;
 constexpr int default_visualization_rate = 4;
 constexpr float default_visualization_max_z = INFINITY;
 constexpr int default_real_world_experiment = false;
+constexpr bool default_visualize_360_raycasting = false;
 
 
 
@@ -80,6 +81,9 @@ namespace se {
 
     nh.param<bool>("supereight_ros/real_world_experiment",
         config.real_world_experiment, default_real_world_experiment);
+
+    nh.param<bool>("supereight_ros/visualize_360_raycasting",
+        config.visualize_360_raycasting, default_visualize_360_raycasting);
 
     return config;
   }

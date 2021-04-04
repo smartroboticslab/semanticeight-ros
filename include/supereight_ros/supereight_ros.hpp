@@ -245,6 +245,8 @@ namespace se {
     ros::Publisher rgba_render_pub_;
     ros::Publisher volume_render_pub_;
     ros::Publisher track_render_pub_;
+    ros::Publisher entropy_render_pub_;
+    ros::Publisher entropy_depth_render_pub_;
 
     // Visualization publishers
     ros::Publisher map_dim_pub_;

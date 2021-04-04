@@ -10,7 +10,7 @@ Panels:
     Property Tree Widget:
       Expanded: ~
       Splitter Ratio: 0.5
-    Tree Height: 213
+    Tree Height: 258
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -209,11 +209,35 @@ Visualization Manager:
       Transport Hint: raw
       Unreliable: false
       Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /supereight/entropy_depth_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Entropy Depth
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /supereight/entropy_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Entropy
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -226,7 +250,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -298,4 +322,4 @@ Window Geometry:
     collapsed: false
   Width: 1920
   X: 0
-  Y: 73
+  Y: 70

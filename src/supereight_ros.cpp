@@ -472,6 +472,22 @@ void SupereightNode::runPipelineOnce() {
           image_res_, current_depth_msg->header);
       volume_render_pub_.publish(volume_render_msg);
     }
+
+    if (node_config_.visualize_360_raycasting) {
+      // Entropy
+      const se::Image<uint32_t> entropy_render = pipeline_->renderEntropy(sensor_);
+      const sensor_msgs::Image entropy_render_msg = RGBA_to_msg(entropy_render.data(),
+          Eigen::Vector2i(entropy_render.width(), entropy_render.height()),
+          current_depth_msg->header);
+      entropy_render_pub_.publish(entropy_render_msg);
+
+      // Entropy depth
+      const se::Image<uint32_t> entropy_depth_render = pipeline_->renderEntropyDepth(sensor_);
+      const sensor_msgs::Image entropy_depth_render_msg = RGBA_to_msg(entropy_depth_render.data(),
+          Eigen::Vector2i(entropy_depth_render.width(), entropy_depth_render.height()),
+          current_depth_msg->header);
+      entropy_depth_render_pub_.publish(entropy_depth_render_msg);
+    }
   }
   timings_[7] = std::chrono::steady_clock::now();
 
@@ -577,6 +593,8 @@ void SupereightNode::setupRos() {
       track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
     }
     volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
+    entropy_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_render", 30);
+    entropy_depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_depth_render", 30);
   }
 
   // Visualization publishers

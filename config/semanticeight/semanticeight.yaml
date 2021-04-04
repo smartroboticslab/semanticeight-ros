@@ -18,6 +18,7 @@ supereight_ros:
   visualization_rate: 4
   visualization_max_z: 3.5
   real_world_experiment: false
+  visualize_360_raycasting: true
 
 # Supereight settings
 supereight:

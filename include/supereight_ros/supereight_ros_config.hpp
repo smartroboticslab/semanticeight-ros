@@ -106,6 +106,12 @@ namespace se {
      * published for the current goal. And maybe some other things too.
      */
     bool real_world_experiment;
+
+    /*!
+     * Whether to visualize the results of 360-degree entropy and depth raycasting. This is helpful
+     * for debugging but may significantly decrease performance.
+     */
+    bool visualize_360_raycasting;
   };
 
 
