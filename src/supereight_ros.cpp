@@ -6,6 +6,7 @@
 #include "supereight_ros/supereight_ros.hpp"
 
 #include <cmath>
+#include <csignal>
 #include <cstring>
 #include <functional>
 #include <map>
@@ -125,6 +126,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       sensor_({1, 1, false, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f}),
       frame_(0),
       num_planning_iterations_(0),
+      num_failed_planning_iterations_(0),
+      max_failed_planning_iterations_(20),
       input_segmentation_(0, 0),
       world_frame_id_("world"),
       map_frame_id_("map"),
@@ -426,11 +429,19 @@ void SupereightNode::runPipelineOnce() {
   if (pipeline_->goalReached() || num_planning_iterations_ == 0) {
     ROS_INFO("Planning %d", num_planning_iterations_);
     const se::Path path_WC = pipeline_->computeNextPath_WC(sensor_);
-    std_msgs::Header header;
-    header.stamp = ros::Time::now();
-    header.frame_id = world_frame_id_;
-    path_pub_.publish(path_to_msg(path_WC, T_CB_, header));
-    num_planning_iterations_++;
+    if (path_WC.empty()) {
+      num_failed_planning_iterations_++;
+      if (num_failed_planning_iterations_ >= max_failed_planning_iterations_) {
+        ROS_INFO("Failed to plan %d times, stopping", num_failed_planning_iterations_);
+        raise(SIGINT);
+      }
+    } else {
+      std_msgs::Header header;
+      header.stamp = ros::Time::now();
+      header.frame_id = world_frame_id_;
+      path_pub_.publish(path_to_msg(path_WC, T_CB_, header));
+      num_planning_iterations_++;
+    }
   }
   timings_[5] = std::chrono::steady_clock::now();
 

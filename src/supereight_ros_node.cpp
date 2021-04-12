@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
   // Save the map to a file if needed
   node->saveMap();
 
+  ROS_INFO("supereight_ros node exited successfully");
   ros::shutdown();
   exit(EXIT_SUCCESS);
 }

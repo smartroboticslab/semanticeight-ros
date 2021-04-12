@@ -215,6 +215,8 @@ namespace se {
     Eigen::Vector2i image_res_;
     int frame_;
     int num_planning_iterations_;
+    int num_failed_planning_iterations_;
+    int max_failed_planning_iterations_;
 
     // Image buffers
     std::unique_ptr<float>    input_depth_;
