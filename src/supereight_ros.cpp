@@ -224,6 +224,11 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
     instance_buffer_.set_capacity(0);
   }
 
+  // Use the correct classes.
+  se::use_matterport3d_classes();
+  se::set_thing("chair");
+  se::set_stuff("book");
+
   setupRos();
 
   ROS_INFO("Initialization finished");
