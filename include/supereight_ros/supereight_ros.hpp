@@ -181,9 +181,17 @@ namespace se {
 
     void visualizeMAV();
 
-    bool is_free(const se::Volume<VoxelImpl::VoxelType>& volume) const;
+    template<typename VoxelImplT>
+    bool is_free(const se::Volume<typename VoxelImplT::VoxelType>& volume) const {
+      constexpr bool is_tsdf = VoxelImplT::invert_normals;
+      return (is_tsdf && volume.data.x > 0.0f) || (!is_tsdf && volume.data.x < 0.0f);
+    }
 
-    bool is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const;
+    template<typename VoxelImplT>
+    bool is_occupied(const se::Volume<typename VoxelImplT::VoxelType>& volume) const {
+      constexpr bool is_tsdf = VoxelImplT::invert_normals;
+      return (is_tsdf && volume.data.x <= 0.0f) || (!is_tsdf && volume.data.x > 0.0f);
+    }
 
     geometry_msgs::TransformStamped T_MW_Msg() const;
 

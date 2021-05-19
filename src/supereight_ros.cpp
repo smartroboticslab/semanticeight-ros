@@ -772,11 +772,11 @@ void SupereightNode::visualizeWholeMap() {
     std::map<int, visualization_msgs::Marker>* markers = nullptr;
     std::string ns;
     std_msgs::ColorRGBA volume_color;
-    if (is_free(volume)) {
+    if (is_free<VoxelImpl>(volume)) {
       markers = &markers_free;
       ns = "map_free";
       volume_color = eigen_to_color(color_free_);
-    } else if (is_occupied(volume)) {
+    } else if (is_occupied<VoxelImpl>(volume)) {
       markers = &markers_occupied;
       ns = "map_occupied";
       volume_color = eigen_to_color(color_occupied_);
@@ -830,7 +830,7 @@ void SupereightNode::visualizeObjects() {
   std::map<int, visualization_msgs::Marker> markers_objects;
   for (size_t i = 0; i < objects.size(); ++i) {
     for (const auto& volume : *(objects[i]->map_)) {
-      if (is_occupied(volume)) {
+      if (is_occupied<MultiresTSDF>(volume)) {
         const int size = volume.size;
         if (markers_objects.count(size) == 0) {
           // Initialize the Marker message for this cube size.
@@ -1109,20 +1109,6 @@ void SupereightNode::visualizeMAV() {
   mav_marker.lifetime = ros::Duration(0.0);
   mav_marker.frame_locked = true;
   mav_sphere_pub_.publish(mav_marker);
-}
-
-
-
-bool SupereightNode::is_free(const se::Volume<VoxelImpl::VoxelType>& volume) const {
-  constexpr bool is_tsdf = VoxelImpl::invert_normals;
-  return (is_tsdf && volume.data.x > 0.0f) || (!is_tsdf && volume.data.x < 0.0f);
-}
-
-
-
-bool SupereightNode::is_occupied(const se::Volume<VoxelImpl::VoxelType>& volume) const {
-  constexpr bool is_tsdf = VoxelImpl::invert_normals;
-  return (is_tsdf && volume.data.x < 0.0f) || (!is_tsdf && volume.data.x > 0.0f);
 }
 
 

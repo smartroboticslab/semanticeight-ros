@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD 14)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 
 # Select the supereight voxel and sensor implementations to use.
-set(VOXEL_IMPL MultiresOFusion)
+set(VOXEL_IMPL MultiresOFusion MultiresTSDF)
 set(SENSOR_IMPL PinholeCamera)
 
 # ------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ include_directories(
 
 # Compute the supereight library name from the voxel and sensor implementation
 # names.
-set(SUPEREIGHT_LIB "SE::DenseSLAM${VOXEL_IMPL}${SENSOR_IMPL}")
+set(SUPEREIGHT_LIB "SE::DenseSLAM${SENSOR_IMPL}")
 
 
 add_executable(supereight_ros
