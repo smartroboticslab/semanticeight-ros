@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
   // Save the map to a file if needed
   node->saveMap();
 
+  ros::shutdown();
   exit(EXIT_SUCCESS);
 }
 
