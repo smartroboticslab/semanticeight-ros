@@ -205,39 +205,6 @@ namespace se {
 
 
 
-  bool get_closest_image(
-      const boost::circular_buffer<sensor_msgs::ImageConstPtr>& buffer,
-      const double                                              query_timestamp,
-      const double                                              threshold,
-      sensor_msgs::ImageConstPtr&                               closest_image) {
-
-    // Find the minimum time difference.
-    double min_time_diff = std::numeric_limits<double>::infinity();
-    sensor_msgs::ImageConstPtr min_img;
-    for (const auto img : buffer) {
-      const double img_timestamp = ros::Time(img->header.stamp).toSec();
-      const double time_diff = std::fabs(img_timestamp - query_timestamp);
-
-      if (time_diff <= min_time_diff) {
-        min_time_diff = time_diff;
-        min_img = img;
-      } else {
-        // The time difference started increasing which means the minimum has
-        // been found, finish early.
-        break;
-      }
-    }
-
-    if (min_time_diff <= threshold) {
-      closest_image = min_img;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-
-
   Eigen::Matrix4f transform_msg_to_eigen(const geometry_msgs::TransformStamped& tf_msg) {
     const Eigen::Vector3f translation (
         tf_msg.transform.translation.x,

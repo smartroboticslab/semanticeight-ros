@@ -144,24 +144,26 @@ namespace se {
 
 
   /*!
-   * \brief Find the image in the buffer that is closest to the query_timestamp.
+   * \brief Find the element in the buffer that is closest to the query_timestamp.
    *
    * The difference between the query_timestamp and the image timestamp will be
    * at most threshold seconds.
    *
-   * \param[in]  buffer          The circular buffer containing the images.
+   * \param[in]  buffer          The circular buffer.
    * \param[in]  query_timestamp The timestamp in seconds to try and match.
    * \param[in]  threshold       The maximum time difference in seconds for an
-   *                             image to be considered a match.
-   * \param[out] closest_image   The matched image.
+   *                             element to be considered a match.
+   * \param[in]  get_timestamp   A function used to get each element's timestamp.
+   * \param[out] closest_element The matched element.
    *
    * \return true if a match was found, false otherwise.
    */
-  bool get_closest_image(
-      const boost::circular_buffer<sensor_msgs::ImageConstPtr>& buffer,
-      const double                                              query_timestamp,
-      const double                                              threshold,
-      sensor_msgs::ImageConstPtr&                               closest_image);
+  template<typename T, typename GetTimestampF>
+  bool get_closest_element(const boost::circular_buffer<T>& buffer,
+                           const double                     query_timestamp,
+                           const double                     threshold,
+                           GetTimestampF                    get_timestamp,
+                           T&                               closest_element);
 
 
 
@@ -186,6 +188,8 @@ namespace se {
   Eigen::Matrix4f pose_msg_to_eigen(const geometry_msgs::PoseStamped& pose_msg);
 
 } // namespace se
+
+#include "utilities_impl.hpp"
 
 #endif
 

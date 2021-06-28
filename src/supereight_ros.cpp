@@ -22,6 +22,8 @@
 
 
 
+auto get_image_timestamp = [](sensor_msgs::ImageConstPtr img) { return img->header.stamp; };
+
 namespace se {
 
 SupereightNode::SupereightNode(const ros::NodeHandle& nh,
@@ -159,8 +161,8 @@ void SupereightNode::runPipelineOnce() {
     if (rgb_buffer_.empty()) {
       return;
     } else {
-      const bool found = get_closest_image(rgb_buffer_, depth_timestamp,
-          node_config_.max_timestamp_diff, current_rgb_msg);
+      const bool found = get_closest_element(rgb_buffer_, depth_timestamp,
+          node_config_.max_timestamp_diff, get_image_timestamp, current_rgb_msg);
       if (!found) {
         return;
       }
