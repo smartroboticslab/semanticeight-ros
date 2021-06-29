@@ -197,7 +197,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   pipeline_->freeInitialPosition(sensor_);
 
   // Initialize the timings.
-  timings_.resize(9);
   timing_labels_ = {"Message preprocessing",
                     "Preprocessing",
                     "Tracking",
@@ -206,6 +205,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
                     "Raycasting",
                     "Rendering",
                     "Visualization"};
+  timings_.resize(timing_labels_.size(), 0.0);
 
   // Allocate message circular buffers.
   if (node_config_.enable_tracking) {
@@ -244,7 +244,9 @@ void SupereightNode::runPipelineOnce() {
     return;
   }
 
-  timings_[0] = std::chrono::steady_clock::now();
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
+  start_time = std::chrono::steady_clock::now();
 
 
 
@@ -365,11 +367,13 @@ void SupereightNode::runPipelineOnce() {
   if (node_config_.enable_rgb) {
     to_supereight_RGB(current_rgb_msg, input_rgba_.get());
   }
-  timings_[1] = std::chrono::steady_clock::now();
+  end_time = std::chrono::steady_clock::now();
+  timings_[0] = std::chrono::duration<double>(end_time - start_time).count();
 
 
 
   // Preprocessing
+  start_time = std::chrono::steady_clock::now();
   pipeline_->preprocessDepth(input_depth_.get(), node_config_.input_res,
       supereight_config_.bilateral_filter);
   if (node_config_.enable_rgb) {
@@ -378,11 +382,13 @@ void SupereightNode::runPipelineOnce() {
       pipeline_->preprocessSegmentation(input_segmentation_);
     }
   }
-  timings_[2] = std::chrono::steady_clock::now();
+  end_time = std::chrono::steady_clock::now();
+  timings_[1] = std::chrono::duration<double>(end_time - start_time).count();
 
 
 
   // Tracking
+  start_time = std::chrono::steady_clock::now();
   bool tracked = false;
   if (node_config_.enable_tracking) {
     if (frame_ % supereight_config_.tracking_rate == 0) {
@@ -410,11 +416,13 @@ void SupereightNode::runPipelineOnce() {
   tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
   supereight_pose_pub_.publish(se_T_WB_msg);
   pose_tf_broadcaster_.sendTransform(poseToTransform(se_T_WB_msg));
-  timings_[3] = std::chrono::steady_clock::now();
+  end_time = std::chrono::steady_clock::now();
+  timings_[2] = std::chrono::duration<double>(end_time - start_time).count();
 
 
 
   // Integration
+  start_time = std::chrono::steady_clock::now();
   // Integrate only if tracking was successful or it is one of the first 4
   // frames.
   bool integrated = false;
@@ -426,11 +434,13 @@ void SupereightNode::runPipelineOnce() {
   } else {
     integrated = false;
   }
-  timings_[4] = std::chrono::steady_clock::now();
+  end_time = std::chrono::steady_clock::now();
+  timings_[3] = std::chrono::duration<double>(end_time - start_time).count();
 
 
 
   // Exploration planning
+  start_time = std::chrono::steady_clock::now();
   if (pipeline_->goalReached() || num_planning_iterations_ == 0) {
     ROS_INFO("Planning %d", num_planning_iterations_);
     const se::Path path_WC = pipeline_->computeNextPath_WC(sensor_);
@@ -448,15 +458,13 @@ void SupereightNode::runPipelineOnce() {
       num_planning_iterations_++;
     }
   }
-  timings_[5] = std::chrono::steady_clock::now();
-
-
-
-  timings_[6] = std::chrono::steady_clock::now();
+  end_time = std::chrono::steady_clock::now();
+  timings_[4] = std::chrono::duration<double>(end_time - start_time).count();
 
 
 
   // Rendering
+  start_time = std::chrono::steady_clock::now();
   if (node_config_.enable_rendering) {
     // Depth
     pipeline_->renderDepth(depth_render_.get(), image_res_, sensor_);
@@ -505,11 +513,13 @@ void SupereightNode::runPipelineOnce() {
       entropy_depth_render_pub_.publish(entropy_depth_render_msg);
     }
   }
-  timings_[7] = std::chrono::steady_clock::now();
+  end_time = std::chrono::steady_clock::now();
+  timings_[6] = std::chrono::duration<double>(end_time - start_time).count();
 
 
 
   // Visualization
+  start_time = std::chrono::steady_clock::now();
   map_dim_pub_.publish(map_dim_msg_);
   if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
     visualizeWholeMap();
@@ -521,7 +531,8 @@ void SupereightNode::runPipelineOnce() {
     visualizeGoal();
     visualizeMAV();
   }
-  timings_[8] = std::chrono::steady_clock::now();
+  end_time = std::chrono::steady_clock::now();
+  timings_[7] = std::chrono::duration<double>(end_time - start_time).count();
 
 
 

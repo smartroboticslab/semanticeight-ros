@@ -310,7 +310,7 @@ namespace se {
     visualization_msgs::Marker map_dim_msg_;
 
     // Timings
-    std::vector<std::chrono::time_point<std::chrono::steady_clock> > timings_;
+    std::vector<double> timings_;
     std::vector<std::string> timing_labels_;
   };
 

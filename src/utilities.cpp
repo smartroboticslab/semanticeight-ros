@@ -227,17 +227,12 @@ namespace se {
 
 
 
-  void print_timings(
-      const std::vector<std::chrono::time_point<std::chrono::steady_clock> >& timings,
-      const std::vector<std::string>& labels) {
-
-    for (size_t i = 0; i < timings.size() - 1; ++i) {
-      const double delta_t
-          = std::chrono::duration<double>(timings[i+1] - timings[i]).count();
-      ROS_INFO("%-25s %.5f s", labels[i].c_str(), delta_t);
+  void print_timings(const std::vector<double>& timings, const std::vector<std::string>& labels) {
+    double total_t = 0.0;
+    for (size_t i = 0; i < timings.size(); ++i) {
+      ROS_INFO("%-25s %.5f s", labels[i].c_str(), timings[i]);
+      total_t += timings[i];
     }
-    const double total_t
-        = std::chrono::duration<double>(timings[timings.size()-1] - timings[0]).count();
     ROS_INFO("Total                     %.5f s", total_t);
   }
 

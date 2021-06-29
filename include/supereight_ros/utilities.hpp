@@ -134,9 +134,7 @@ namespace se {
 
 
 
-  void print_timings(
-      const std::vector<std::chrono::time_point<std::chrono::steady_clock> >& timings,
-      const std::vector<std::string>& labels);
+  void print_timings(const std::vector<double>& timings, const std::vector<std::string>& labels);
 
 
 
