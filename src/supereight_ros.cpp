@@ -236,11 +236,11 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
 
 
-void SupereightNode::runPipelineOnce() {
-  // runPipelineOnce() should only be run by a single thread at a time. Return
+void SupereightNode::matchAndFuse() {
+  // matchAndFuse() should only be run by a single thread at a time. Return
   // if the lock can't be acquired (another thread is already running).
-  std::unique_lock<std::mutex> fusion_lock (fusion_mutex_, std::defer_lock_t());
-  if (!fusion_lock.try_lock()) {
+  std::unique_lock<std::mutex> matching_lock (matching_mutex_, std::defer_lock_t());
+  if (!matching_lock.try_lock()) {
     return;
   }
 
@@ -312,13 +312,6 @@ void SupereightNode::runPipelineOnce() {
     }
   }
 
-  // Copy the semantics into the appropriate buffer.
-  if (node_config_.enable_rgb) {
-    if (semantics_found) {
-      input_segmentation_ = to_supereight_segmentation(current_class_msg, current_instance_msg);
-    }
-  }
-
   // Pose
   Eigen::Matrix4f external_T_WC;
   if (!node_config_.enable_tracking) {
@@ -353,8 +346,14 @@ void SupereightNode::runPipelineOnce() {
     }
   }
 
-  ROS_INFO("-----------------------------------------");
-  ROS_INFO("Frame %d", frame_);
+  // Copy the semantics into the appropriate buffer.
+  if (node_config_.enable_rgb) {
+    if (semantics_found) {
+      input_segmentation_ = to_supereight_segmentation(current_class_msg, current_instance_msg);
+    } else {
+      input_segmentation_ = se::SegmentationResult(0, 0);
+    }
+  }
 
   // The currect depth image is going to be integrated, remove it from the
   // buffer to avoid integrating it again.
@@ -362,15 +361,31 @@ void SupereightNode::runPipelineOnce() {
     const std::lock_guard<std::mutex> depth_lock (depth_buffer_mutex_);
     depth_buffer_.pop_front();
   }
-  // Copy the depth and RGB images into the buffers used by supereight.
-  to_supereight_depth(current_depth_msg, sensor_.far_plane, input_depth_.get());
-  if (node_config_.enable_rgb) {
-    to_supereight_RGB(current_rgb_msg, input_rgba_.get());
-  }
   end_time = std::chrono::steady_clock::now();
   timings_[0] = std::chrono::duration<double>(end_time - start_time).count();
 
+  fuse(external_T_WC, current_depth_msg, current_rgb_msg, input_segmentation_);
+}
 
+
+
+void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
+                          const sensor_msgs::ImageConstPtr& depth_image,
+                          const sensor_msgs::ImageConstPtr& color_image,
+                          const se::SegmentationResult&     segmentation) {
+  const std::lock_guard<std::mutex> fusion_lock (fusion_mutex_);
+
+  ROS_INFO("-----------------------------------------");
+  ROS_INFO("Frame %d", frame_);
+
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
+
+  // Convert the depth and RGB images into a format that supereight likes.
+  to_supereight_depth(depth_image, sensor_.far_plane, input_depth_.get());
+  if (node_config_.enable_rgb) {
+    to_supereight_RGB(color_image, input_rgba_.get());
+  }
 
   // Preprocessing
   start_time = std::chrono::steady_clock::now();
@@ -378,14 +393,10 @@ void SupereightNode::runPipelineOnce() {
       supereight_config_.bilateral_filter);
   if (node_config_.enable_rgb) {
     pipeline_->preprocessColor(input_rgba_.get(), node_config_.input_res);
-    if (semantics_found) {
-      pipeline_->preprocessSegmentation(input_segmentation_);
-    }
+    pipeline_->preprocessSegmentation(segmentation);
   }
   end_time = std::chrono::steady_clock::now();
   timings_[1] = std::chrono::duration<double>(end_time - start_time).count();
-
-
 
   // Tracking
   start_time = std::chrono::steady_clock::now();
@@ -397,20 +408,17 @@ void SupereightNode::runPipelineOnce() {
       tracked = false;
     }
   } else {
-    pipeline_->setT_WC(external_T_WC);
+    pipeline_->setT_WC(T_WC);
     tracked = true;
   }
   // Call object tracking.
-  if (semantics_found) {
-    pipeline_->trackObjects(sensor_);
-  }
-
+  pipeline_->trackObjects(sensor_);
   // Publish pose estimated/received by supereight.
   const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
   const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
   Eigen::Quaterniond se_q_WB (se_T_WB.block<3, 3>(0, 0).cast<double>());
   geometry_msgs::PoseStamped se_T_WB_msg;
-  se_T_WB_msg.header = current_depth_msg->header;
+  se_T_WB_msg.header = depth_image->header;
   se_T_WB_msg.header.frame_id = world_frame_id_;
   tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
   tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
@@ -419,8 +427,6 @@ void SupereightNode::runPipelineOnce() {
   end_time = std::chrono::steady_clock::now();
   timings_[2] = std::chrono::duration<double>(end_time - start_time).count();
 
-
-
   // Integration
   start_time = std::chrono::steady_clock::now();
   // Integrate only if tracking was successful or it is one of the first 4
@@ -428,16 +434,12 @@ void SupereightNode::runPipelineOnce() {
   bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
     integrated = pipeline_->integrate(sensor_, frame_);
-    if (semantics_found) {
-      integrated = pipeline_->integrateObjects(sensor_, frame_);
-    }
+    integrated = pipeline_->integrateObjects(sensor_, frame_);
   } else {
     integrated = false;
   }
   end_time = std::chrono::steady_clock::now();
   timings_[3] = std::chrono::duration<double>(end_time - start_time).count();
-
-
 
   // Exploration planning
   start_time = std::chrono::steady_clock::now();
@@ -469,22 +471,22 @@ void SupereightNode::runPipelineOnce() {
     // Depth
     pipeline_->renderDepth(depth_render_.get(), image_res_, sensor_);
     const sensor_msgs::Image depth_render_msg = RGBA_to_msg(depth_render_.get(),
-        image_res_, current_depth_msg->header);
+        image_res_, depth_image->header);
     depth_render_pub_.publish(depth_render_msg);
 
     // RGB
     if (node_config_.enable_rgb) {
       pipeline_->renderRGBA(rgba_render_.get(), image_res_);
-      const sensor_msgs::Image rgba_render_msg = RGBA_to_msg(rgba_render_.get(),
-          image_res_, current_depth_msg->header);
+      const sensor_msgs::Image rgba_render_msg = RGBA_to_msg(rgba_render_.get(), image_res_,
+          depth_image->header);
       rgba_render_pub_.publish(rgba_render_msg);
     }
 
     // Track
     if (node_config_.enable_tracking) {
       pipeline_->renderTrack(track_render_.get(), image_res_);
-      const sensor_msgs::Image track_render_msg = RGBA_to_msg(track_render_.get(),
-          image_res_, current_depth_msg->header);
+      const sensor_msgs::Image track_render_msg = RGBA_to_msg(track_render_.get(), image_res_,
+          depth_image->header);
       track_render_pub_.publish(track_render_msg);
     }
 
@@ -492,8 +494,8 @@ void SupereightNode::runPipelineOnce() {
     if (frame_ % supereight_config_.rendering_rate == 0) {
       (void) pipeline_->raycastObjectsAndBg(sensor_);
       pipeline_->renderObjects(volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID);
-      const sensor_msgs::Image volume_render_msg = RGBA_to_msg(volume_render_.get(),
-          image_res_, current_depth_msg->header);
+      const sensor_msgs::Image volume_render_msg = RGBA_to_msg(volume_render_.get(), image_res_,
+          depth_image->header);
       volume_render_pub_.publish(volume_render_msg);
     }
 
@@ -501,22 +503,19 @@ void SupereightNode::runPipelineOnce() {
       // Entropy
       const se::Image<uint32_t> entropy_render = pipeline_->renderEntropy(sensor_);
       const sensor_msgs::Image entropy_render_msg = RGBA_to_msg(entropy_render.data(),
-          Eigen::Vector2i(entropy_render.width(), entropy_render.height()),
-          current_depth_msg->header);
+          Eigen::Vector2i(entropy_render.width(), entropy_render.height()), depth_image->header);
       entropy_render_pub_.publish(entropy_render_msg);
 
       // Entropy depth
       const se::Image<uint32_t> entropy_depth_render = pipeline_->renderEntropyDepth(sensor_);
       const sensor_msgs::Image entropy_depth_render_msg = RGBA_to_msg(entropy_depth_render.data(),
           Eigen::Vector2i(entropy_depth_render.width(), entropy_depth_render.height()),
-          current_depth_msg->header);
+          depth_image->header);
       entropy_depth_render_pub_.publish(entropy_depth_render_msg);
     }
   }
   end_time = std::chrono::steady_clock::now();
   timings_[6] = std::chrono::duration<double>(end_time - start_time).count();
-
-
 
   // Visualization
   start_time = std::chrono::steady_clock::now();
@@ -534,14 +533,11 @@ void SupereightNode::runPipelineOnce() {
   end_time = std::chrono::steady_clock::now();
   timings_[7] = std::chrono::duration<double>(end_time - start_time).count();
 
-
-
   ROS_INFO("Free volume:     %10.3f m^3", pipeline_->free_volume);
   ROS_INFO("Occupied volume: %10.3f m^3", pipeline_->occupied_volume);
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
   print_timings(timings_, timing_labels_);
-
   frame_++;
 }
 

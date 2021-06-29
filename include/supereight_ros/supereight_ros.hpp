@@ -60,7 +60,12 @@ namespace se {
      * `/supereight/track_render` and `/supereight/volume_render` topics
      * respectively.
      */
-    void runPipelineOnce();
+    void matchAndFuse();
+
+    void fuse(const Eigen::Matrix4f&            T_WC,
+              const sensor_msgs::ImageConstPtr& depth_image,
+              const sensor_msgs::ImageConstPtr& color_image,
+              const se::SegmentationResult&     segmentation);
 
     /*!
      * \brief Save the current supereight map to a `.vtk` file.
@@ -295,6 +300,7 @@ namespace se {
     std::mutex class_buffer_mutex_;
     std::mutex instance_buffer_mutex_;
 
+    std::mutex matching_mutex_;
     std::mutex fusion_mutex_;
 
     /*!
