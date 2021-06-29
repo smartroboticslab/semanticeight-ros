@@ -26,6 +26,7 @@
 #include "se/segmentation_result.hpp"
 
 
+
 namespace se {
   /*!
    * \brief The possible return values of se::get_surrounding_poses().

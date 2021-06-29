@@ -112,6 +112,10 @@ namespace se {
      * for debugging but may significantly decrease performance.
      */
     bool visualize_360_raycasting;
+
+    /** Run Mask R-CNN on the input images.
+     */
+    bool run_segmentation;
   };
 
 

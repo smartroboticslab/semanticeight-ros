@@ -12,6 +12,7 @@ project(supereight_ros VERSION 0.1.0 LANGUAGES C CXX)
 # ------------------------------------------------------------------------------
 set(CMAKE_CXX_STANDARD 14)
 option(WITH_OPENMP "Compile with OpenMP" ON)
+option(WITH_MASKRCNN "Compile with libmaskrcnn-trt" ON)
 
 # Select the supereight voxel and sensor implementations to use.
 set(VOXEL_IMPL MultiresOFusion MultiresTSDF)
@@ -61,6 +62,11 @@ option(SE_BUILD_GLUT_GUI "Build the OpenGL-based GUI" OFF)
 option(SE_BUILD_QT_GUI "Build the Qt-based GUI" OFF)
 add_subdirectory(semanticeight)
 
+# Compile libmaskrcnn-trt
+if (WITH_MASKRCNN)
+  add_subdirectory(libmaskrcnn-trt)
+endif ()
+
 # ------------------------------------------------------------------------------
 # Catkin
 # ------------------------------------------------------------------------------
@@ -92,6 +98,9 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )
+if (WITH_MASKRCNN)
+  include_directories(libmaskrcnn-trt/include)
+endif ()
 
 # Compute the supereight library name from the voxel and sensor implementation
 # names.
@@ -112,6 +121,10 @@ target_link_libraries(supereight_ros
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
+if (WITH_MASKRCNN)
+  target_link_libraries(supereight_ros maskrcnn-trt)
+  target_compile_definitions(supereight_ros PUBLIC SE_WITH_MASKRCNN)
+endif ()
 
 # ------------------------------------------------------------------------------
 # TEST

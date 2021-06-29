@@ -14,6 +14,7 @@
 
 #include <lodepng.h>
 
+#include <cv_bridge/cv_bridge.h>
 #include <eigen_conversions/eigen_msg.h>
 
 #include "supereight_ros/utilities.hpp"
@@ -129,6 +130,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       num_failed_planning_iterations_(0),
       max_failed_planning_iterations_(20),
       input_segmentation_(0, 0),
+#ifdef SE_WITH_MASKRCNN
+      network_(network_config_),
+#endif // SE_WITH_MASKRCNN
       world_frame_id_("world"),
       map_frame_id_("map"),
       body_frame_id_("body"),
@@ -204,7 +208,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
                     "Planning",
                     "Raycasting",
                     "Rendering",
-                    "Visualization"};
+                    "Visualization",
+                    "Network"};
   timings_.resize(timing_labels_.size(), 0.0);
 
   // Allocate message circular buffers.
@@ -216,8 +221,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   depth_buffer_.set_capacity(node_config_.depth_buffer_size);
   if (node_config_.enable_rgb) {
     rgb_buffer_.set_capacity(node_config_.rgb_buffer_size);
-    class_buffer_.set_capacity(node_config_.rgb_buffer_size);
-    instance_buffer_.set_capacity(node_config_.rgb_buffer_size);
+    if (!node_config_.run_segmentation) {
+      class_buffer_.set_capacity(node_config_.rgb_buffer_size);
+      instance_buffer_.set_capacity(node_config_.rgb_buffer_size);
+    }
   } else {
     rgb_buffer_.set_capacity(0);
     class_buffer_.set_capacity(0);
@@ -225,9 +232,25 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   }
 
   // Use the correct classes.
-  se::use_matterport3d_classes();
+  if (node_config_.run_segmentation) {
+    se::use_coco_classes();
+  } else {
+    se::use_matterport3d_classes();
+  }
   se::set_thing("chair");
   se::set_stuff("book");
+
+  if (node_config_.run_segmentation) {
+#ifdef SE_WITH_MASKRCNN
+    network_config_.model_filename = "/home/srl/Documents/Datasets/MaskRCNN/mrcnn_nchw.uff";
+    network_config_.serialized_model_filename = network_config_.model_filename + ".bin";
+    network_ = mr::MaskRCNNConfig(network_config_);
+    if (!network_.build()) {
+        ROS_FATAL("Couldn't initialize the network.");
+        abort();
+    }
+#endif // SE_WITH_MASKRCNN
+  }
 
   setupRos();
 
@@ -364,6 +387,20 @@ void SupereightNode::matchAndFuse() {
   end_time = std::chrono::steady_clock::now();
   timings_[0] = std::chrono::duration<double>(end_time - start_time).count();
 
+  if (node_config_.run_segmentation) {
+    // If the network_mutex_ can be locked it means there is no thread running runNetwork().
+    if (network_mutex_.try_lock()) {
+      // Release the lock so that it can be acquired in runNetwork().
+      network_mutex_.unlock();
+      // Run the network in a background thread.
+      std::thread t (std::bind(&SupereightNode::runNetwork, this, external_T_WC, current_depth_msg, current_rgb_msg));
+      t.detach();
+      // Don't call fuse with this depth frame as it will be done by runNetwork();
+      return;
+    }
+  }
+
+  // Call fuse() if runNetwork() wasn't called.
   fuse(external_T_WC, current_depth_msg, current_rgb_msg, input_segmentation_);
 }
 
@@ -533,11 +570,12 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   end_time = std::chrono::steady_clock::now();
   timings_[7] = std::chrono::duration<double>(end_time - start_time).count();
 
+  print_timings(timings_, timing_labels_);
   ROS_INFO("Free volume:     %10.3f m^3", pipeline_->free_volume);
   ROS_INFO("Occupied volume: %10.3f m^3", pipeline_->occupied_volume);
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
-  print_timings(timings_, timing_labels_);
+  std::fill(timings_.begin(), timings_.end(), 0.0);
   frame_++;
 }
 
@@ -590,10 +628,12 @@ void SupereightNode::setupRos() {
   if (node_config_.enable_rgb) {
     rgb_sub_ = nh_.subscribe("/camera/rgb_image", node_config_.rgb_buffer_size,
         &SupereightNode::RGBCallback, this);
-    class_sub_ = nh_.subscribe("/camera/class", node_config_.rgb_buffer_size,
-        &SupereightNode::SemClassCallback, this);
-    instance_sub_ = nh_.subscribe("/camera/instance", node_config_.rgb_buffer_size,
-        &SupereightNode::SemInstanceCallback, this);
+    if (!node_config_.run_segmentation) {
+      class_sub_ = nh_.subscribe("/camera/class", node_config_.rgb_buffer_size,
+          &SupereightNode::SemClassCallback, this);
+      instance_sub_ = nh_.subscribe("/camera/instance", node_config_.rgb_buffer_size,
+          &SupereightNode::SemInstanceCallback, this);
+    }
   }
 
   // Publishers
@@ -1186,5 +1226,38 @@ visualization_msgs::Marker SupereightNode::mapDimMsg() const {
   return m;
 }
 
+
+
+void SupereightNode::runNetwork(const Eigen::Matrix4f&            T_WC,
+                                const sensor_msgs::ImageConstPtr& depth_image,
+                                const sensor_msgs::ImageConstPtr& color_image) {
+  // runNetwork() should only be run by a single thread at a time so that matchAndFuse() can fall
+  // back to calling fuse(). Return if the lock can't be acquired (another thread is already
+  // running).
+  std::unique_lock<std::mutex> network_lock (network_mutex_, std::defer_lock_t());
+  if (!network_lock.try_lock()) {
+    return;
+  }
+
+  std::chrono::time_point<std::chrono::steady_clock> start_time = std::chrono::steady_clock::now();
+
+  cv_bridge::CvImageConstPtr rgb_ptr = cv_bridge::toCvShare(color_image, "rgb8");
+  se::SegmentationResult segmentation (rgb_ptr->image.cols, rgb_ptr->image.rows);
+#ifdef SE_WITH_MASKRCNN
+  const std::vector<mr::Detection> detections = network_.infer(rgb_ptr->image, false);
+  //cv::imwrite("/home/srl/frame_" + std::to_string(frame_) + ".png",
+  //    mr::visualize_detections(detections, rgb_ptr->image));
+  // Convert the object detections to a SegmentationResult.
+  for (const auto& d : detections) {
+    segmentation.object_instances.emplace_back(se::instance_new, d.mask,
+        se::DetectionConfidence(d.class_id, d.confidence));
+  }
+#endif // SE_WITH_MASKRCNN
+
+  std::chrono::time_point<std::chrono::steady_clock> end_time = std::chrono::steady_clock::now();
+  timings_[8] = std::chrono::duration<double>(end_time - start_time).count();
+
+  fuse(T_WC, depth_image, color_image, segmentation);
+}
 }  // namespace se
 

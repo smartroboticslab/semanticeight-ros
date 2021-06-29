@@ -29,6 +29,9 @@
 
 #include "se/DenseSLAMSystem.h"
 #include "se/octree_iterator.hpp"
+#ifdef SE_WITH_MASKRCNN
+#include "maskrcnn_trt/maskrcnn.hpp"
+#endif // SE_WITH_MASKRCNN
 
 #include "supereight_ros/supereight_ros_config.hpp"
 
@@ -211,6 +214,10 @@ namespace se {
 
     visualization_msgs::Marker mapDimMsg() const;
 
+    void runNetwork(const Eigen::Matrix4f&            T_WC,
+                    const sensor_msgs::ImageConstPtr& depth_image,
+                    const sensor_msgs::ImageConstPtr& color_image);
+
 
 
     // ROS node
@@ -241,6 +248,10 @@ namespace se {
 
     // Semantics
     se::SegmentationResult input_segmentation_;
+#ifdef SE_WITH_MASKRCNN
+    mr::MaskRCNNConfig network_config_;
+    mr::MaskRCNN network_;
+#endif // SE_WITH_MASKRCNN
 
     // Subscribers
     ros::Subscriber pose_sub_;
@@ -302,6 +313,7 @@ namespace se {
 
     std::mutex matching_mutex_;
     std::mutex fusion_mutex_;
+    std::mutex network_mutex_;
 
     /*!
      * Global/map coordinate frame. Will always look up TF transforms to this
