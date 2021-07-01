@@ -28,6 +28,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include "se/DenseSLAMSystem.h"
+#include "se/exploration_planner.hpp"
 #include "se/octree_iterator.hpp"
 #ifdef SE_WITH_MASKRCNN
 #include "maskrcnn_trt/maskrcnn.hpp"
@@ -69,6 +70,8 @@ namespace se {
               const sensor_msgs::ImageConstPtr& depth_image,
               const sensor_msgs::ImageConstPtr& color_image,
               const se::SegmentationResult&     segmentation);
+
+    void plan();
 
     /*!
      * \brief Save the current supereight map to a `.vtk` file.
@@ -231,6 +234,7 @@ namespace se {
     Configuration supereight_config_;
     SensorImpl sensor_;
     std::shared_ptr<DenseSLAMSystem> pipeline_ = nullptr;
+    std::unique_ptr<se::ExplorationPlanner> planner_;
     Eigen::Vector3f t_MW_;
     Eigen::Matrix4f T_CB_;
     Eigen::Vector3f init_t_WB_;
@@ -315,6 +319,8 @@ namespace se {
 
     std::mutex matching_mutex_;
     std::mutex fusion_mutex_;
+    std::mutex map_mutex_;
+    std::mutex pose_mutex_;
     std::mutex network_mutex_;
 
     /*!

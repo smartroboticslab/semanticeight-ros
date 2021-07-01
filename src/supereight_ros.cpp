@@ -199,6 +199,20 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       supereight_config_.pyramid,
       supereight_config_));
   pipeline_->freeInitialPosition(sensor_);
+  se::ExplorationConfig exploration_config = {
+    supereight_config_.num_candidates, {
+      supereight_config_.raycast_width,
+      supereight_config_.raycast_height,
+      supereight_config_.linear_velocity,
+      supereight_config_.angular_velocity, {
+        "", Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(),
+        supereight_config_.robot_radius,
+        supereight_config_.safety_radius,
+        supereight_config_.min_control_point_radius,
+        supereight_config_.skeleton_sample_precision,
+        supereight_config_.solving_time}}};
+  planner_ = std::unique_ptr<se::ExplorationPlanner>(new se::ExplorationPlanner(
+        pipeline_->getMap(), pipeline_->T_MW(), exploration_config));
 
   // Allocate message circular buffers.
   if (node_config_.enable_tracking) {
@@ -241,6 +255,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   }
 
   setupRos();
+
+  // Start the planner thread.
+  std::thread t (std::bind(&SupereightNode::plan, this));
+  t.detach();
 
   ROS_INFO("Initialization finished");
 }
@@ -426,29 +444,31 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   // Tracking
   start_time = std::chrono::steady_clock::now();
   bool tracked = false;
-  if (node_config_.enable_tracking) {
-    if (frame_ % supereight_config_.tracking_rate == 0) {
-      tracked = pipeline_->track(sensor_, supereight_config_.icp_threshold);
+  {
+    const std::lock_guard<std::mutex> map_lock (map_mutex_);
+    if (node_config_.enable_tracking) {
+      if (frame_ % supereight_config_.tracking_rate == 0) {
+        tracked = pipeline_->track(sensor_, supereight_config_.icp_threshold);
+      } else {
+        tracked = false;
+      }
     } else {
-      tracked = false;
+      pipeline_->setT_WC(T_WC);
+      tracked = true;
     }
-  } else {
-    pipeline_->setT_WC(T_WC);
-    tracked = true;
+    // Call object tracking.
+    pipeline_->trackObjects(sensor_);
+    // Publish the pose estimated/received by supereight.
+    const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
+    const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
+    Eigen::Quaterniond se_q_WB (se_T_WB.block<3, 3>(0, 0).cast<double>());
+    geometry_msgs::PoseStamped se_T_WB_msg;
+    se_T_WB_msg.header = depth_image->header;
+    se_T_WB_msg.header.frame_id = world_frame_id_;
+    tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
+    tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
+    supereight_pose_pub_.publish(se_T_WB_msg);
   }
-  // Call object tracking.
-  pipeline_->trackObjects(sensor_);
-  // Publish pose estimated/received by supereight.
-  const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
-  const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
-  Eigen::Quaterniond se_q_WB (se_T_WB.block<3, 3>(0, 0).cast<double>());
-  geometry_msgs::PoseStamped se_T_WB_msg;
-  se_T_WB_msg.header = depth_image->header;
-  se_T_WB_msg.header.frame_id = world_frame_id_;
-  tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
-  tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
-  supereight_pose_pub_.publish(se_T_WB_msg);
-  pose_tf_broadcaster_.sendTransform(poseToTransform(se_T_WB_msg));
   end_time = std::chrono::steady_clock::now();
   times_tracking_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
@@ -458,6 +478,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   // frames.
   bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
+    const std::lock_guard<std::mutex> map_lock (map_mutex_);
     integrated = pipeline_->integrate(sensor_, frame_);
     integrated = pipeline_->integrateObjects(sensor_, frame_);
   } else {
@@ -465,31 +486,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   }
   end_time = std::chrono::steady_clock::now();
   times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
-
-  // Exploration planning
-  start_time = std::chrono::steady_clock::now();
-  if (pipeline_->goalReached() || num_planning_iterations_ == 0) {
-    ROS_INFO("Planning %d", num_planning_iterations_);
-    const se::Path path_WC = pipeline_->computeNextPath_WC(sensor_);
-    if (path_WC.empty()) {
-      num_failed_planning_iterations_++;
-      if (num_failed_planning_iterations_ >= max_failed_planning_iterations_) {
-        ROS_INFO("Failed to plan %d times, stopping", num_failed_planning_iterations_);
-        raise(SIGINT);
-      }
-    } else {
-      std_msgs::Header header;
-      header.stamp = ros::Time::now();
-      header.frame_id = world_frame_id_;
-      path_pub_.publish(path_to_msg(path_WC, T_CB_, header));
-      num_planning_iterations_++;
-    }
-  }
-  end_time = std::chrono::steady_clock::now();
-  times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
-  ROS_INFO("%-25s %.5f s", "Planning", times_planning_.back());
-
-
 
   // Rendering
   start_time = std::chrono::steady_clock::now();
@@ -527,13 +523,13 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
 
     if (node_config_.visualize_360_raycasting) {
       // Entropy
-      const se::Image<uint32_t> entropy_render = pipeline_->renderEntropy(sensor_);
+      const se::Image<uint32_t> entropy_render = planner_->renderEntropy(sensor_);
       const sensor_msgs::Image entropy_render_msg = RGBA_to_msg(entropy_render.data(),
           Eigen::Vector2i(entropy_render.width(), entropy_render.height()), depth_image->header);
       entropy_render_pub_.publish(entropy_render_msg);
 
       // Entropy depth
-      const se::Image<uint32_t> entropy_depth_render = pipeline_->renderEntropyDepth(sensor_);
+      const se::Image<uint32_t> entropy_depth_render = planner_->renderEntropyDepth(sensor_);
       const sensor_msgs::Image entropy_depth_render_msg = RGBA_to_msg(entropy_depth_render.data(),
           Eigen::Vector2i(entropy_depth_render.width(), entropy_depth_render.height()),
           depth_image->header);
@@ -550,11 +546,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     visualizeWholeMap();
     visualizeObjects();
     visualizeFrontiers();
-    visualizeCandidates();
-    visualizeCandidatePaths();
-    visualizeRejectedCandidates();
-    visualizeGoal();
-    visualizeMAV();
   }
   end_time = std::chrono::steady_clock::now();
   times_visualization_.push_back(std::chrono::duration<double>(end_time - start_time).count());
@@ -565,6 +556,57 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
   frame_++;
+}
+
+
+
+void SupereightNode::plan() {
+  // Wait for the first pose
+  while (true) {
+    std::this_thread::sleep_for(std::chrono::duration<double>(0.01));
+    const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
+    if (!planner_->getT_WCHistory().empty()) {
+      break;
+    }
+  }
+  // Exploration planning
+  while (num_failed_planning_iterations_ < max_failed_planning_iterations_) {
+    bool goal_reached = false;
+    {
+      const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
+      goal_reached = planner_->goalReached();
+    }
+    if (goal_reached || num_planning_iterations_ == 0) {
+      const auto start_time = std::chrono::steady_clock::now();
+      se::Path path_WC;
+      {
+        const std::lock_guard<std::mutex> map_lock (map_mutex_);
+        const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
+        path_WC = planner_->computeNextPath_WC(pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
+      }
+
+      if (path_WC.empty()) {
+        num_failed_planning_iterations_++;
+      } else {
+        std_msgs::Header header;
+        header.stamp = ros::Time::now();
+        header.frame_id = world_frame_id_;
+        path_pub_.publish(path_to_msg(path_WC, T_CB_, header));
+        num_planning_iterations_++;
+        visualizeCandidates();
+        visualizeCandidatePaths();
+        visualizeRejectedCandidates();
+        visualizeGoal();
+      }
+
+      const auto end_time = std::chrono::steady_clock::now();
+      times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+      ROS_WARN("Planning iteration %d", num_planning_iterations_);
+      ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
+    }
+  }
+  ROS_INFO("Failed to plan %d times, stopping", num_failed_planning_iterations_);
+  raise(SIGINT);
 }
 
 
@@ -750,11 +792,28 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   const Eigen::Vector3d t_WC = T_WC.topRightCorner<3, 1>();
   tf::vectorEigenToMsg(t_WC, T_WC_msg.transform.translation);
 
-  // Put it into the buffer.
-  const std::lock_guard<std::mutex> pose_lock (pose_buffer_mutex_);
-  pose_buffer_.push_back(T_WC_msg);
-  ROS_DEBUG("Pose buffer:        %lu/%lu",
-      pose_buffer_.size(), pose_buffer_.capacity());
+  {
+    const std::lock_guard<std::mutex> planner_pose_lock (pose_mutex_);
+    planner_->setT_WC(T_WC.cast<float>());
+  }
+  {
+    // Put it into the buffer.
+    const std::lock_guard<std::mutex> pose_lock (pose_buffer_mutex_);
+    pose_buffer_.push_back(T_WC_msg);
+    ROS_DEBUG("Pose buffer:        %lu/%lu", pose_buffer_.size(), pose_buffer_.capacity());
+  }
+
+  // Update the Body-World transform.
+  geometry_msgs::PoseStamped T_WB_msg;
+  T_WB_msg.header = header;
+  T_WB_msg.header.frame_id = world_frame_id_;
+  const Eigen::Quaterniond q_WB (T_WB.topLeftCorner<3, 3>());
+  tf::quaternionEigenToMsg(q_WB, T_WB_msg.pose.orientation);
+  const Eigen::Vector3d t_WB = T_WB.topRightCorner<3, 1>();
+  tf::pointEigenToMsg(t_WB, T_WB_msg.pose.position);
+  pose_tf_broadcaster_.sendTransform(poseToTransform(T_WB_msg));
+
+  visualizeMAV();
 }
 
 
@@ -974,7 +1033,7 @@ void SupereightNode::visualizeCandidates() {
   arrow_marker.action = visualization_msgs::Marker::ADD;
   text_marker.action = visualization_msgs::Marker::ADD;
   // Publish an arrow and an ID for each candidate
-  for (const auto& candidate : pipeline_->candidateViews()) {
+  for (const auto& candidate : planner_->candidateViews()) {
     if (candidate.isValid()) {
       // Arrow marker
       const Eigen::Matrix4f goal_T_MB = candidate.goal() * T_CB_;
@@ -1019,7 +1078,7 @@ void SupereightNode::visualizeCandidatePaths() {
   map_candidate_path_pub_.publish(marker);
   marker.action = visualization_msgs::Marker::ADD;
   // Combine all candidate paths into a single line strip
-  for (const auto& candidate : pipeline_->candidateViews()) {
+  for (const auto& candidate : planner_->candidateViews()) {
     if (candidate.isValid()) {
       const se::Path path = candidate.path();
       if (path.size() > 1) {
@@ -1062,7 +1121,7 @@ void SupereightNode::visualizeRejectedCandidates() {
   map_rejected_candidate_pub_.publish(marker);
   marker.action = visualization_msgs::Marker::ADD;
   // Publish the position of each rejected candidate
-  for (const auto& candidate : pipeline_->rejectedCandidateViews()) {
+  for (const auto& candidate : planner_->rejectedCandidateViews()) {
     const Eigen::Matrix4f goal_T_MB = candidate.goal() * T_CB_;
     marker.id++;
     marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3,1>());
@@ -1073,7 +1132,7 @@ void SupereightNode::visualizeRejectedCandidates() {
 
 
 void SupereightNode::visualizeGoal() {
-  se::CandidateView goal_view = pipeline_->goalView();
+  se::CandidateView goal_view = planner_->goalView();
   if (!goal_view.isValid()) {
     return;
   }
