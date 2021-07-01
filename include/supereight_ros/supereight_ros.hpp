@@ -214,6 +214,8 @@ namespace se {
 
     visualization_msgs::Marker mapDimMsg() const;
 
+    void printFrameTimes() const;
+
     void runNetwork(const Eigen::Matrix4f&            T_WC,
                     const sensor_msgs::ImageConstPtr& depth_image,
                     const sensor_msgs::ImageConstPtr& color_image);
@@ -328,8 +330,14 @@ namespace se {
     visualization_msgs::Marker map_dim_msg_;
 
     // Timings
-    std::vector<double> timings_;
-    std::vector<std::string> timing_labels_;
+    std::vector<double> times_matching_;
+    std::vector<double> times_preprocessing_;
+    std::vector<double> times_tracking_;
+    std::vector<double> times_integration_;
+    std::vector<double> times_rendering_;
+    std::vector<double> times_visualization_;
+    std::vector<double> times_network_;
+    std::vector<double> times_planning_;
   };
 
 } // namespace se

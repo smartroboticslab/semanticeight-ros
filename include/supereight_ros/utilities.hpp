@@ -135,10 +135,6 @@ namespace se {
 
 
 
-  void print_timings(const std::vector<double>& timings, const std::vector<std::string>& labels);
-
-
-
   /*!
    * \brief Find the two closest poses whose timestamps are before and after the
    * query timestamp.

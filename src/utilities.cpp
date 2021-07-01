@@ -227,17 +227,6 @@ namespace se {
 
 
 
-  void print_timings(const std::vector<double>& timings, const std::vector<std::string>& labels) {
-    double total_t = 0.0;
-    for (size_t i = 0; i < timings.size(); ++i) {
-      ROS_INFO("%-25s %.5f s", labels[i].c_str(), timings[i]);
-      total_t += timings[i];
-    }
-    ROS_INFO("Total                     %.5f s", total_t);
-  }
-
-
-
   InterpResult get_surrounding_poses(
       const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
       const double                                                   query_timestamp,

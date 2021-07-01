@@ -200,18 +200,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       supereight_config_));
   pipeline_->freeInitialPosition(sensor_);
 
-  // Initialize the timings.
-  timing_labels_ = {"Message preprocessing",
-                    "Preprocessing",
-                    "Tracking",
-                    "Integration",
-                    "Planning",
-                    "Raycasting",
-                    "Rendering",
-                    "Visualization",
-                    "Network"};
-  timings_.resize(timing_labels_.size(), 0.0);
-
   // Allocate message circular buffers.
   if (node_config_.enable_tracking) {
     pose_buffer_.set_capacity(0);
@@ -385,7 +373,7 @@ void SupereightNode::matchAndFuse() {
     depth_buffer_.pop_front();
   }
   end_time = std::chrono::steady_clock::now();
-  timings_[0] = std::chrono::duration<double>(end_time - start_time).count();
+  times_matching_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   if (node_config_.run_segmentation) {
     // If the network_mutex_ can be locked it means there is no thread running runNetwork().
@@ -433,7 +421,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     pipeline_->preprocessSegmentation(segmentation);
   }
   end_time = std::chrono::steady_clock::now();
-  timings_[1] = std::chrono::duration<double>(end_time - start_time).count();
+  times_preprocessing_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   // Tracking
   start_time = std::chrono::steady_clock::now();
@@ -462,7 +450,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   supereight_pose_pub_.publish(se_T_WB_msg);
   pose_tf_broadcaster_.sendTransform(poseToTransform(se_T_WB_msg));
   end_time = std::chrono::steady_clock::now();
-  timings_[2] = std::chrono::duration<double>(end_time - start_time).count();
+  times_tracking_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   // Integration
   start_time = std::chrono::steady_clock::now();
@@ -476,7 +464,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     integrated = false;
   }
   end_time = std::chrono::steady_clock::now();
-  timings_[3] = std::chrono::duration<double>(end_time - start_time).count();
+  times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   // Exploration planning
   start_time = std::chrono::steady_clock::now();
@@ -498,7 +486,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     }
   }
   end_time = std::chrono::steady_clock::now();
-  timings_[4] = std::chrono::duration<double>(end_time - start_time).count();
+  times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+  ROS_INFO("%-25s %.5f s", "Planning", times_planning_.back());
 
 
 
@@ -552,7 +541,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     }
   }
   end_time = std::chrono::steady_clock::now();
-  timings_[6] = std::chrono::duration<double>(end_time - start_time).count();
+  times_rendering_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   // Visualization
   start_time = std::chrono::steady_clock::now();
@@ -568,14 +557,13 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     visualizeMAV();
   }
   end_time = std::chrono::steady_clock::now();
-  timings_[7] = std::chrono::duration<double>(end_time - start_time).count();
+  times_visualization_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
-  print_timings(timings_, timing_labels_);
+  printFrameTimes();
   ROS_INFO("Free volume:     %10.3f m^3", pipeline_->free_volume);
   ROS_INFO("Occupied volume: %10.3f m^3", pipeline_->occupied_volume);
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
-  std::fill(timings_.begin(), timings_.end(), 0.0);
   frame_++;
 }
 
@@ -1228,6 +1216,25 @@ visualization_msgs::Marker SupereightNode::mapDimMsg() const {
 
 
 
+void SupereightNode::printFrameTimes() const {
+  double total_time = 0.0;
+  total_time += times_matching_.back();
+  total_time += times_preprocessing_.back();
+  total_time += times_tracking_.back();
+  total_time += times_integration_.back();
+  total_time += times_rendering_.back();
+  total_time += times_visualization_.back();
+  ROS_INFO("%-25s %.5f s", "Matching",      times_matching_.back());
+  ROS_INFO("%-25s %.5f s", "Preprocessing", times_preprocessing_.back());
+  ROS_INFO("%-25s %.5f s", "Tracking",      times_tracking_.back());
+  ROS_INFO("%-25s %.5f s", "Integration",   times_integration_.back());
+  ROS_INFO("%-25s %.5f s", "Rendering",     times_rendering_.back());
+  ROS_INFO("%-25s %.5f s", "Visualization", times_visualization_.back());
+  ROS_INFO("Frame total               %.5f s", total_time);
+}
+
+
+
 void SupereightNode::runNetwork(const Eigen::Matrix4f&            T_WC,
                                 const sensor_msgs::ImageConstPtr& depth_image,
                                 const sensor_msgs::ImageConstPtr& color_image) {
@@ -1255,7 +1262,8 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f&            T_WC,
 #endif // SE_WITH_MASKRCNN
 
   std::chrono::time_point<std::chrono::steady_clock> end_time = std::chrono::steady_clock::now();
-  timings_[8] = std::chrono::duration<double>(end_time - start_time).count();
+  times_network_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+  ROS_INFO("%-25s %.5f s", "Network", times_network_.back());
 
   fuse(T_WC, depth_image, color_image, segmentation);
 }
