@@ -88,6 +88,14 @@ Visualization Manager:
       Value: false
     - Class: rviz/Marker
       Enabled: true
+      Marker Topic: /supereight/planner/pose_history
+      Name: Position history
+      Namespaces:
+        pose_history: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
       Marker Topic: /supereight/map/objects
       Name: Objects
       Namespaces:

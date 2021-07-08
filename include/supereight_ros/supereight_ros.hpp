@@ -192,6 +192,8 @@ namespace se {
 
     void visualizeMAV();
 
+    void visualizePoseHistory();
+
     template<typename VoxelImplT>
     bool is_free(const se::Volume<typename VoxelImplT::VoxelType>& volume) const {
       constexpr bool is_tsdf = VoxelImplT::invert_normals;
@@ -243,6 +245,7 @@ namespace se {
     int num_planning_iterations_;
     int num_failed_planning_iterations_;
     int max_failed_planning_iterations_;
+    se::PoseHistory fuse_pose_history_;
 
     // Image buffers
     std::unique_ptr<float>    input_depth_;
@@ -292,6 +295,7 @@ namespace se {
     ros::Publisher map_rejected_candidate_pub_;
     ros::Publisher map_goal_pub_;
     ros::Publisher mav_sphere_pub_;
+    ros::Publisher pose_history_pub_;
 
     // Visualization colors
     const Eigen::Vector4f color_occupied_ = Eigen::Vector4f(1.0, 1.0, 1.0, 1.0);
@@ -304,6 +308,7 @@ namespace se {
     const Eigen::Vector4f color_rejected_candidate_ = Eigen::Vector4f(1.0, 0.0, 0.0, 0.5);
     const Eigen::Vector4f color_goal_ = Eigen::Vector4f(1.0, 0.0, 1.0, 1.0);
     const Eigen::Vector4f color_mav_sphere_ = Eigen::Vector4f(0.0, 0.0, 1.0, 0.5);
+    const Eigen::Vector4f color_pose_history_ = Eigen::Vector4f(0.5, 0.5, 0.5, 0.5);
 
     // Circular buffers for incoming messages
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;

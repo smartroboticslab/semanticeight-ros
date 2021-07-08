@@ -468,6 +468,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
     tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
     supereight_pose_pub_.publish(se_T_WB_msg);
+    // Add the pose to the history.
+    fuse_pose_history_.poses.push_back(se_T_WB);
   }
   end_time = std::chrono::steady_clock::now();
   times_tracking_.push_back(std::chrono::duration<double>(end_time - start_time).count());
@@ -546,6 +548,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     visualizeWholeMap();
     visualizeObjects();
     visualizeFrontiers();
+    visualizePoseHistory();
   }
   end_time = std::chrono::steady_clock::now();
   times_visualization_.push_back(std::chrono::duration<double>(end_time - start_time).count());
@@ -703,6 +706,7 @@ void SupereightNode::setupRos() {
   map_rejected_candidate_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/rejected_candidate_views", 2);
   map_goal_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/goal", 2);
   mav_sphere_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav/sphere", 2);
+  pose_history_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/pose_history", 2);
 }
 
 
@@ -1203,6 +1207,36 @@ void SupereightNode::visualizeMAV() {
   mav_marker.lifetime = ros::Duration(0.0);
   mav_marker.frame_locked = true;
   mav_sphere_pub_.publish(mav_marker);
+}
+
+
+
+void SupereightNode::visualizePoseHistory() {
+  // Initialize the message header
+  std_msgs::Header header;
+  header.stamp = ros::Time::now();
+  header.frame_id = world_frame_id_;
+  visualization_msgs::Marker marker;
+  marker.header = header;
+  marker.ns = "pose_history";
+  marker.id = 1;
+  marker.type = visualization_msgs::Marker::LINE_STRIP;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.pose.position = make_point();
+  marker.pose.orientation = make_quaternion();
+  marker.scale = make_vector3(0.1f);
+  marker.color = eigen_to_color(color_pose_history_);
+  marker.lifetime = ros::Duration(0.0);
+  marker.frame_locked = true;
+  // Add all visited points
+  marker.points.resize(fuse_pose_history_.poses.size());
+  for (size_t i = 0; i < fuse_pose_history_.poses.size(); ++i) {
+    const Eigen::Vector3f t_WB = fuse_pose_history_.poses[i].topRightCorner<3,1>();
+    marker.points[i].x = t_WB.x();
+    marker.points[i].y = t_WB.y();
+    marker.points[i].z = t_WB.z();
+  }
+  pose_history_pub_.publish(marker);
 }
 
 
