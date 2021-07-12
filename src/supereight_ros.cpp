@@ -548,6 +548,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     visualizeWholeMap();
     visualizeMapMesh();
     visualizeObjects();
+    visualizeObjectMeshes();
     visualizeFrontiers();
     visualizePoseHistory();
   }
@@ -702,6 +703,7 @@ void SupereightNode::setupRos() {
   map_unknown_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/unknown", 10);
   map_mesh_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/mesh", 10);
   map_object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/objects", 10);
+  map_object_mesh_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/object_meshes", 10);
   map_frontier_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/frontiers", 10);
   map_candidate_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidate_views", 100);
   map_candidate_path_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidate_paths", 2);
@@ -1002,6 +1004,50 @@ void SupereightNode::visualizeObjects() {
   }
   for (const auto& marker : markers_objects) {
     map_object_pub_.publish(marker.second);
+  }
+}
+
+
+
+void SupereightNode::visualizeObjectMeshes() {
+  const Eigen::Matrix4f T_WM = pipeline_->T_WM();
+  const Objects& objects = pipeline_->getObjectMaps();
+  const std::vector<std::vector<se::Triangle>> meshes = pipeline_->objectTriangleMeshesV();
+  if (objects.size() != meshes.size()) {
+    ROS_FATAL("Got different numbers of objects and object meshes.");
+    abort();
+  }
+  // Publish each object mesh as a separate message.
+  for (size_t i = 0; i < objects.size(); ++i) {
+    const int instance_id = objects[i]->instance_id;
+    const float voxel_dim = objects[i]->voxelDim();
+    const Eigen::Matrix4f T_MO = objects[i]->T_MO_;
+    const Eigen::Vector3f c = se::internal::color_map[instance_id % se::internal::color_map.size()] / 255.0f;
+    visualization_msgs::Marker mesh_marker;
+    mesh_marker.header.stamp = ros::Time::now();
+    mesh_marker.header.frame_id = world_frame_id_;
+    mesh_marker.ns = "object_mesh";
+    mesh_marker.id = objects[i]->instance_id;
+    mesh_marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    mesh_marker.action = visualization_msgs::Marker::ADD;
+    mesh_marker.pose.position = make_point();
+    mesh_marker.pose.orientation = make_quaternion();
+    mesh_marker.scale = make_vector3(1.0);
+    mesh_marker.color = eigen_to_color(c.homogeneous());
+    mesh_marker.lifetime = ros::Duration(0.0);
+    mesh_marker.frame_locked = true;
+    mesh_marker.points.resize(3 * meshes[i].size());
+    for (size_t j = 0; j < meshes[i].size(); j++) {
+      const auto& triangle = meshes[i][j];
+      // Convert the triangle vertices from the octree frame to the world frame.
+      const Eigen::Vector3f v0_W = (T_WM * T_MO * (voxel_dim * triangle.vertexes[0]).homogeneous()).head<3>();
+      const Eigen::Vector3f v1_W = (T_WM * T_MO * (voxel_dim * triangle.vertexes[1]).homogeneous()).head<3>();
+      const Eigen::Vector3f v2_W = (T_WM * T_MO * (voxel_dim * triangle.vertexes[2]).homogeneous()).head<3>();
+      mesh_marker.points[3*j + 0] = eigen_to_point(v0_W);
+      mesh_marker.points[3*j + 1] = eigen_to_point(v1_W);
+      mesh_marker.points[3*j + 2] = eigen_to_point(v2_W);
+    }
+    map_object_mesh_pub_.publish(mesh_marker);
   }
 }
 

@@ -95,11 +95,19 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/object_meshes
+      Name: Object meshes
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
       Enabled: true
       Marker Topic: /supereight/map/objects
       Name: Objects
       Namespaces:
-        {}
+        map objects: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
