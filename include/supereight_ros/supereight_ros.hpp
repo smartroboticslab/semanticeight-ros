@@ -178,6 +178,8 @@ namespace se {
 
     void visualizeWholeMap();
 
+    void visualizeMapMesh();
+
     void visualizeObjects();
 
     void visualizeFrontiers();
@@ -288,6 +290,7 @@ namespace se {
     ros::Publisher map_free_pub_;
     ros::Publisher map_occupied_pub_;
     ros::Publisher map_unknown_pub_;
+    ros::Publisher map_mesh_pub_;
     ros::Publisher map_object_pub_;
     ros::Publisher map_frontier_pub_;
     ros::Publisher map_candidate_pub_;

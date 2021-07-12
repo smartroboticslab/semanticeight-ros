@@ -10,7 +10,7 @@ Panels:
     Property Tree Widget:
       Expanded: ~
       Splitter Ratio: 0.5
-    Tree Height: 319
+    Tree Height: 305
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -104,12 +104,20 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
+      Marker Topic: /supereight/map/mesh
+      Name: Background mesh
+      Namespaces:
+        map_mesh: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: false
       Marker Topic: /supereight/map/occupied
       Name: Occupied Volume
       Namespaces:
-        map_occupied: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: false
       Marker Topic: /supereight/map/unknown
@@ -376,4 +384,4 @@ Window Geometry:
     collapsed: true
   Width: 1920
   X: 0
-  Y: 70
+  Y: 73

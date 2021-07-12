@@ -546,6 +546,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   map_dim_pub_.publish(map_dim_msg_);
   if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
     visualizeWholeMap();
+    visualizeMapMesh();
     visualizeObjects();
     visualizeFrontiers();
     visualizePoseHistory();
@@ -699,6 +700,7 @@ void SupereightNode::setupRos() {
   map_free_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/free", 10);
   map_occupied_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/occupied", 10);
   map_unknown_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/unknown", 10);
+  map_mesh_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/mesh", 10);
   map_object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/objects", 10);
   map_frontier_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/frontiers", 10);
   map_candidate_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidate_views", 100);
@@ -914,6 +916,47 @@ void SupereightNode::visualizeWholeMap() {
   for (const auto& marker : markers_unknown) {
     map_unknown_pub_.publish(marker.second);
   }
+}
+
+
+
+void SupereightNode::visualizeMapMesh() {
+  const std::vector<se::Triangle> mesh = pipeline_->triangleMeshV();
+  const float voxel_dim = pipeline_->getMap()->voxelDim();
+  const Eigen::Matrix4f T_WM = pipeline_->T_WM();
+  // Initialize the message header
+  std_msgs::Header header;
+  header.stamp = ros::Time::now();
+  header.frame_id = world_frame_id_;
+  visualization_msgs::Marker mesh_marker;
+  mesh_marker = visualization_msgs::Marker();
+  mesh_marker.header = header;
+  mesh_marker.ns = "map_mesh";
+  mesh_marker.id = 0;
+  mesh_marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+  mesh_marker.action = visualization_msgs::Marker::ADD;
+  mesh_marker.pose.position = make_point();
+  mesh_marker.pose.orientation = make_quaternion();
+  mesh_marker.scale = make_vector3(1.0);
+  mesh_marker.color = eigen_to_color(color_occupied_);
+  mesh_marker.lifetime = ros::Duration(0.0);
+  mesh_marker.frame_locked = true;
+  mesh_marker.points.resize(3 * mesh.size());
+  for (size_t i = 0; i < mesh.size(); i++) {
+    const auto& triangle = mesh[i];
+    // Convert the triangle vertices from the octree frame to the world frame.
+    const Eigen::Vector3f v0_W = (T_WM * (voxel_dim * triangle.vertexes[0]).homogeneous()).head<3>();
+    const Eigen::Vector3f v1_W = (T_WM * (voxel_dim * triangle.vertexes[1]).homogeneous()).head<3>();
+    const Eigen::Vector3f v2_W = (T_WM * (voxel_dim * triangle.vertexes[2]).homogeneous()).head<3>();
+    const float triangle_max_height_W = Eigen::Vector3f(v0_W.z(), v1_W.z(), v2_W.z()).maxCoeff();
+    // Skip triangles above the height threshold.
+    if (triangle_max_height_W <= node_config_.visualization_max_z) {
+      mesh_marker.points[3*i + 0] = eigen_to_point(v0_W);
+      mesh_marker.points[3*i + 1] = eigen_to_point(v1_W);
+      mesh_marker.points[3*i + 2] = eigen_to_point(v2_W);
+    }
+  }
+  map_mesh_pub_.publish(mesh_marker);
 }
 
 
