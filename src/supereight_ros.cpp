@@ -129,6 +129,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       num_planning_iterations_(0),
       num_failed_planning_iterations_(0),
       max_failed_planning_iterations_(20),
+      max_exploration_time_(std::nan("")),
       input_segmentation_(0, 0),
 #ifdef SE_WITH_MASKRCNN
       network_(network_config_),
@@ -260,6 +261,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   std::thread t (std::bind(&SupereightNode::plan, this));
   t.detach();
 
+  exploration_start_time_ = std::chrono::steady_clock::now();
   ROS_INFO("Initialization finished");
 }
 
@@ -560,6 +562,11 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   ROS_INFO("Occupied volume: %10.3f m^3", pipeline_->occupied_volume);
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
+
+  if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_).count() > max_exploration_time_) {
+    ROS_INFO("Reached time limit of %.3f s, stopping", max_exploration_time_);
+    raise(SIGINT);
+  }
   frame_++;
 }
 
