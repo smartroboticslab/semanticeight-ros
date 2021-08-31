@@ -459,7 +459,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
       tracked = true;
     }
     // Call object tracking.
-    pipeline_->trackObjects(sensor_);
+    pipeline_->trackObjects(sensor_, frame_);
     // Publish the pose estimated/received by supereight.
     const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
     const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
@@ -518,7 +518,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
 
     // Volume
     if (frame_ % supereight_config_.rendering_rate == 0) {
-      (void) pipeline_->raycastObjectsAndBg(sensor_);
+      (void) pipeline_->raycastObjectsAndBg(sensor_, frame_);
       pipeline_->renderObjects(volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID);
       const sensor_msgs::Image volume_render_msg = RGBA_to_msg(volume_render_.get(), image_res_,
           depth_image->header);
