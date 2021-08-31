@@ -10,7 +10,7 @@ project(supereight_ros VERSION 0.1.0 LANGUAGES C CXX)
 # ------------------------------------------------------------------------------
 # Compilation options
 # ------------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 option(WITH_MASKRCNN "Compile with libmaskrcnn-trt" ON)
 
@@ -120,6 +120,7 @@ target_link_libraries(supereight_ros
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+  stdc++fs
 )
 if (WITH_MASKRCNN)
   target_link_libraries(supereight_ros maskrcnn-trt)
