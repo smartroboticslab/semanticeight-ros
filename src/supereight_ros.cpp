@@ -17,6 +17,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <eigen_conversions/eigen_msg.h>
 
+#include "supereight_ros/filesystem.hpp"
 #include "supereight_ros/utilities.hpp"
 #include "se/voxel_implementations.hpp"
 
@@ -625,8 +626,15 @@ void SupereightNode::plan() {
 
 void SupereightNode::saveMap() {
   if (!supereight_config_.output_mesh_file.empty()) {
-    pipeline_->dumpMesh((supereight_config_.output_mesh_file + "_voxel.ply").c_str(), (supereight_config_.output_mesh_file + "_metre.ply").c_str());
-    pipeline_->dumpObjectMeshes(supereight_config_.output_mesh_file, false);
+    stdfs::create_directories(supereight_config_.output_mesh_file);
+    std::stringstream output_mesh_meter_file_ss;
+    output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh_"
+                              << std::setw(5) << std::setfill('0') << frame_ << ".ply";
+    pipeline_->dumpMesh("", output_mesh_meter_file_ss.str().c_str());
+    std::stringstream output_mesh_object_file_ss;
+    output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_"
+                              << std::setw(5) << std::setfill('0') << frame_ << "_object";
+    pipeline_->dumpObjectMeshes(output_mesh_object_file_ss.str().c_str(), false);
     ROS_INFO("Map saved in %s\n", supereight_config_.output_mesh_file.c_str());
   }
 }
