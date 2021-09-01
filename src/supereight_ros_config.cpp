@@ -198,6 +198,7 @@ namespace se {
     // Couldn't find a way to get the filename of the YAML file loaded from ROS.
 
     // Exploration only ///////////////////////////////////////////////////////
+    nh.getParam("supereight/exploration/enable_exploration", config.enable_exploration);
     nh.getParam("supereight/exploration/num_candidates", config.num_candidates);
     nh.getParam("supereight/exploration/raycast_width", config.raycast_width);
     nh.getParam("supereight/exploration/raycast_height", config.raycast_height);

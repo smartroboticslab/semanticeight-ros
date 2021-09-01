@@ -105,6 +105,7 @@ namespace se {
     out << "\n";
 
     // Exploration only ///////////////////////////////////////////////////////
+    out << str_utils::bool_to_pretty_str(config.enable_exploration,         "Enable exploration") << "\n";
     out << str_utils::value_to_pretty_str(config.num_candidates,            "Num candidates") << "\n";
     out << str_utils::value_to_pretty_str(config.raycast_width,             "Raycast width") << "\n";
     out << str_utils::value_to_pretty_str(config.raycast_height,            "Raycast height") << "\n";
@@ -200,7 +201,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       t_MW_,
       supereight_config_.pyramid,
       supereight_config_));
-  pipeline_->freeInitialPosition(sensor_);
+  if (supereight_config_.enable_exploration) {
+    pipeline_->freeInitialPosition(sensor_);
+  }
   se::ExplorationConfig exploration_config = {
     supereight_config_.num_candidates, {
       supereight_config_.raycast_width,
@@ -259,8 +262,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   setupRos();
 
   // Start the planner thread.
-  std::thread t (std::bind(&SupereightNode::plan, this));
-  t.detach();
+  if (supereight_config_.enable_exploration) {
+    std::thread t (std::bind(&SupereightNode::plan, this));
+    t.detach();
+  }
 
   exploration_start_time_ = std::chrono::steady_clock::now();
   ROS_INFO("Initialization finished");
