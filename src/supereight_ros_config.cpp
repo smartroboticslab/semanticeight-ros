@@ -194,8 +194,6 @@ namespace se {
 
     // Voxel Impl
     config.voxel_impl_type = VoxelImpl::type();
-    const float voxel_dim = config.map_dim.x() / config.map_size.x();
-    VoxelImpl::configure(voxel_dim);
     // TODO load the voxel implementation parameters from the YAML file.
     // Couldn't find a way to get the filename of the YAML file loaded from ROS.
 
