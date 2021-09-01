@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2021 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2021 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+supereight_ros:
+  pose_buffer_size: 200
+  depth_buffer_size: 20
+  rgb_buffer_size: 20
+
+supereight:
+  exploration:
+    enable_exploration: false
+

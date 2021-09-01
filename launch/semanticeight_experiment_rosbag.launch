@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2020 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<launch>
+  <!-- Set the ROS log level in rosconsole.conf -->
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
+
+  <!-- supereight-ros node -->
+  <node pkg="supereight_ros"
+        name="semanticeight"
+        type="supereight_ros"
+        clear_params="true"
+        output="screen"
+        required="true"
+        launch-prefix="">
+    <!-- Include rosparam yaml files -->
+    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/semanticeight_experiment.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/semanticeight_experiment_rosbag.yaml"/>
+    <!-- Remap topic names -->
+    <remap from="/camera/depth_image" to="/camera/aligned_depth_to_color/image_raw"/>
+    <remap from="/camera/rgb_image"   to="/camera/color/image_raw"/>
+    <remap from="/pose"               to="/vicon/s550_jetson/s550_jetson"/>
+  </node>
+
+  <!-- rviz with appropriate config -->
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find supereight_ros)/config/semanticeight/semanticeight.rviz" />
+</launch>
+

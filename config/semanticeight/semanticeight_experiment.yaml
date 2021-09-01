@@ -1,0 +1,79 @@
+# SPDX-FileCopyrightText: 2021 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2021 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Supereight ROS node settings
+supereight_ros:
+  enable_tracking: false
+  enable_rendering: true
+  enable_rgb: true
+  input_res: [640, 480]
+  pose_topic_type: "geometry_msgs::TransformStamped"
+  pose_buffer_size: 100
+  depth_buffer_size: 10
+  rgb_buffer_size: 10
+  max_timestamp_diff: 0.02
+  center_at_first_position: true
+  visualization_rate: 4
+  visualization_max_z: 3.5
+  real_world_experiment: true
+  visualize_360_raycasting: true
+  run_segmentation: false
+
+# Supereight settings
+supereight:
+  general:
+    sequence_name:              ""
+    sequence_type:              "ros"
+    output_render_path:         ""
+    enable_meshing:             true
+    output_mesh_path:           "/home/srl/meshes_ros"
+    # Rates
+    tracking_rate:              1
+    integration_rate:           1
+    rendering_rate:             4
+    meshing_rate:               0
+    fps:                        0.0
+    # Other
+    drop_frames:                false
+    max_frame:                  -1
+    icp_threshold:              1e-5
+    bilateral_filter:           false
+    pyramid:                    [10, 5, 4]
+
+  map:
+    size:                       512
+    dim:                        10.24
+    t_MW_factor:                [0.501, 0.501, 0.501]
+
+  sensor:
+    intrinsics:                 [382.166, 381.71, 316.145, 247.318]
+    downsampling_factor:        2
+    T_BC:                       [-0.128775, -0.521742,   0.852497,   0.105121,
+                                 -0.996569,  0.122076, -0.0635599, -0.0169158,
+                                -0.0762536, -0.851455,  -0.538894, -0.0551072,
+                                         0,         0,          0,          1]
+    init_T_WB:                  [1, 0, 0, 0,
+                                 0, 1, 0, 0,
+                                 0, 0, 1, 0,
+                                 0, 0, 0, 1]
+    near_plane:                 0.4
+    far_plane:                  6.0
+
+  exploration:
+    enable_exploration:        true
+    num_candidates:            10
+    raycast_width:             36
+    raycast_height:            10
+    linear_velocity:           1.0
+    angular_velocity:          0.1
+    robot_radius:              0.3
+    safety_radius:             0.0
+    min_control_point_radius:  0.1
+    skeleton_sample_precision: 0.05
+    solving_time:              0.1
+
+
+# WARNING: Any voxel parameters added in this file will be ignored. Change the
+# defaults if you need different values.
+
