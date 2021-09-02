@@ -166,6 +166,12 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       track_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
     }
     volume_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    volume_render_color_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    volume_render_scale_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    volume_render_min_scale_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    class_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    instance_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    raycast_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
   }
 
   // Initialize the sensor.
@@ -525,10 +531,27 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     // Volume
     if (frame_ % supereight_config_.rendering_rate == 0) {
       (void) pipeline_->raycastObjectsAndBg(sensor_, frame_);
+
       pipeline_->renderObjects(volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID);
-      const sensor_msgs::Image volume_render_msg = RGBA_to_msg(volume_render_.get(), image_res_,
-          depth_image->header);
-      volume_render_pub_.publish(volume_render_msg);
+      volume_render_pub_.publish(RGBA_to_msg(volume_render_.get(), image_res_, depth_image->header));
+
+      pipeline_->renderObjects(volume_render_color_.get(), image_res_, sensor_, RenderMode::Color, false);
+      volume_render_color_pub_.publish(RGBA_to_msg(volume_render_color_.get(), image_res_, depth_image->header));
+
+      pipeline_->renderObjects(volume_render_scale_.get(), image_res_, sensor_, RenderMode::Scale, false);
+      volume_render_scale_pub_.publish(RGBA_to_msg(volume_render_scale_.get(), image_res_, depth_image->header));
+
+      pipeline_->renderObjects(volume_render_min_scale_.get(), image_res_, sensor_, RenderMode::MinScale, false);
+      volume_render_min_scale_pub_.publish(RGBA_to_msg(volume_render_min_scale_.get(), image_res_, depth_image->header));
+
+      pipeline_->renderObjectClasses(class_render_.get(), image_res_);
+      class_render_pub_.publish(RGBA_to_msg(class_render_.get(), image_res_, depth_image->header));
+
+      pipeline_->renderObjectInstances(instance_render_.get(), image_res_);
+      instance_render_pub_.publish(RGBA_to_msg(instance_render_.get(), image_res_, depth_image->header));
+
+      pipeline_->renderRaycast(raycast_render_.get(), image_res_);
+      raycast_render_pub_.publish(RGBA_to_msg(raycast_render_.get(), image_res_, depth_image->header));
     }
 
     if (node_config_.visualize_360_raycasting) {
@@ -711,6 +734,12 @@ void SupereightNode::setupRos() {
       track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render",30);
     }
     volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render",30);
+    volume_render_color_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_color",30);
+    volume_render_scale_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_scale",30);
+    volume_render_min_scale_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_min_scale",30);
+    class_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/class_render",30);
+    instance_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/instance_render",30);
+    raycast_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/raycast_render",30);
     entropy_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_render", 30);
     entropy_depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_depth_render", 30);
   }

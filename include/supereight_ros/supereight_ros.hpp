@@ -260,6 +260,12 @@ namespace se {
     std::unique_ptr<uint32_t> depth_render_;
     std::unique_ptr<uint32_t> track_render_;
     std::unique_ptr<uint32_t> volume_render_;
+    std::unique_ptr<uint32_t> volume_render_color_;
+    std::unique_ptr<uint32_t> volume_render_scale_;
+    std::unique_ptr<uint32_t> volume_render_min_scale_;
+    std::unique_ptr<uint32_t> class_render_;
+    std::unique_ptr<uint32_t> instance_render_;
+    std::unique_ptr<uint32_t> raycast_render_;
 
     // Semantics
     se::SegmentationResult input_segmentation_;
@@ -284,8 +290,14 @@ namespace se {
     // Render publishers
     ros::Publisher depth_render_pub_;
     ros::Publisher rgba_render_pub_;
-    ros::Publisher volume_render_pub_;
     ros::Publisher track_render_pub_;
+    ros::Publisher volume_render_pub_;
+    ros::Publisher volume_render_color_pub_;
+    ros::Publisher volume_render_scale_pub_;
+    ros::Publisher volume_render_min_scale_pub_;
+    ros::Publisher class_render_pub_;
+    ros::Publisher instance_render_pub_;
+    ros::Publisher raycast_render_pub_;
     ros::Publisher entropy_render_pub_;
     ros::Publisher entropy_depth_render_pub_;
 
