@@ -576,9 +576,9 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   start_time = std::chrono::steady_clock::now();
   map_dim_pub_.publish(map_dim_msg_);
   if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
-    visualizeWholeMap();
+    //visualizeWholeMap();
     visualizeMapMesh();
-    visualizeObjects();
+    //visualizeObjects();
     visualizeObjectMeshes();
     visualizeFrontiers();
     visualizePoseHistory();
