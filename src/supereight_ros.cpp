@@ -532,7 +532,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     if (frame_ % supereight_config_.rendering_rate == 0) {
       (void) pipeline_->raycastObjectsAndBg(sensor_, frame_);
 
-      pipeline_->renderObjects(volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID);
+      pipeline_->renderObjects(volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID, false);
       volume_render_pub_.publish(RGBA_to_msg(volume_render_.get(), image_res_, depth_image->header));
 
       pipeline_->renderObjects(volume_render_color_.get(), image_res_, sensor_, RenderMode::Color, false);
@@ -591,6 +591,34 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   ROS_INFO("Occupied volume: %10.3f m^3", pipeline_->occupied_volume);
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
+
+  if (supereight_config_.output_render_file != "") {
+    stdfs::create_directories(supereight_config_.output_render_file);
+
+    const int w = (pipeline_->getImageResolution()).x();
+    const int h = (pipeline_->getImageResolution()).y();
+    const std::string prefix = supereight_config_.output_render_file + "/";
+    std::stringstream path_suffix_ss;
+    path_suffix_ss << std::setw(5) << std::setfill('0') << frame_ << ".png";
+    const std::string suffix = path_suffix_ss.str();
+
+    std::unique_ptr<uint32_t[]> segmentation_render (new uint32_t[w * h]);
+    pipeline_->renderInputSegmentation(segmentation_render.get(), pipeline_->getImageResolution());
+    std::unique_ptr<uint32_t[]> volume_aabb_render (new uint32_t[w * h]);
+    pipeline_->renderObjects(volume_aabb_render.get(), pipeline_->getImageResolution(), sensor_, RenderMode::InstanceID);
+
+    lodepng_encode32_file((prefix + "rgba_" + suffix).c_str(), (unsigned char*) rgba_render_.get(), w, h);
+    lodepng_encode32_file((prefix + "depth_" + suffix).c_str(), (unsigned char*) depth_render_.get(), w, h);
+    lodepng_encode32_file((prefix + "segm_" + suffix).c_str(), (unsigned char*) segmentation_render.get(), w, h);
+    lodepng_encode32_file((prefix + "volume_" + suffix).c_str(), (unsigned char*) volume_render_.get(), w, h);
+    lodepng_encode32_file((prefix + "volume_color_" + suffix).c_str(), (unsigned char*) volume_render_color_.get(), w, h);
+    lodepng_encode32_file((prefix + "volume_scale_" + suffix).c_str(), (unsigned char*) volume_render_scale_.get(), w, h);
+    lodepng_encode32_file((prefix + "volume_min_scale_" + suffix).c_str(), (unsigned char*) volume_render_min_scale_.get(), w, h);
+    lodepng_encode32_file((prefix + "volume_aabb_" + suffix).c_str(), (unsigned char*) volume_aabb_render.get(), w, h);
+    lodepng_encode32_file((prefix + "raycast_" + suffix).c_str(), (unsigned char*) raycast_render_.get(), w, h);
+    lodepng_encode32_file((prefix + "instance_" + suffix).c_str(), (unsigned char*) instance_render_.get(), w, h);
+    lodepng_encode32_file((prefix + "class_" + suffix).c_str(), (unsigned char*) class_render_.get(), w, h);
+  }
 
   if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_).count() > max_exploration_time_) {
     ROS_INFO("Reached time limit of %.3f s, stopping", max_exploration_time_);
