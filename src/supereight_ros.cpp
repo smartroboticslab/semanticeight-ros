@@ -663,10 +663,12 @@ void SupereightNode::plan() {
         header.frame_id = world_frame_id_;
         path_pub_.publish(path_to_msg(path_WC, T_CB_, header));
         num_planning_iterations_++;
-        visualizeCandidates();
-        visualizeCandidatePaths();
-        visualizeRejectedCandidates();
-        visualizeGoal();
+        if (node_config_.visualization_rate > 0) {
+          visualizeCandidates();
+          visualizeCandidatePaths();
+          visualizeRejectedCandidates();
+          visualizeGoal();
+        }
       }
 
       const auto end_time = std::chrono::steady_clock::now();
@@ -900,7 +902,9 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   tf::pointEigenToMsg(t_WB, T_WB_msg.pose.position);
   pose_tf_broadcaster_.sendTransform(poseToTransform(T_WB_msg));
 
-  visualizeMAV();
+  if (node_config_.visualization_rate > 0) {
+    visualizeMAV();
+  }
 }
 
 
