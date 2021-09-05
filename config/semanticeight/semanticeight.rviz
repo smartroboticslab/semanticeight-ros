@@ -10,7 +10,7 @@ Panels:
     Property Tree Widget:
       Expanded: ~
       Splitter Ratio: 0.5
-    Tree Height: 185
+    Tree Height: 319
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -134,6 +134,14 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/object_aabbs
+      Name: Object AABBs
+      Namespaces:
+        object_aabb: true
+      Queue Size: 100
+      Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /supereight/mav/sphere

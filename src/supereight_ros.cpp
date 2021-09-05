@@ -580,6 +580,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     visualizeMapMesh();
     //visualizeObjects();
     visualizeObjectMeshes();
+    visualizeObjectAABBs();
     visualizeFrontiers();
     visualizePoseHistory();
   }
@@ -781,6 +782,7 @@ void SupereightNode::setupRos() {
   map_mesh_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/mesh", 10);
   map_object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/objects", 10);
   map_object_mesh_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/object_meshes", 10);
+  map_object_aabb_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/object_aabbs", 10);
   map_frontier_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/frontiers", 10);
   map_candidate_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidate_views", 100);
   map_candidate_path_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidate_paths", 2);
@@ -1125,6 +1127,35 @@ void SupereightNode::visualizeObjectMeshes() {
       mesh_marker.points[3*j + 2] = eigen_to_point(v2_W);
     }
     map_object_mesh_pub_.publish(mesh_marker);
+  }
+}
+
+
+
+void SupereightNode::visualizeObjectAABBs() {
+  const Eigen::Matrix4f T_WM = pipeline_->T_WM();
+  for (const auto& o : pipeline_->getObjectMaps()) {
+    const std::vector<Eigen::Vector3f,Eigen::aligned_allocator<Eigen::Vector3f>> edges = o->bounding_volume_M_.edges();
+
+    visualization_msgs::Marker aabb_marker;
+    aabb_marker.header.stamp = ros::Time::now();
+    aabb_marker.header.frame_id = world_frame_id_;
+    aabb_marker.ns = "object_aabb";
+    aabb_marker.id = o->instance_id;
+    aabb_marker.type = visualization_msgs::Marker::LINE_LIST;
+    aabb_marker.action = visualization_msgs::Marker::ADD;
+    aabb_marker.pose.position = eigen_to_point(T_WM.topRightCorner<3,1>());
+    aabb_marker.pose.orientation = eigen_to_quaternion(Eigen::Quaternionf(T_WM.topLeftCorner<3,3>()));
+    aabb_marker.scale.x = 0.05;
+    aabb_marker.color = eigen_to_color(color_pose_history_);
+    aabb_marker.lifetime = ros::Duration(0.0);
+    aabb_marker.frame_locked = true;
+    aabb_marker.points.resize(edges.size());
+    for (size_t i = 0; i < edges.size(); i++) {
+      aabb_marker.points[i] = eigen_to_point(edges[i]);
+    }
+
+    map_object_aabb_pub_.publish(aabb_marker);
   }
 }
 

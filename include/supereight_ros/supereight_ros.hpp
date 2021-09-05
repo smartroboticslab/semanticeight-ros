@@ -184,6 +184,8 @@ namespace se {
 
     void visualizeObjectMeshes();
 
+    void visualizeObjectAABBs();
+
     void visualizeFrontiers();
 
     void visualizeCandidates();
@@ -309,6 +311,7 @@ namespace se {
     ros::Publisher map_mesh_pub_;
     ros::Publisher map_object_pub_;
     ros::Publisher map_object_mesh_pub_;
+    ros::Publisher map_object_aabb_pub_;
     ros::Publisher map_frontier_pub_;
     ros::Publisher map_candidate_pub_;
     ros::Publisher map_candidate_path_pub_;
