@@ -19,6 +19,7 @@
 constexpr bool default_enable_tracking = true;
 constexpr bool default_enable_rendering = true;
 constexpr bool default_enable_rgb = false;
+constexpr bool default_enable_objects = false;
 const Eigen::Vector2i default_input_res (640, 480);
 const std::string default_pose_topic_type ("geometry_msgs::PoseStamped");
 constexpr int default_pose_buffer_size = 600;
@@ -47,6 +48,9 @@ namespace se {
 
     nh.param<bool>("supereight_ros/enable_rgb",
         config.enable_rgb, default_enable_rgb);
+
+    nh.param<bool>("supereight_ros/enable_objects",
+        config.enable_objects, default_enable_objects);
 
     std::vector<int> input_res_vector;
     if (nh.getParam("supereight_ros/input_res", input_res_vector)) {
@@ -93,6 +97,16 @@ namespace se {
     nh.param<bool>("supereight_ros/run_segmentation",
         config.run_segmentation, default_run_segmentation);
 
+    // Can't have objects or semantics with RGB disabled.
+    if (!config.enable_rgb && config.run_segmentation) {
+      config.run_segmentation = false;
+      ROS_WARN("Disabling object segmentation since RGB is disabled");
+    }
+    if (!config.enable_rgb && config.enable_objects) {
+      config.enable_objects = false;
+      ROS_WARN("Disabling object reconstruction since RGB is disabled");
+    }
+
     return config;
   }
 
@@ -103,6 +117,7 @@ namespace se {
     ROS_INFO("  enable_tracking:          %d", config.enable_tracking);
     ROS_INFO("  enable_rendering:         %d", config.enable_rendering);
     ROS_INFO("  enable_rgb:               %d", config.enable_rgb);
+    ROS_INFO("  enable_objects:           %d", config.enable_objects);
     ROS_INFO("  input_res:                %d %d", config.input_res.x(), config.input_res.y());
     ROS_INFO("  pose_topic_type:          %s", config.pose_topic_type.c_str());
     ROS_INFO("  pose_buffer_size:         %d", config.pose_buffer_size);

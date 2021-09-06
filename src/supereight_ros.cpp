@@ -168,8 +168,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
     volume_render_color_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
     volume_render_scale_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
     volume_render_min_scale_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
-    class_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
-    instance_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    if (node_config_.enable_objects) {
+      class_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+      instance_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+    }
     raycast_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
   }
 
@@ -233,7 +235,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   depth_buffer_.set_capacity(node_config_.depth_buffer_size);
   if (node_config_.enable_rgb) {
     rgb_buffer_.set_capacity(node_config_.rgb_buffer_size);
-    if (!node_config_.run_segmentation) {
+    if (!node_config_.run_segmentation && node_config_.enable_objects) {
       class_buffer_.set_capacity(node_config_.rgb_buffer_size);
       instance_buffer_.set_capacity(node_config_.rgb_buffer_size);
     }
@@ -324,7 +326,7 @@ void SupereightNode::matchAndFuse() {
   bool semantics_found = true;
   // Class
   sensor_msgs::ImageConstPtr current_class_msg;
-  if (node_config_.enable_rgb) {
+  if (node_config_.enable_objects) {
     const std::lock_guard<std::mutex> class_lock (class_buffer_mutex_);
     if (class_buffer_.empty()) {
       semantics_found = false;
@@ -340,7 +342,7 @@ void SupereightNode::matchAndFuse() {
 
   // Instance
   sensor_msgs::ImageConstPtr current_instance_msg;
-  if (node_config_.enable_rgb) {
+  if (node_config_.enable_objects) {
     const std::lock_guard<std::mutex> instance_lock (instance_buffer_mutex_);
     if (instance_buffer_.empty()) {
       semantics_found = false;
@@ -389,7 +391,7 @@ void SupereightNode::matchAndFuse() {
   }
 
   // Copy the semantics into the appropriate buffer.
-  if (node_config_.enable_rgb) {
+  if (node_config_.enable_objects) {
     if (semantics_found) {
       input_segmentation_ = to_supereight_segmentation(current_class_msg, current_instance_msg);
     } else {
@@ -449,6 +451,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
       supereight_config_.bilateral_filter);
   if (node_config_.enable_rgb) {
     pipeline_->preprocessColor(input_rgba_.get(), node_config_.input_res);
+  }
+  if (node_config_.enable_objects) {
     pipeline_->preprocessSegmentation(segmentation);
   }
   end_time = std::chrono::steady_clock::now();
@@ -468,7 +472,9 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     tracked = true;
   }
   // Call object tracking.
-  pipeline_->trackObjects(sensor_, frame_);
+  if (node_config_.enable_objects) {
+    pipeline_->trackObjects(sensor_, frame_);
+  }
   // Publish the pose estimated/received by supereight.
   const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
   const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
@@ -497,7 +503,9 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
     start_time = std::chrono::steady_clock::now();
-    integrated = pipeline_->integrateObjects(sensor_, frame_);
+    if (node_config_.enable_objects) {
+      integrated = pipeline_->integrateObjects(sensor_, frame_);
+    }
     end_time = std::chrono::steady_clock::now();
     times_object_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
   } else {
@@ -547,11 +555,13 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
       pipeline_->renderObjects(volume_render_min_scale_.get(), image_res_, sensor_, RenderMode::MinScale, false);
       volume_render_min_scale_pub_.publish(RGBA_to_msg(volume_render_min_scale_.get(), image_res_, depth_image->header));
 
-      pipeline_->renderObjectClasses(class_render_.get(), image_res_);
-      class_render_pub_.publish(RGBA_to_msg(class_render_.get(), image_res_, depth_image->header));
+      if (node_config_.enable_objects) {
+        pipeline_->renderObjectClasses(class_render_.get(), image_res_);
+        class_render_pub_.publish(RGBA_to_msg(class_render_.get(), image_res_, depth_image->header));
 
-      pipeline_->renderObjectInstances(instance_render_.get(), image_res_);
-      instance_render_pub_.publish(RGBA_to_msg(instance_render_.get(), image_res_, depth_image->header));
+        pipeline_->renderObjectInstances(instance_render_.get(), image_res_);
+        instance_render_pub_.publish(RGBA_to_msg(instance_render_.get(), image_res_, depth_image->header));
+      }
 
       pipeline_->renderRaycast(raycast_render_.get(), image_res_);
       raycast_render_pub_.publish(RGBA_to_msg(raycast_render_.get(), image_res_, depth_image->header));
@@ -581,9 +591,11 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
     //visualizeWholeMap();
     visualizeMapMesh();
-    //visualizeObjects();
-    visualizeObjectMeshes();
-    visualizeObjectAABBs();
+    if (node_config_.enable_objects) {
+      //visualizeObjects();
+      visualizeObjectMeshes();
+      visualizeObjectAABBs();
+    }
     visualizeFrontiers();
     visualizePoseHistory();
   }
@@ -620,8 +632,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     lodepng_encode32_file((prefix + "volume_min_scale_" + suffix).c_str(), (unsigned char*) volume_render_min_scale_.get(), w, h);
     lodepng_encode32_file((prefix + "volume_aabb_" + suffix).c_str(), (unsigned char*) volume_aabb_render.get(), w, h);
     lodepng_encode32_file((prefix + "raycast_" + suffix).c_str(), (unsigned char*) raycast_render_.get(), w, h);
-    lodepng_encode32_file((prefix + "instance_" + suffix).c_str(), (unsigned char*) instance_render_.get(), w, h);
-    lodepng_encode32_file((prefix + "class_" + suffix).c_str(), (unsigned char*) class_render_.get(), w, h);
+    if (node_config_.enable_objects) {
+      lodepng_encode32_file((prefix + "instance_" + suffix).c_str(), (unsigned char*) instance_render_.get(), w, h);
+      lodepng_encode32_file((prefix + "class_" + suffix).c_str(), (unsigned char*) class_render_.get(), w, h);
+    }
   }
 
   if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_).count() > node_config_.max_exploration_time) {
@@ -740,7 +754,7 @@ void SupereightNode::setupRos() {
   if (node_config_.enable_rgb) {
     rgb_sub_ = nh_.subscribe("/camera/rgb_image", node_config_.rgb_buffer_size,
         &SupereightNode::RGBCallback, this);
-    if (!node_config_.run_segmentation) {
+    if (!node_config_.run_segmentation && node_config_.enable_objects) {
       class_sub_ = nh_.subscribe("/camera/class", node_config_.rgb_buffer_size,
           &SupereightNode::SemClassCallback, this);
       instance_sub_ = nh_.subscribe("/camera/instance", node_config_.rgb_buffer_size,

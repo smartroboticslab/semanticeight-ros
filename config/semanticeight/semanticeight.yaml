@@ -8,6 +8,7 @@ supereight_ros:
   enable_tracking: false
   enable_rendering: true
   enable_rgb: true
+  enable_objects: true
   input_res: [640, 480]
   pose_topic_type: "geometry_msgs::PoseStamped"
   pose_buffer_size: 100

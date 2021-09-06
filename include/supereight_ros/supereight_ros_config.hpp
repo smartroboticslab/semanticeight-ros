@@ -40,6 +40,10 @@ namespace se {
      */
     bool enable_rgb;
 
+    /** Enable reconstruction of individual objects using semantic information.
+     */
+    bool enable_objects;
+
     /*!
      * The resolution of the input depth and RGB images (width, height).
      *
