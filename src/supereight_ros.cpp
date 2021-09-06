@@ -485,19 +485,20 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   times_tracking_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   // Integration
-  start_time = std::chrono::steady_clock::now();
   // Integrate only if tracking was successful or it is one of the first 4
   // frames.
   bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
     const std::lock_guard<std::mutex> map_lock (map_mutex_);
+    start_time = std::chrono::steady_clock::now();
     integrated = pipeline_->integrate(sensor_, frame_);
     integrated = pipeline_->integrateObjects(sensor_, frame_);
+    end_time = std::chrono::steady_clock::now();
+    times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
   } else {
     integrated = false;
+    times_integration_.push_back(0);
   }
-  end_time = std::chrono::steady_clock::now();
-  times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   // Rendering
   start_time = std::chrono::steady_clock::now();
@@ -643,14 +644,17 @@ void SupereightNode::plan() {
       goal_reached = planner_->goalReached();
     }
     if (goal_reached || num_planning_iterations_ == 0) {
-      ROS_WARN("Planning iteration %d", num_planning_iterations_);
-      const auto start_time = std::chrono::steady_clock::now();
       se::Path path_WC;
       {
         const std::lock_guard<std::mutex> map_lock (map_mutex_);
         const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
+        const auto start_time = std::chrono::steady_clock::now();
         path_WC = planner_->computeNextPath_WC(pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
+        const auto end_time = std::chrono::steady_clock::now();
+        times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
       }
+      ROS_WARN("Planning iteration %d", num_planning_iterations_);
+      ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
 
       if (path_WC.empty()) {
         num_planning_iterations_++;
@@ -668,10 +672,6 @@ void SupereightNode::plan() {
           visualizeGoal();
         }
       }
-
-      const auto end_time = std::chrono::steady_clock::now();
-      times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
-      ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
     }
   }
   ROS_INFO("Failed to plan %d times, stopping", num_failed_planning_iterations_);
