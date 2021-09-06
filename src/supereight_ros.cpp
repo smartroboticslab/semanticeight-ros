@@ -647,6 +647,7 @@ void SupereightNode::plan() {
       goal_reached = planner_->goalReached();
     }
     if (goal_reached || num_planning_iterations_ == 0) {
+      ROS_WARN("Planning iteration %d", num_planning_iterations_);
       const auto start_time = std::chrono::steady_clock::now();
       se::Path path_WC;
       {
@@ -674,7 +675,6 @@ void SupereightNode::plan() {
 
       const auto end_time = std::chrono::steady_clock::now();
       times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
-      ROS_WARN("Planning iteration %d", num_planning_iterations_);
       ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
     }
   }
