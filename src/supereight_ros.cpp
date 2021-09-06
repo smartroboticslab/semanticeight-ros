@@ -457,33 +457,30 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   // Tracking
   start_time = std::chrono::steady_clock::now();
   bool tracked = false;
-  {
-    const std::lock_guard<std::mutex> map_lock (map_mutex_);
-    if (node_config_.enable_tracking) {
-      if (frame_ % supereight_config_.tracking_rate == 0) {
-        tracked = pipeline_->track(sensor_, supereight_config_.icp_threshold);
-      } else {
-        tracked = false;
-      }
+  if (node_config_.enable_tracking) {
+    if (frame_ % supereight_config_.tracking_rate == 0) {
+      tracked = pipeline_->track(sensor_, supereight_config_.icp_threshold);
     } else {
-      pipeline_->setT_WC(T_WC);
-      tracked = true;
+      tracked = false;
     }
-    // Call object tracking.
-    pipeline_->trackObjects(sensor_, frame_);
-    // Publish the pose estimated/received by supereight.
-    const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
-    const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
-    Eigen::Quaterniond se_q_WB (se_T_WB.block<3, 3>(0, 0).cast<double>());
-    geometry_msgs::PoseStamped se_T_WB_msg;
-    se_T_WB_msg.header = depth_image->header;
-    se_T_WB_msg.header.frame_id = world_frame_id_;
-    tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
-    tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
-    supereight_pose_pub_.publish(se_T_WB_msg);
-    // Add the pose to the history.
-    fuse_pose_history_.poses.push_back(se_T_WB);
+  } else {
+    pipeline_->setT_WC(T_WC);
+    tracked = true;
   }
+  // Call object tracking.
+  pipeline_->trackObjects(sensor_, frame_);
+  // Publish the pose estimated/received by supereight.
+  const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
+  const Eigen::Vector3d se_t_WB = se_T_WB.block<3, 1>(0, 3).cast<double>();
+  Eigen::Quaterniond se_q_WB (se_T_WB.block<3, 3>(0, 0).cast<double>());
+  geometry_msgs::PoseStamped se_T_WB_msg;
+  se_T_WB_msg.header = depth_image->header;
+  se_T_WB_msg.header.frame_id = world_frame_id_;
+  tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
+  tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
+  supereight_pose_pub_.publish(se_T_WB_msg);
+  // Add the pose to the history.
+  fuse_pose_history_.poses.push_back(se_T_WB);
   end_time = std::chrono::steady_clock::now();
   times_tracking_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
