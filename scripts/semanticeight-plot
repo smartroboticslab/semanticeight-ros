@@ -7,7 +7,7 @@ set -eu
 # Usage: get_data_tsv LOGFILE
 # It assumes that the lines for each frame are encountered in a specific order.
 get_data_tsv() {
-	awk 'BEGIN { OFS = "\t"; print "Frame", "Time", "Matching", "Preprocessing", "Tracking", "Integration", "Free volume", "Occupied volume", "Explored volume"}
+	awk 'BEGIN { OFS = "\t"; print "Frame", "Time", "Matching", "Preprocessing", "Tracking", "Integration", "Object integration", "Free volume", "Occupied volume", "Explored volume"}
 		# Initialize the starting timestamp from the matching data
 		/Matching/ {
 			if (start_t == 0)
@@ -15,7 +15,7 @@ get_data_tsv() {
 			printf "%d\t%s\t", frame++, ($1 - start_t)
 		}
 		# Just print the data column
-		/(Matching|Preprocessing|Tracking|Integration|Free volume:|Occupied volume:|Explored volume:)[[:space:]]+[0-9]/ {
+		/(Matching|Preprocessing|Tracking|Integration|Object integration|Free volume:|Occupied volume:|Explored volume:)[[:space:]]+[0-9]/ {
 			printf "%f\t", $(NF-1)
 		}
 		# End the line
@@ -103,18 +103,18 @@ plot_data() {
 	set key right bottom;
 	set xlabel 'Time (s)';
 	set ylabel 'Volume (m³)';
-	plot for [f in data_files] f using 2:7 notitle linetype rgb 'blue' dashtype \".\",\
-		for [f in data_files] f using 2:8 notitle linetype rgb 'red' dashtype \".\",\
-		'$average_data_file' using 2:7 title 'Free' linetype rgb 'blue' linewidth 3,\
-		'$average_data_file' using 2:8 title 'Occupied' linetype rgb 'red' linewidth 3,;
+	plot for [f in data_files] f using 2:8 notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in data_files] f using 2:9 notitle linetype rgb 'red' dashtype \".\",\
+		'$average_data_file' using 2:8 title 'Free' linetype rgb 'blue' linewidth 3,\
+		'$average_data_file' using 2:9 title 'Occupied' linetype rgb 'red' linewidth 3,;
 
 	set key right bottom;
 	set xlabel 'Frame';
 	set ylabel 'Volume (m³)';
-	plot for [f in data_files] f using (\$1+1):7 notitle linetype rgb 'blue' dashtype \".\",\
-		for [f in data_files] f using (\$1+1):8 notitle linetype rgb 'red' dashtype \".\",\
-		'$average_data_file' using (\$1+1):7 title 'Free' linetype rgb 'blue' linewidth 3,\
-		'$average_data_file' using (\$1+1):8 title 'Occupied' linetype rgb 'red' linewidth 3,;
+	plot for [f in data_files] f using (\$1+1):8 notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in data_files] f using (\$1+1):9 notitle linetype rgb 'red' dashtype \".\",\
+		'$average_data_file' using (\$1+1):8 title 'Free' linetype rgb 'blue' linewidth 3,\
+		'$average_data_file' using (\$1+1):9 title 'Occupied' linetype rgb 'red' linewidth 3,;
 
 
 	set xlabel 'Planning iteration';
@@ -127,8 +127,8 @@ plot_data() {
 	set key right top;
 	set xlabel 'Frame';
 	set ylabel 'Frame time (s)';
-	plot for [i=3:6:1] \
-		'$average_data_file' using (\$1+1):(sum [col=i:6] column(col)) title columnheader(i) with filledcurves x1;
+	plot for [i=3:7:1] \
+		'$average_data_file' using (\$1+1):(sum [col=i:7] column(col)) title columnheader(i) with filledcurves x1;
 
 	unset multiplot;"
 

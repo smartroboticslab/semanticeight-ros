@@ -367,6 +367,7 @@ namespace se {
     std::vector<double> times_preprocessing_;
     std::vector<double> times_tracking_;
     std::vector<double> times_integration_;
+    std::vector<double> times_object_integration_;
     std::vector<double> times_rendering_;
     std::vector<double> times_visualization_;
     std::vector<double> times_network_;

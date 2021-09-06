@@ -490,14 +490,20 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
     const std::lock_guard<std::mutex> map_lock (map_mutex_);
+
     start_time = std::chrono::steady_clock::now();
     integrated = pipeline_->integrate(sensor_, frame_);
-    integrated = pipeline_->integrateObjects(sensor_, frame_);
     end_time = std::chrono::steady_clock::now();
     times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+
+    start_time = std::chrono::steady_clock::now();
+    integrated = pipeline_->integrateObjects(sensor_, frame_);
+    end_time = std::chrono::steady_clock::now();
+    times_object_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
   } else {
     integrated = false;
     times_integration_.push_back(0);
+    times_object_integration_.push_back(0);
   }
 
   // Rendering
@@ -1513,14 +1519,16 @@ void SupereightNode::printFrameTimes() const {
   total_time += times_preprocessing_.back();
   total_time += times_tracking_.back();
   total_time += times_integration_.back();
+  total_time += times_object_integration_.back();
   total_time += times_rendering_.back();
   total_time += times_visualization_.back();
-  ROS_INFO("%-25s %.5f s", "Matching",      times_matching_.back());
-  ROS_INFO("%-25s %.5f s", "Preprocessing", times_preprocessing_.back());
-  ROS_INFO("%-25s %.5f s", "Tracking",      times_tracking_.back());
-  ROS_INFO("%-25s %.5f s", "Integration",   times_integration_.back());
-  ROS_INFO("%-25s %.5f s", "Rendering",     times_rendering_.back());
-  ROS_INFO("%-25s %.5f s", "Visualization", times_visualization_.back());
+  ROS_INFO("%-25s %.5f s", "Matching",           times_matching_.back());
+  ROS_INFO("%-25s %.5f s", "Preprocessing",      times_preprocessing_.back());
+  ROS_INFO("%-25s %.5f s", "Tracking",           times_tracking_.back());
+  ROS_INFO("%-25s %.5f s", "Integration",        times_integration_.back());
+  ROS_INFO("%-25s %.5f s", "Object integration", times_object_integration_.back());
+  ROS_INFO("%-25s %.5f s", "Rendering",          times_rendering_.back());
+  ROS_INFO("%-25s %.5f s", "Visualization",      times_visualization_.back());
   ROS_INFO("Frame total               %.5f s", total_time);
 }
 
