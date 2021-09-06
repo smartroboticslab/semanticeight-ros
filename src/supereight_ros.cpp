@@ -131,7 +131,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       num_planning_iterations_(0),
       num_failed_planning_iterations_(0),
       max_failed_planning_iterations_(20),
-      max_exploration_time_(std::nan("")),
       input_segmentation_(0, 0),
 #ifdef SE_WITH_MASKRCNN
       network_(network_config_),
@@ -621,8 +620,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     lodepng_encode32_file((prefix + "class_" + suffix).c_str(), (unsigned char*) class_render_.get(), w, h);
   }
 
-  if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_).count() > max_exploration_time_) {
-    ROS_INFO("Reached time limit of %.3f s, stopping", max_exploration_time_);
+  if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_).count() > node_config_.max_exploration_time) {
+    ROS_INFO("Reached time limit of %.3f s, stopping", node_config_.max_exploration_time);
     raise(SIGINT);
   }
   frame_++;

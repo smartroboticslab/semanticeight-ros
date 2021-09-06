@@ -19,6 +19,7 @@ supereight_ros:
   visualization_max_z: 3.5
   real_world_experiment: false
   visualize_360_raycasting: true
+  max_exploration_time: .NaN
   run_segmentation: false
 
 # Supereight settings

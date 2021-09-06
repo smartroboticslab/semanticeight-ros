@@ -113,6 +113,10 @@ namespace se {
      */
     bool visualize_360_raycasting;
 
+    /** Set to NaN for no time limit.
+     */
+    double max_exploration_time;
+
     /** Run Mask R-CNN on the input images.
      */
     bool run_segmentation;

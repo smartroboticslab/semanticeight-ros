@@ -253,7 +253,6 @@ namespace se {
     int max_failed_planning_iterations_;
     se::PoseHistory fuse_pose_history_;
     std::chrono::time_point<std::chrono::steady_clock> exploration_start_time_;
-    double max_exploration_time_;
 
     // Image buffers
     std::unique_ptr<float>    input_depth_;
