@@ -656,6 +656,7 @@ void SupereightNode::plan() {
       }
 
       if (path_WC.empty()) {
+        num_planning_iterations_++;
         num_failed_planning_iterations_++;
       } else {
         std_msgs::Header header;
