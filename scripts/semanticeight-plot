@@ -118,10 +118,8 @@ plot_data() {
 
 	set xlabel 'Planning iteration';
 	set ylabel 'Planning time (s)';
-	set xtics 1;
 	plot for [f in planning_files] f using (\$1+1):3 notitle linetype rgb 'blue' dashtype \".\",\
 		'$average_planning_file' using (\$1+1):3 notitle linetype rgb 'blue' linewidth 3;
-	set xtics autofreq;
 
 	set key right top;
 	set xlabel 'Frame';
