@@ -701,7 +701,7 @@ void SupereightNode::plan() {
 
 
 void SupereightNode::saveMap() {
-  if (!supereight_config_.output_mesh_file.empty()) {
+  if (supereight_config_.enable_meshing && !supereight_config_.output_mesh_file.empty()) {
     stdfs::create_directories(supereight_config_.output_mesh_file);
     std::stringstream output_mesh_meter_file_ss;
     output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh_"
