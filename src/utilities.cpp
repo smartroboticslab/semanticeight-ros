@@ -36,7 +36,7 @@ namespace se {
     } else if (((input_depth->encoding == "16UC1") || (input_depth->encoding == "mono16"))
          && !input_depth->is_bigendian) {
       const uint16_t* d = reinterpret_cast<const uint16_t*>(input_depth->data.data());
-      #pragma omp parallel for
+#pragma omp parallel for
       for (size_t i = 0; i < input_depth->width * input_depth->height; ++i) {
         const float depth_m = d[i] / 1000.0f;
         if (depth_m >= far_plane) {
@@ -66,7 +66,7 @@ namespace se {
     // Add the alpha channel.
     } else if ((input_color->encoding == "8UC3") || (input_color->encoding == "rgb8")) {
       // Iterate over all pixels.
-      #pragma omp parallel for
+#pragma omp parallel for
       for (size_t i = 0; i < input_color->width * input_color->height; ++i) {
         const uint8_t r = input_color->data[3*i + 0];
         const uint8_t g = input_color->data[3*i + 1];
@@ -74,9 +74,19 @@ namespace se {
         output_rgba[i] = se::pack_rgba(r, g, b, 0xFF);
       }
 
+    // Duplicate the grayscale channel and add alpha.
+    } else if ((input_color->encoding == "8UC1") || (input_color->encoding == "mono8")) {
+      // Iterate over all pixels.
+#pragma omp parallel for
+      for (size_t i = 0; i < input_color->width * input_color->height; ++i) {
+        const uint8_t v = input_color->data[i];
+        output_rgba[i] = se::pack_rgba(v, v, v, 0xFF);
+      }
+      ROS_WARN_ONCE("Using a %s image as RGB, semantics might not work well", input_color->encoding.c_str());
+
     // Invalid format.
     } else {
-      ROS_FATAL("Invalid input depth format %s, expected rgb8, 8UC3, rgba8 or 8UC4",
+      ROS_FATAL("Invalid input RGB format %s, expected rgb8, 8UC3, rgba8 or 8UC4",
           input_color->encoding.c_str());
       abort();
     }
