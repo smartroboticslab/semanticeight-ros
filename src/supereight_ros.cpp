@@ -711,6 +711,14 @@ void SupereightNode::saveMap() {
     output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_"
                               << std::setw(5) << std::setfill('0') << frame_ << "_object";
     pipeline_->dumpObjectMeshes(output_mesh_object_file_ss.str().c_str(), false);
+    std::stringstream output_path_ply_file_ss;
+    output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path_"
+                              << std::setw(5) << std::setfill('0') << frame_ << ".ply";
+    planner_->writePathPLY(output_path_ply_file_ss.str());
+    std::stringstream output_path_tsv_file_ss;
+    output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path_"
+                              << std::setw(5) << std::setfill('0') << frame_ << ".tsv";
+    planner_->writePathTSV(output_path_tsv_file_ss.str());
     ROS_INFO("Map saved in %s\n", supereight_config_.output_mesh_file.c_str());
   }
 }
