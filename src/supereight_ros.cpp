@@ -508,6 +508,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     }
     end_time = std::chrono::steady_clock::now();
     times_object_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+
+    // The map_mutex_ is used to synchronize the fusion and planning threads so it's a good place to
+    // add the current pose to the history.
+    planner_->setT_WC(T_WC.cast<float>());
   } else {
     integrated = false;
     times_integration_.push_back(0);
@@ -906,10 +910,6 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   const Eigen::Vector3d t_WC = T_WC.topRightCorner<3, 1>();
   tf::vectorEigenToMsg(t_WC, T_WC_msg.transform.translation);
 
-  {
-    const std::lock_guard<std::mutex> planner_pose_lock (pose_mutex_);
-    planner_->setT_WC(T_WC.cast<float>());
-  }
   {
     // Put it into the buffer.
     const std::lock_guard<std::mutex> pose_lock (pose_buffer_mutex_);
