@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2019-2020 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2019 Anna Dai
+# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Supereight ROS node settings
+supereight_ros:
+  visualization_max_z: 2.8
+
+# Supereight settings
+supereight:
+  map:
+    size:                       512
+    dim:                        40.96
+    t_MW_factor:                [0.501, 0.501, 0.501]
+
+# WARNING: Any voxel parameters added in this file will be ignored. Change the
+# defaults if you need different values.
+

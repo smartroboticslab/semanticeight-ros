@@ -353,8 +353,8 @@ namespace se {
      */
     const std::string world_frame_id_;
     const std::string map_frame_id_;
-    const std::string body_frame_id_;
-    const std::string camera_frame_id_;
+    std::string body_frame_id_;
+    std::string camera_frame_id_;
 
     // Constant messages
     visualization_msgs::Marker map_dim_msg_;

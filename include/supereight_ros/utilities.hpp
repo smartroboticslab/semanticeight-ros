@@ -19,6 +19,7 @@
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <trajectory_msgs/MultiDOFJointTrajectory.h>
 #include <nav_msgs/Path.h>
 #include <std_msgs/ColorRGBA.h>
 
@@ -114,6 +115,11 @@ namespace se {
 
   nav_msgs::Path path_to_path_msg(const se::Path&         path_WB,
                                   const std_msgs::Header& header);
+
+
+
+  trajectory_msgs::MultiDOFJointTrajectory path_to_traj_msg(const se::Path&         path_WB,
+                                                            const std_msgs::Header& header);
 
 
 

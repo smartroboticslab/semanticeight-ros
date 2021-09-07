@@ -16,6 +16,16 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <eigen_conversions/eigen_msg.h>
+#include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
+#include <tf_conversions/tf_eigen.h>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <tf2_ros/transform_listener.h>
+
+#include <mav_msgs/conversions.h>
+#include <mav_msgs/default_topics.h>
 
 #include "supereight_ros/filesystem.hpp"
 #include "supereight_ros/utilities.hpp"
@@ -143,6 +153,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       camera_frame_id_("camera") {
 
   readConfig(nh_private);
+  if (node_config_.experiment_type == "gazebo") {
+    body_frame_id_ = "firefly/base_link";
+    camera_frame_id_ = "firefly/vi_sensor/camera_depth_optical_center_link";
+  }
 
   t_MW_ = supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
   T_CB_ = supereight_config_.T_BC.inverse();
@@ -277,6 +291,31 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
   exploration_start_time_ = std::chrono::steady_clock::now();
   ROS_INFO("Initialization finished");
+
+  if (node_config_.experiment_type == "gazebo") {
+    for (double i = 0.0; i <= 0.2; i += 0.05) {
+      mav_msgs::EigenTrajectoryPoint point;
+      nh.param<double>("wp_x", point.position_W.x(), 0.0);
+      nh.param<double>("wp_y", point.position_W.y(), 0.0);
+      nh.param<double>("wp_z", point.position_W.z(), 1.0);
+      // Take the constant tracking error of the controller into account
+      point.position_W.z() += 0.2;
+      tf::Quaternion q_tf_WB = tf::Quaternion(tf::Vector3(0.0, 0.0, 1.0), 0);
+      double yaw = tf::getYaw(q_tf_WB);
+      point.setFromYaw(yaw);
+
+      trajectory_msgs::MultiDOFJointTrajectory path_msg;
+      path_msg.header.stamp = ros::Time::now();
+      path_msg.points.clear();
+
+      trajectory_msgs::MultiDOFJointTrajectoryPoint point_msg;
+      mav_msgs::msgMultiDofJointTrajectoryPointFromEigen(point, &point_msg);
+      path_msg.points.push_back(point_msg);
+      path_pub_.publish(path_msg);
+
+      ros::Duration(1.0).sleep();
+    }
+  }
 }
 
 
@@ -697,7 +736,11 @@ void SupereightNode::plan() {
         std_msgs::Header header;
         header.stamp = ros::Time::now();
         header.frame_id = world_frame_id_;
-        path_pub_.publish(path_to_path_msg(path_WB, header));
+        if (node_config_.experiment_type == "gazebo") {
+          path_pub_.publish(path_to_traj_msg(path_WB, header));
+        } else {
+          path_pub_.publish(path_to_path_msg(path_WB, header));
+        }
         if (node_config_.visualization_rate > 0) {
           visualizeCandidates();
           visualizeCandidatePaths();
@@ -810,7 +853,11 @@ void SupereightNode::setupRos() {
   // Publishers
   supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose",
       node_config_.pose_buffer_size);
-  path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", node_config_.pose_buffer_size);
+  if (node_config_.experiment_type == "gazebo") {
+    path_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/supereight/path", 5);
+  } else {
+    path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", 5);
+  }
   static_tf_broadcaster_.sendTransform(T_MW_Msg());
   static_tf_broadcaster_.sendTransform(T_BC_Msg());
   // Render publishers
