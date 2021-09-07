@@ -4,10 +4,26 @@
 #   that the average does not extend all the way to the shortest data line.
 set -eu
 
+# Usage: maybe_gunzip FILE
+# Unzip FILE if its extension is .gz or cat it otherwise.
+maybe_gunzip() {
+	case "$1" in
+		*.gz)
+			gunzip -c "$1"
+			;;
+
+
+		*)
+			cat "$1"
+			;;
+	esac
+}
+
 # Usage: get_data_tsv LOGFILE
 # It assumes that the lines for each frame are encountered in a specific order.
 get_data_tsv() {
-	awk 'BEGIN { OFS = "\t"; print "Frame", "Time", "Matching", "Preprocessing", "Tracking", "Integration", "Object integration", "Free volume", "Occupied volume", "Explored volume"}
+	maybe_gunzip "$1" | awk '
+		BEGIN { OFS = "\t"; print "Frame", "Time", "Matching", "Preprocessing", "Tracking", "Integration", "Object integration", "Free volume", "Occupied volume", "Explored volume"}
 		# Initialize the starting timestamp from the matching data
 		/Matching/ {
 			if (start_t == 0)
@@ -19,17 +35,18 @@ get_data_tsv() {
 			printf "%f\t", $(NF-1)
 		}
 		# End the line
-		/Explored volume/ { printf "\n" }' "$1"
+		/Explored volume/ { printf "\n" }'
 }
 
 # Usage: get_planning_data_tsv LOGFILE
 get_planning_data_tsv() {
-	awk 'BEGIN { OFS = "\t"; print "Planning iteration", "Time", "Planning" }
+	maybe_gunzip "$1" | awk '
+		BEGIN { OFS = "\t"; print "Planning iteration", "Time", "Planning" }
 		/Planning[[:space:]]+[0-9]/ {
 			if (start_t == 0)
 				start_t = $1
 			print iteration++, ($1 - start_t), $(NF-1)
-		}' "$1"
+		}'
 }
 
 # Usage: get_average_data LOGFILE...
