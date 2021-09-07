@@ -91,9 +91,8 @@ plot_data() {
 	get_average_data $planning_files > "$average_planning_file"
 
 	# Plot the data.
-	#set terminal png size 1920,1080;
-	#set output '/home/srl/semanticeight-plot.png';
 	gnuplot -p -e "
+	$save_command
 	data_files = \"$data_files\";
 	planning_files = \"$planning_files\";
 	set grid;
@@ -161,19 +160,23 @@ plot_data() {
 
 usage() {
 	printf 'Usage: %s [rosout.log]...\n' "$(basename "$0")"
-	grep -E '[[:space:]].) #' "$0" | sed -e 's/) #/ /g' -e 's/^[ \t]*/  -/g'
+	grep -E '[[:space:]].) #' "$0" | sed -e 's/) #//g' -e 's/^[ \t]*/  -/g'
 }
 
 
 
 # Parse command line options.
 extra_plots=0
-while getopts 'eh' opt_name; do
+save_command=''
+while getopts 'eo:h' opt_name; do
 	case "$opt_name" in
-		e) # Show extra plots
+		e) #      Display extra plots
 			extra_plots=1
 			;;
-		h) # Display this help message
+		o) #=FILE Save to FILE instead of displaying
+			save_command="set terminal png size 1920,1080; set output '$OPTARG';"
+			;;
+		h) #      Display this help message
 			usage
 			exit 0
 			;;
