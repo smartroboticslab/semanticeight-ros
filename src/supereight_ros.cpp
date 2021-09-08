@@ -616,7 +616,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
 
-  if (supereight_config_.output_render_file != "") {
+  if (supereight_config_.rendering_rate > 0 && (frame_ + 1) % supereight_config_.rendering_rate == 0 && supereight_config_.output_render_file != "") {
     stdfs::create_directories(supereight_config_.output_render_file);
 
     const int w = (pipeline_->getImageResolution()).x();
