@@ -747,6 +747,12 @@ void SupereightNode::setupRos() {
   // Initialize the constant messages
   map_dim_msg_ = mapDimMsg();
 
+  // Setup the Habitat-Sim to supereight translation if we're not doing an experiment. This has to
+  // happen before pose_sub_ is initialized otherwise the same topic might be subscribed to twice.
+  if (!node_config_.real_world_experiment) {
+    static_tf_broadcaster_.sendTransform(T_WWh_Msg());
+  }
+
   // Pose subscriber
   if (!node_config_.enable_tracking) {
     if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
@@ -784,10 +790,6 @@ void SupereightNode::setupRos() {
   path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", node_config_.pose_buffer_size);
   static_tf_broadcaster_.sendTransform(T_MW_Msg());
   static_tf_broadcaster_.sendTransform(T_BC_Msg());
-  // Don't set-up the Habitat-Sim to supereight translation if we're doing an experiment
-  if (!node_config_.real_world_experiment) {
-    static_tf_broadcaster_.sendTransform(T_WWh_Msg());
-  }
   // Render publishers
   if (node_config_.enable_rendering) {
     depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
