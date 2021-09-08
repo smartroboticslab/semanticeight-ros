@@ -66,6 +66,7 @@ supereight:
   exploration:
     enable_exploration:        true
     num_candidates:            10
+    exploration_weight:        0.5
     use_pose_history:          true
     raycast_width:             36
     raycast_height:            10

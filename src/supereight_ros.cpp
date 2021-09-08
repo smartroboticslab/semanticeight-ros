@@ -107,6 +107,7 @@ namespace se {
     // Exploration only ///////////////////////////////////////////////////////
     out << str_utils::bool_to_pretty_str(config.enable_exploration,         "Enable exploration") << "\n";
     out << str_utils::value_to_pretty_str(config.num_candidates,            "Num candidates") << "\n";
+    out << str_utils::value_to_pretty_str(config.exploration_weight,        "Exploration weight") << "\n";
     out << str_utils::bool_to_pretty_str(config.use_pose_history,           "Use pose history") << "\n";
     out << str_utils::value_to_pretty_str(config.raycast_width,             "Raycast width") << "\n";
     out << str_utils::value_to_pretty_str(config.raycast_height,            "Raycast height") << "\n";
@@ -214,6 +215,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   }
   se::ExplorationConfig exploration_config = {
     supereight_config_.num_candidates, {
+      supereight_config_.exploration_weight,
       supereight_config_.use_pose_history,
       supereight_config_.raycast_width,
       supereight_config_.raycast_height,
