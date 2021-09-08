@@ -30,7 +30,7 @@ supereight:
     sequence_type:              "ros"
     output_render_path:         ""
     enable_meshing:             false
-    output_mesh_path:           ""
+    output_mesh_path:           "/home/srl/meshes_ros"
     # Rates
     tracking_rate:              1
     integration_rate:           1
@@ -61,7 +61,7 @@ supereight:
                                  0, 0, 1, 0,
                                  0, 0, 0, 1]
     near_plane:                 0.1
-    far_plane:                  20.0
+    far_plane:                  5.0
 
   exploration:
     enable_exploration:        true
