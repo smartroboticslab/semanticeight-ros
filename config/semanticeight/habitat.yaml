@@ -17,11 +17,12 @@ habitat_ros:
 
   # Scene settings
   scene_file: "habitat_sim/data/scene_datasets/habitat-test-scenes/skokloster-castle.glb"
+  initial_T_WB: [-1.80, -19.25, 0.50, 0, 0, 1, 0]
   #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/1LXtFkjw3qL/1LXtFkjw3qL.glb"
   #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/2t7WUuJeko7/2t7WUuJeko7.glb"
   #initial_T_WB: [2.079, -0.098, 0.163]
   #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/2azQ1b91cZZ/2azQ1b91cZZ.glb"
-  #initial_T_WB: [17.543, -6.348, 0.663]
+  #initial_T_WB: [15.00, -5.30, -0.30, 0, 0, 0, 1]
   #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/1pXnuDYAj8r/1pXnuDYAj8r.glb"
   #initial_T_WB: [11.438, -1.796, 0.364]
   world_frame_id: "habitat_world"
