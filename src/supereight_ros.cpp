@@ -642,6 +642,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     }
   }
 
+  if (supereight_config_.meshing_rate > 0 && (frame_ + 1) % supereight_config_.meshing_rate == 0) {
+    SupereightNode::saveMap();
+  }
+
   if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_).count() > node_config_.max_exploration_time) {
     ROS_INFO("Reached time limit of %.3f s, stopping", node_config_.max_exploration_time);
     raise(SIGINT);
