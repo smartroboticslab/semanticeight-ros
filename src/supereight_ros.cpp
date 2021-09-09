@@ -132,7 +132,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       frame_(0),
       num_planning_iterations_(0),
       num_failed_planning_iterations_(0),
-      max_failed_planning_iterations_(20),
+      max_failed_planning_iterations_(0),
       input_segmentation_(0, 0),
 #ifdef SE_WITH_MASKRCNN
       network_(network_config_),
@@ -669,7 +669,7 @@ void SupereightNode::plan() {
     }
   }
   // Exploration planning
-  while (num_failed_planning_iterations_ < max_failed_planning_iterations_) {
+  while (num_failed_planning_iterations_ < max_failed_planning_iterations_ || max_failed_planning_iterations_ == 0) {
     bool goal_reached = false;
     {
       const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
