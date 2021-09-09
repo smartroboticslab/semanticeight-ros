@@ -1516,11 +1516,26 @@ geometry_msgs::TransformStamped SupereightNode::T_WWh_Msg() const {
   // Wait for a pose from Habitat-Sim and use its translation
   // Don't use the rotation because it messes stuff up
   ROS_INFO("Waiting for pose from Habitat-Sim");
-  geometry_msgs::PoseStampedConstPtr msg = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/pose");
-  tf.transform.translation.x = msg->pose.position.x;
-  tf.transform.translation.y = msg->pose.position.y;
-  tf.transform.translation.z = msg->pose.position.z;
-  tf.transform.rotation = make_quaternion();
+  if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
+    geometry_msgs::PoseStampedConstPtr msg = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/pose");
+    tf.transform.translation.x = msg->pose.position.x;
+    tf.transform.translation.y = msg->pose.position.y;
+    tf.transform.translation.z = msg->pose.position.z;
+    tf.transform.rotation = make_quaternion();
+
+  } else if (node_config_.pose_topic_type == "geometry_msgs::TransformStamped") {
+    geometry_msgs::TransformStampedConstPtr msg = ros::topic::waitForMessage<geometry_msgs::TransformStamped>("/pose");
+    tf.transform.translation.x = msg->transform.translation.x;
+    tf.transform.translation.y = msg->transform.translation.y;
+    tf.transform.translation.z = msg->transform.translation.z;
+    tf.transform.rotation = make_quaternion();
+
+
+  } else {
+    ROS_FATAL("Invalid pose topic type %s", node_config_.pose_topic_type.c_str());
+    ROS_FATAL("Expected geometry_msgs::PoseStamped or geometry_msgs::TransformStamped");
+    abort();
+  }
   return tf;
 }
 
