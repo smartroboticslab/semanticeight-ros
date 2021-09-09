@@ -16,7 +16,7 @@ supereight_ros:
   center_at_first_position: true
   visualization_rate: 4
   visualization_max_z: 3.5
-  real_world_experiment: true
+  experiment_type: "real"
   visualize_360_raycasting: true
   run_segmentation: false
 

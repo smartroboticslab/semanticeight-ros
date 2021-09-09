@@ -753,7 +753,7 @@ void SupereightNode::setupRos() {
 
   // Setup the Habitat-Sim to supereight translation if we're not doing an experiment. This has to
   // happen before pose_sub_ is initialized otherwise the same topic might be subscribed to twice.
-  if (!node_config_.real_world_experiment) {
+  if (node_config_.experiment_type == "habitat") {
     static_tf_broadcaster_.sendTransform(T_WWh_Msg());
   }
 

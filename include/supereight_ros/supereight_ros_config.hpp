@@ -106,10 +106,9 @@ namespace se {
     float visualization_max_z;
 
     /*!
-     * Whether a real world experiment is being performed. This changes the type of topic being
-     * published for the current goal. And maybe some other things too.
+     * The type of the experiment being run. Valid values are "habitat", "gazebo" and "real".
      */
-    bool real_world_experiment;
+    std::string experiment_type;
 
     /*!
      * Whether to visualize the results of 360-degree entropy and depth raycasting. This is helpful

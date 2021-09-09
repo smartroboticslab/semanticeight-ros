@@ -29,7 +29,7 @@ constexpr double default_max_timestamp_diff = 0.001;
 constexpr bool default_center_at_first_position = true;
 constexpr int default_visualization_rate = 4;
 constexpr float default_visualization_max_z = INFINITY;
-constexpr int default_real_world_experiment = false;
+const std::string default_experiment_type = "habitat";
 constexpr bool default_visualize_360_raycasting = false;
 constexpr double default_max_exploration_time = std::nan("");
 constexpr bool default_run_segmentation = false;
@@ -85,8 +85,8 @@ namespace se {
     nh.param<float>("supereight_ros/visualization_max_z",
         config.visualization_max_z, default_visualization_max_z);
 
-    nh.param<bool>("supereight_ros/real_world_experiment",
-        config.real_world_experiment, default_real_world_experiment);
+    nh.param<std::string>("supereight_ros/experiment_type",
+        config.experiment_type, default_experiment_type);
 
     nh.param<bool>("supereight_ros/visualize_360_raycasting",
         config.visualize_360_raycasting, default_visualize_360_raycasting);
@@ -105,6 +105,14 @@ namespace se {
     if (!config.enable_rgb && config.enable_objects) {
       config.enable_objects = false;
       ROS_WARN("Disabling object reconstruction since RGB is disabled");
+    }
+
+    // Ensure a valid experiment type was provided.
+    if (config.experiment_type != "habitat" && config.experiment_type != "gazebo"
+        && config.experiment_type != "real") {
+      ROS_FATAL("Invalid experiment_type \"%s\", expected \"habitat\", \"gazebo\" or \"real\"",
+          config.experiment_type.c_str());
+      abort();
     }
 
     return config;
@@ -127,7 +135,7 @@ namespace se {
     ROS_INFO("  center_at_first_position: %d", config.center_at_first_position);
     ROS_INFO("  visualization_rate:       %d", config.visualization_rate);
     ROS_INFO("  visualization_max_z:      %f", config.visualization_max_z);
-    ROS_INFO("  real_world_experiment:    %d", config.real_world_experiment);
+    ROS_INFO("  experiment_type:          %s", config.experiment_type.c_str());
   }
 
 
