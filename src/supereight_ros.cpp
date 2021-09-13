@@ -228,7 +228,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
         supereight_config_.skeleton_sample_precision,
         supereight_config_.solving_time}}};
   planner_ = std::unique_ptr<se::ExplorationPlanner>(new se::ExplorationPlanner(
-        pipeline_->getMap(), pipeline_->T_MW(), exploration_config));
+        pipeline_->getMap(), pipeline_->T_MW(), supereight_config_.T_BC, exploration_config));
 
   // Allocate message circular buffers.
   if (node_config_.enable_tracking) {
@@ -515,7 +515,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
 
     // The map_mutex_ is used to synchronize the fusion and planning threads so it's a good place to
     // add the current pose to the history.
-    planner_->setT_WC(T_WC.cast<float>());
+    planner_->setT_WB(se_T_WB);
   } else {
     integrated = false;
     times_integration_.push_back(0);
@@ -664,7 +664,7 @@ void SupereightNode::plan() {
   while (true) {
     std::this_thread::sleep_for(std::chrono::duration<double>(0.01));
     const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
-    if (!planner_->getT_WCHistory().empty()) {
+    if (!planner_->getT_WBHistory().empty()) {
       break;
     }
   }
@@ -676,26 +676,26 @@ void SupereightNode::plan() {
       goal_reached = planner_->goalReached();
     }
     if (goal_reached || num_planning_iterations_ == 0) {
-      se::Path path_WC;
+      se::Path path_WB;
       {
         const std::lock_guard<std::mutex> map_lock (map_mutex_);
         const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
         const auto start_time = std::chrono::steady_clock::now();
-        path_WC = planner_->computeNextPath_WC(pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
+        path_WB = planner_->computeNextPath_WB(pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
         const auto end_time = std::chrono::steady_clock::now();
         times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
       }
       ROS_WARN("Planning iteration %d", num_planning_iterations_);
       ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
 
-      if (path_WC.empty()) {
+      if (path_WB.empty()) {
         num_planning_iterations_++;
         num_failed_planning_iterations_++;
       } else {
         std_msgs::Header header;
         header.stamp = ros::Time::now();
         header.frame_id = world_frame_id_;
-        path_pub_.publish(path_to_msg(path_WC, T_CB_, header));
+        path_pub_.publish(path_to_path_msg(path_WB, header));
         num_planning_iterations_++;
         if (node_config_.visualization_rate > 0) {
           visualizeCandidates();
@@ -726,11 +726,11 @@ void SupereightNode::saveMap() {
     std::stringstream output_path_ply_file_ss;
     output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path_"
                               << std::setw(5) << std::setfill('0') << frame_ << ".ply";
-    planner_->writePathPLY(output_path_ply_file_ss.str(), T_CB_);
+    planner_->writePathPLY(output_path_ply_file_ss.str());
     std::stringstream output_path_tsv_file_ss;
     output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path_"
                               << std::setw(5) << std::setfill('0') << frame_ << ".tsv";
-    planner_->writePathTSV(output_path_tsv_file_ss.str(), T_CB_);
+    planner_->writePathTSV(output_path_tsv_file_ss.str());
     ROS_INFO("Map saved in %s\n", supereight_config_.output_mesh_file.c_str());
   }
 }
@@ -1276,7 +1276,7 @@ void SupereightNode::visualizeCandidates() {
   for (const auto& candidate : planner_->candidateViews()) {
     if (candidate.isValid()) {
       // Arrow marker
-      const Eigen::Matrix4f goal_T_MB = candidate.goal() * T_CB_;
+      const Eigen::Matrix4f goal_T_MB = candidate.goalT_MB();
       arrow_marker.header.stamp = ros::Time::now();
       arrow_marker.id++;
       arrow_marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3,1>());
@@ -1323,8 +1323,8 @@ void SupereightNode::visualizeCandidatePaths() {
       const se::Path path = candidate.path();
       if (path.size() > 1) {
         // Add the path from the current pose to the candidate
-        for (const auto& T_MC : path) {
-          marker.points.push_back(eigen_to_point(T_MC.topRightCorner<3,1>()));
+        for (const auto& T_MB : path) {
+          marker.points.push_back(eigen_to_point(T_MB.topRightCorner<3,1>()));
         }
         // Add the path from the candidate to the current pose, just to make the visualization look nice
         for (auto it = path.rbegin(); it != path.rend(); ++it) {
@@ -1362,7 +1362,7 @@ void SupereightNode::visualizeRejectedCandidates() {
   marker.action = visualization_msgs::Marker::ADD;
   // Publish the position of each rejected candidate
   for (const auto& candidate : planner_->rejectedCandidateViews()) {
-    const Eigen::Matrix4f goal_T_MB = candidate.goal() * T_CB_;
+    const Eigen::Matrix4f goal_T_MB = candidate.goalT_MB();
     marker.id++;
     marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3,1>());
     map_rejected_candidate_pub_.publish(marker);
@@ -1381,7 +1381,7 @@ void SupereightNode::visualizeGoal() {
   header.stamp = ros::Time::now();
   header.frame_id = map_frame_id_;
   // Initialize the Marker message
-  const Eigen::Matrix4f goal_T_MB = goal_view.goal() * T_CB_;
+  const Eigen::Matrix4f goal_T_MB = goal_view.goalT_MB();
   visualization_msgs::Marker goal_marker;
   goal_marker = visualization_msgs::Marker();
   goal_marker.header = header;

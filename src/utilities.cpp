@@ -161,15 +161,14 @@ namespace se {
 
 
 
-  nav_msgs::Path path_to_msg(const se::Path&         path_WC,
-                             const Eigen::Matrix4f&  T_CB,
-                             const std_msgs::Header& header) {
+  nav_msgs::Path path_to_path_msg(const se::Path&         path_WB,
+                                  const std_msgs::Header& header) {
     nav_msgs::Path path_msg;
     path_msg.header = header;
-    path_msg.poses.resize(path_WC.size());
-    for (size_t i = 0; i < path_WC.size(); ++i) {
+    path_msg.poses.resize(path_WB.size());
+    for (size_t i = 0; i < path_WB.size(); ++i) {
       path_msg.poses[i].header = header;
-      const Eigen::Matrix4f T_WB = path_WC[i] * T_CB;
+      const Eigen::Matrix4f T_WB = path_WB[i];
       const Eigen::Vector3f t_WB = T_WB.topRightCorner<3,1>();
       const Eigen::Quaternionf q_WB (T_WB.topLeftCorner<3,3>());
       path_msg.poses[i].pose.position.x = t_WB.x();

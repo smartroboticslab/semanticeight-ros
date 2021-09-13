@@ -112,9 +112,8 @@ namespace se {
 
 
 
-  nav_msgs::Path path_to_msg(const se::Path&         path_WC,
-                             const Eigen::Matrix4f&  T_CB,
-                             const std_msgs::Header& header);
+  nav_msgs::Path path_to_path_msg(const se::Path&         path_WB,
+                                  const std_msgs::Header& header);
 
 
 
