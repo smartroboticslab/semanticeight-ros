@@ -929,14 +929,15 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
   }
 
   // Update the Body-World transform.
-  geometry_msgs::PoseStamped T_WB_msg;
+  geometry_msgs::TransformStamped T_WB_msg;
   T_WB_msg.header = header;
   T_WB_msg.header.frame_id = world_frame_id_;
+  T_WB_msg.child_frame_id = body_frame_id_;
   const Eigen::Quaterniond q_WB (T_WB.topLeftCorner<3, 3>());
-  tf::quaternionEigenToMsg(q_WB, T_WB_msg.pose.orientation);
+  tf::quaternionEigenToMsg(q_WB, T_WB_msg.transform.rotation);
   const Eigen::Vector3d t_WB = T_WB.topRightCorner<3, 1>();
-  tf::pointEigenToMsg(t_WB, T_WB_msg.pose.position);
-  pose_tf_broadcaster_.sendTransform(poseToTransform(T_WB_msg));
+  tf::vectorEigenToMsg(t_WB, T_WB_msg.transform.translation);
+  pose_tf_broadcaster_.sendTransform(T_WB_msg);
 
   if (node_config_.visualization_rate > 0) {
     visualizeMAV();
@@ -957,23 +958,6 @@ void SupereightNode::SemInstanceCallback(const sensor_msgs::ImageConstPtr& insta
   const std::lock_guard<std::mutex> instance_lock (instance_buffer_mutex_);
   instance_buffer_.push_back(instance_msg);
   ROS_DEBUG("Inst. image buffer: %lu/%lu", instance_buffer_.size(), instance_buffer_.capacity());
-}
-
-
-
-geometry_msgs::TransformStamped SupereightNode::poseToTransform(const geometry_msgs::PoseStamped&  T_WB_msg) const {
-  static geometry_msgs::TransformStamped tf;
-  tf.header.stamp = ros::Time::now();
-  tf.header.frame_id = world_frame_id_;
-  tf.child_frame_id = body_frame_id_;
-  tf.transform.translation.x = T_WB_msg.pose.position.x;
-  tf.transform.translation.y = T_WB_msg.pose.position.y;
-  tf.transform.translation.z = T_WB_msg.pose.position.z;
-  tf.transform.rotation.x = T_WB_msg.pose.orientation.x;
-  tf.transform.rotation.y = T_WB_msg.pose.orientation.y;
-  tf.transform.rotation.z = T_WB_msg.pose.orientation.z;
-  tf.transform.rotation.w = T_WB_msg.pose.orientation.w;
-  return tf;
 }
 
 

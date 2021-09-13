@@ -174,8 +174,6 @@ namespace se {
 
     void SemInstanceCallback(const sensor_msgs::ImageConstPtr& instance_msg);
 
-    geometry_msgs::TransformStamped poseToTransform(const geometry_msgs::PoseStamped&  T_WB_msg) const;
-
     void visualizeWholeMap();
 
     void visualizeMapMesh();
