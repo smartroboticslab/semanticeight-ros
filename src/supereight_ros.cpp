@@ -210,9 +210,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       t_MW_,
       supereight_config_.pyramid,
       supereight_config_));
-  if (supereight_config_.enable_exploration) {
-    pipeline_->freeInitialPosition(sensor_);
-  }
   se::ExplorationConfig exploration_config = {
     supereight_config_.num_candidates, {
       supereight_config_.exploration_weight,
@@ -667,6 +664,10 @@ void SupereightNode::plan() {
     if (!planner_->getT_WBHistory().empty()) {
       break;
     }
+  }
+  if (supereight_config_.enable_exploration) {
+    const std::lock_guard<std::mutex> map_lock (map_mutex_);
+    pipeline_->freeInitialPosition(sensor_);
   }
   // Exploration planning
   while (num_failed_planning_iterations_ < max_failed_planning_iterations_ || max_failed_planning_iterations_ == 0) {
