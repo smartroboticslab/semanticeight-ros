@@ -1172,19 +1172,18 @@ void SupereightNode::visualizeObjectMeshes() {
 
 
 void SupereightNode::visualizeObjectAABBs() {
-  const Eigen::Matrix4f T_WM = pipeline_->T_WM();
   for (const auto& o : pipeline_->getObjectMaps()) {
     const std::vector<Eigen::Vector3f,Eigen::aligned_allocator<Eigen::Vector3f>> edges = o->bounding_volume_M_.edges();
 
     visualization_msgs::Marker aabb_marker;
     aabb_marker.header.stamp = ros::Time::now();
-    aabb_marker.header.frame_id = world_frame_id_;
+    aabb_marker.header.frame_id = map_frame_id_;
     aabb_marker.ns = "object_aabb";
     aabb_marker.id = o->instance_id;
     aabb_marker.type = visualization_msgs::Marker::LINE_LIST;
     aabb_marker.action = visualization_msgs::Marker::ADD;
-    aabb_marker.pose.position = eigen_to_point(T_WM.topRightCorner<3,1>());
-    aabb_marker.pose.orientation = eigen_to_quaternion(Eigen::Quaternionf(T_WM.topLeftCorner<3,3>()));
+    aabb_marker.pose.position = make_point();
+    aabb_marker.pose.orientation = make_quaternion();
     aabb_marker.scale.x = 0.05;
     aabb_marker.color = eigen_to_color(color_pose_history_);
     aabb_marker.lifetime = ros::Duration(0.0);
