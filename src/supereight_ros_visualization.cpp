@@ -513,12 +513,16 @@ void SupereightNode::visualizePoseHistory() {
   marker.lifetime = ros::Duration(0.0);
   marker.frame_locked = true;
   // Add all visited points
-  marker.points.resize(fuse_pose_history_.poses.size());
-  for (size_t i = 0; i < fuse_pose_history_.poses.size(); ++i) {
-    const Eigen::Vector3f t_WB = fuse_pose_history_.poses[i].topRightCorner<3,1>();
-    marker.points[i].x = t_WB.x();
-    marker.points[i].y = t_WB.y();
-    marker.points[i].z = t_WB.z();
+  {
+    const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
+    const auto& T_WB_history = planner_->getT_WBHistory();
+    marker.points.resize(T_WB_history.size());
+    for (size_t i = 0; i < T_WB_history.size(); ++i) {
+      const Eigen::Vector3f t_WB = T_WB_history[i].topRightCorner<3,1>();
+      marker.points[i].x = t_WB.x();
+      marker.points[i].y = t_WB.y();
+      marker.points[i].z = t_WB.z();
+    }
   }
   pose_history_pub_.publish(marker);
 }

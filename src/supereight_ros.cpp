@@ -486,8 +486,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
   tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
   supereight_pose_pub_.publish(se_T_WB_msg);
-  // Add the pose to the history.
-  fuse_pose_history_.poses.push_back(se_T_WB);
   end_time = std::chrono::steady_clock::now();
   times_tracking_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
