@@ -496,23 +496,26 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   // frames.
   bool integrated = false;
   if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
-    const std::lock_guard<std::mutex> map_lock (map_mutex_);
+    {
+      const std::lock_guard<std::mutex> map_lock (map_mutex_);
 
-    start_time = std::chrono::steady_clock::now();
-    integrated = pipeline_->integrate(sensor_, frame_);
-    end_time = std::chrono::steady_clock::now();
-    times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+      start_time = std::chrono::steady_clock::now();
+      integrated = pipeline_->integrate(sensor_, frame_);
+      end_time = std::chrono::steady_clock::now();
+      times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
-    start_time = std::chrono::steady_clock::now();
-    if (node_config_.enable_objects) {
-      integrated = pipeline_->integrateObjects(sensor_, frame_);
+      start_time = std::chrono::steady_clock::now();
+      if (node_config_.enable_objects) {
+        integrated = pipeline_->integrateObjects(sensor_, frame_);
+      }
+      end_time = std::chrono::steady_clock::now();
+      times_object_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
     }
-    end_time = std::chrono::steady_clock::now();
-    times_object_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
-    // The map_mutex_ is used to synchronize the fusion and planning threads so it's a good place to
-    // add the current pose to the history.
-    planner_->setT_WB(se_T_WB);
+    {
+      const std::lock_guard<std::mutex> map_lock (pose_mutex_);
+      planner_->setT_WB(se_T_WB);
+    }
   } else {
     integrated = false;
     times_integration_.push_back(0);
