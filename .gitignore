@@ -37,7 +37,8 @@
 
 # Directories
 build
-doc
+doc/html
+doc/manifest.yaml
 cmake-build-debug
 se_apps/scripts/results
 .idea

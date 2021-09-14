@@ -1,0 +1,94 @@
+digraph supereight_ros_threads {
+	edge [color=black]
+
+	subgraph cluster_0 {
+		label = "Data input threads"
+		color=darkgray
+
+		subgraph functions {
+			node [shape=box, style="filled, rounded", fillcolor=lightgray, label="\N()"]
+			depthCallback [label="\N()\n\nat camera rate\n "]
+			rgbCallback [label="\N()\n\nat camera rate\n "]
+			poseCallback [label="\N()\n\nat tracking rate\n "]
+			subgraph optional {
+				node [style="filled, rounded, dashed"]
+				classCallback [label="\N()\n\nat camera rate\nonly for habitat-ros"]
+				instanceCallback [label="\N()\n\nat camera rate\nonly for habitat-ros"]
+			}
+		}
+	}
+
+	subgraph cluster_1 {
+		label = "Mapping thread"
+		color=darkgray
+
+		subgraph functions {
+			node [shape=box, style="filled, rounded", fillcolor=lightgray, label="\N()"]
+			matchAndFuse [label="\N()\n\none instance\nunblocking lock matching_mutex_\ncalled by main loop"]
+			fuse [label="\N(pose, depth, rgb, segmentation)\n\none instance\nblocking lock fusion_mutex_"]
+			subgraph optional {
+				node [style="filled, rounded, dashed"]
+				runNetwork [label="\N(pose, depth, rgb)\n\none instance\nunblocking lock network_mutex_\nonly for libmaskrcnn-trt", style="filled, rounded, dashed"]
+			}
+		}
+		subgraph function_calls {
+			edge [color=red, label="calls"]
+			matchAndFuse -> fuse
+			subgraph optional {
+				edge [style=dashed]
+				matchAndFuse -> runNetwork -> fuse
+			}
+		}
+	}
+
+	subgraph cluster_2 {
+		label = "Planning thread"
+		color=darkgray
+
+		subgraph functions {
+			node [shape=box, style="filled, rounded", fillcolor=lightgray, label="\N()"]
+			plan [label="\N()\n\none instance\nruns until exploration ends"]
+		}
+	}
+
+	subgraph topics {
+		node [shape=parallelogram, label="/\N"]
+		edge [color=darkgray]
+		depth_image, rgb_image, pose
+		depth_image -> depthCallback
+		rgb_image -> rgbCallback
+		pose -> poseCallback
+		plan -> path
+		subgraph optional {
+			node [style=dashed]
+			edge [style=dashed]
+			class, instance
+			class -> classCallback
+			instance -> instanceCallback
+		}
+	}
+
+	subgraph buffers {
+		node [shape=box]
+		edge [color=black, label="mtx"]
+		depthCallback -> depth_buffer
+		rgbCallback -> rgb_buffer
+		poseCallback -> pose_buffer
+		{depth_buffer, rgb_buffer, pose_buffer} -> matchAndFuse
+
+		map [label="map + frontiers"]
+		pose_history [label="T_WB + T_WC history"]
+		fuse -> map [label="map_mutex_"]
+		map -> plan [label="map_mutex_", dir=both]
+		fuse -> pose_history -> plan [label="pose_mutex_"]
+
+		subgraph optional {
+			node [style=dashed]
+			edge [style=dashed]
+			classCallback -> class_buffer
+			instanceCallback -> instance_buffer
+			{class_buffer, instance_buffer} -> matchAndFuse
+		}
+	}
+}
+
