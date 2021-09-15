@@ -698,13 +698,30 @@ void SupereightNode::plan() {
         header.stamp = ros::Time::now();
         header.frame_id = world_frame_id_;
         path_pub_.publish(path_to_path_msg(path_WB, header));
-        num_planning_iterations_++;
         if (node_config_.visualization_rate > 0) {
           visualizeCandidates();
           visualizeCandidatePaths();
           visualizeRejectedCandidates();
           visualizeGoal();
         }
+        if (supereight_config_.rendering_rate > 0 && supereight_config_.output_render_file != "") {
+          stdfs::create_directories(supereight_config_.output_render_file);
+          const std::string prefix = supereight_config_.output_render_file + "/";
+          std::stringstream path_suffix_ss;
+          path_suffix_ss << std::setw(5) << std::setfill('0') << num_planning_iterations_ << ".png";
+          const std::string suffix = path_suffix_ss.str();
+
+          const se::CandidateView& goal_view = planner_->goalView();
+          const se::Image<uint32_t> entropy_render = planner_->renderEntropy(sensor_);
+          const se::Image<uint32_t> entropy_depth_render = planner_->renderEntropyDepth(sensor_);
+          const se::Image<uint32_t> min_scale_render = planner_->renderMinScale(sensor_);
+          const int w = entropy_render.width();
+          const int h = entropy_render.height();
+          lodepng_encode32_file((prefix + "goal_entropy_" + suffix).c_str(), (unsigned char*) entropy_render.data(), entropy_render.width(), entropy_render.height());
+          lodepng_encode32_file((prefix + "goal_depth_" + suffix).c_str(), (unsigned char*) entropy_depth_render.data(), entropy_depth_render.width(), entropy_depth_render.height());
+          lodepng_encode32_file((prefix + "goal_min_scale_" + suffix).c_str(), (unsigned char*) min_scale_render.data(), min_scale_render.width(), min_scale_render.height());
+        }
+        num_planning_iterations_++;
       }
     }
   }
