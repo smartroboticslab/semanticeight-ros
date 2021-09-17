@@ -5,7 +5,7 @@
 
 # Supereight ROS node settings
 supereight_ros:
-  visualization_max_z: 2.8
+  visualization_max_z: 2.40
 
 # Supereight settings
 supereight:
