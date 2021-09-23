@@ -113,8 +113,18 @@ namespace se {
 
 
 
+  nav_msgs::Path pose_to_path_msg(const Eigen::Matrix4f&  T_WB,
+                                  const std_msgs::Header& header);
+
+
+
   nav_msgs::Path path_to_path_msg(const se::Path&         path_WB,
                                   const std_msgs::Header& header);
+
+
+
+  trajectory_msgs::MultiDOFJointTrajectory pose_to_traj_msg(const Eigen::Matrix4f&  T_WB,
+                                                            const std_msgs::Header& header);
 
 
 

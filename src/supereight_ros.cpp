@@ -718,54 +718,60 @@ void SupereightNode::plan() {
       goal_reached = planner_->goalReached();
     }
     if (goal_reached || num_planning_iterations_ == 0) {
-      se::Path path_WB;
-      {
-        const std::lock_guard<std::mutex> map_lock (map_mutex_);
-        const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
-        const auto start_time = std::chrono::steady_clock::now();
-        path_WB = planner_->computeNextPath_WB(pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
-        const auto end_time = std::chrono::steady_clock::now();
-        times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
-      }
-      ROS_WARN("Planning iteration %d", num_planning_iterations_);
-      ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
+      if (planner_->needsNewGoal()) {
+        se::Path path_WB;
+        {
+          const std::lock_guard<std::mutex> map_lock (map_mutex_);
+          const std::lock_guard<std::mutex> pose_lock (pose_mutex_);
+          const auto start_time = std::chrono::steady_clock::now();
+          path_WB = planner_->computeNextPath_WB(pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
+          const auto end_time = std::chrono::steady_clock::now();
+          times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+        }
+        ROS_WARN("Planning iteration %d", num_planning_iterations_);
+        ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
 
-      if (path_WB.empty()) {
-        num_planning_iterations_++;
-        num_failed_planning_iterations_++;
-      } else {
+        if (path_WB.empty()) {
+          num_planning_iterations_++;
+          num_failed_planning_iterations_++;
+        } else {
+          if (node_config_.visualization_rate > 0) {
+            visualizeCandidates();
+            visualizeCandidatePaths();
+            visualizeRejectedCandidates();
+            visualizeGoal();
+          }
+          if (supereight_config_.rendering_rate > 0 && supereight_config_.output_render_file != "") {
+            stdfs::create_directories(supereight_config_.output_render_file);
+            const std::string prefix = supereight_config_.output_render_file + "/";
+            std::stringstream path_suffix_ss;
+            path_suffix_ss << std::setw(5) << std::setfill('0') << num_planning_iterations_ << ".png";
+            const std::string suffix = path_suffix_ss.str();
+
+            const se::CandidateView& goal_view = planner_->goalView();
+            const se::Image<uint32_t> entropy_render = planner_->renderEntropy(sensor_);
+            const se::Image<uint32_t> entropy_depth_render = planner_->renderEntropyDepth(sensor_);
+            const se::Image<uint32_t> min_scale_render = planner_->renderMinScale(sensor_);
+            const int w = entropy_render.width();
+            const int h = entropy_render.height();
+            lodepng_encode32_file((prefix + "goal_entropy_" + suffix).c_str(), (unsigned char*) entropy_render.data(), entropy_render.width(), entropy_render.height());
+            lodepng_encode32_file((prefix + "goal_depth_" + suffix).c_str(), (unsigned char*) entropy_depth_render.data(), entropy_depth_render.width(), entropy_depth_render.height());
+            lodepng_encode32_file((prefix + "goal_min_scale_" + suffix).c_str(), (unsigned char*) min_scale_render.data(), min_scale_render.width(), min_scale_render.height());
+          }
+          num_planning_iterations_++;
+        }
+      }
+      // Publish the next goal.
+      Eigen::Matrix4f T_WB;
+      if (planner_->goalT_WB(T_WB)) {
         std_msgs::Header header;
         header.stamp = ros::Time::now();
         header.frame_id = world_frame_id_;
         if (node_config_.experiment_type == "gazebo") {
-          path_pub_.publish(path_to_traj_msg(path_WB, header));
+          path_pub_.publish(pose_to_traj_msg(T_WB, header));
         } else {
-          path_pub_.publish(path_to_path_msg(path_WB, header));
+          path_pub_.publish(pose_to_path_msg(T_WB, header));
         }
-        if (node_config_.visualization_rate > 0) {
-          visualizeCandidates();
-          visualizeCandidatePaths();
-          visualizeRejectedCandidates();
-          visualizeGoal();
-        }
-        if (supereight_config_.rendering_rate > 0 && supereight_config_.output_render_file != "") {
-          stdfs::create_directories(supereight_config_.output_render_file);
-          const std::string prefix = supereight_config_.output_render_file + "/";
-          std::stringstream path_suffix_ss;
-          path_suffix_ss << std::setw(5) << std::setfill('0') << num_planning_iterations_ << ".png";
-          const std::string suffix = path_suffix_ss.str();
-
-          const se::CandidateView& goal_view = planner_->goalView();
-          const se::Image<uint32_t> entropy_render = planner_->renderEntropy(sensor_);
-          const se::Image<uint32_t> entropy_depth_render = planner_->renderEntropyDepth(sensor_);
-          const se::Image<uint32_t> min_scale_render = planner_->renderMinScale(sensor_);
-          const int w = entropy_render.width();
-          const int h = entropy_render.height();
-          lodepng_encode32_file((prefix + "goal_entropy_" + suffix).c_str(), (unsigned char*) entropy_render.data(), entropy_render.width(), entropy_render.height());
-          lodepng_encode32_file((prefix + "goal_depth_" + suffix).c_str(), (unsigned char*) entropy_depth_render.data(), entropy_depth_render.width(), entropy_depth_render.height());
-          lodepng_encode32_file((prefix + "goal_min_scale_" + suffix).c_str(), (unsigned char*) min_scale_render.data(), min_scale_render.width(), min_scale_render.height());
-        }
-        num_planning_iterations_++;
       }
     }
   }

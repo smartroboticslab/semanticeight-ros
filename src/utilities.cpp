@@ -169,6 +169,15 @@ namespace se {
 
 
 
+  nav_msgs::Path pose_to_path_msg(const Eigen::Matrix4f&  T_WB,
+                                  const std_msgs::Header& header) {
+    se::Path path;
+    path.push_back(T_WB);
+    return path_to_path_msg(path, header);
+  }
+
+
+
   nav_msgs::Path path_to_path_msg(const se::Path&         path_WB,
                                   const std_msgs::Header& header) {
     nav_msgs::Path path_msg;
@@ -189,6 +198,16 @@ namespace se {
     }
     return path_msg;
   }
+
+
+
+  trajectory_msgs::MultiDOFJointTrajectory pose_to_traj_msg(const Eigen::Matrix4f&  T_WB,
+                                                            const std_msgs::Header& header) {
+    se::Path path;
+    path.push_back(T_WB);
+    return path_to_traj_msg(path, header);
+  }
+
 
 
   trajectory_msgs::MultiDOFJointTrajectory path_to_traj_msg(const se::Path&         path_WB,
