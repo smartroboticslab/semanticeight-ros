@@ -298,7 +298,7 @@ void SupereightNode::visualizeCandidates() {
   arrow_marker.ns = "candidate_views";
   arrow_marker.id = -1;
   arrow_marker.type = visualization_msgs::Marker::ARROW;
-  arrow_marker.scale = make_vector3(1.0f, 0.1f, 0.1f);
+  arrow_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
   arrow_marker.color = eigen_to_color(color_candidate_);
   arrow_marker.lifetime = ros::Duration(0.0);
   arrow_marker.frame_locked = true;
@@ -428,33 +428,41 @@ void SupereightNode::visualizeGoal() {
   std_msgs::Header header;
   header.stamp = ros::Time::now();
   header.frame_id = map_frame_id_;
-  // Initialize the Marker message
-  const Eigen::Matrix4f goal_T_MB = goal_view.goalT_MB();
+  // Initialize the arrow marker message
   visualization_msgs::Marker goal_marker;
   goal_marker = visualization_msgs::Marker();
   goal_marker.header = header;
-  goal_marker.ns = "goal";
-  goal_marker.id = 0;
+  goal_marker.ns = "goal_yaw";
+  goal_marker.id = -1;
   goal_marker.type = visualization_msgs::Marker::ARROW;
-  goal_marker.action = visualization_msgs::Marker::ADD;
-  goal_marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3,1>());
-  goal_marker.pose.orientation = eigen_to_quaternion(Eigen::Quaternionf(goal_T_MB.topLeftCorner<3,3>()));
-  goal_marker.scale = make_vector3(1.0f, 0.1f, 0.1f);
+  goal_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
   goal_marker.color = eigen_to_color(color_goal_);
   goal_marker.lifetime = ros::Duration(0.0);
   goal_marker.frame_locked = true;
-  // Publish the goal sphere marker
+  // Delete all previous goal arrows.
+  goal_marker.action = visualization_msgs::Marker::DELETEALL;
   map_goal_pub_.publish(goal_marker);
+  // Publish an arrow for each path vertex.
+  goal_marker.action = visualization_msgs::Marker::ADD;
+  for (const Eigen::Matrix4f& T_MB : goal_view.path()) {
+    goal_marker.header.stamp = ros::Time::now();
+    goal_marker.id++;
+    goal_marker.pose.position = eigen_to_point(T_MB.topRightCorner<3,1>());
+    goal_marker.pose.orientation = eigen_to_quaternion(Eigen::Quaternionf(T_MB.topLeftCorner<3,3>()));
+    map_goal_pub_.publish(goal_marker);
+    // Only the final arrow marker appears without the sleep.
+    std::this_thread::sleep_for(std::chrono::duration<double>(0.00001));
+  }
   // Initialize the Line message
   visualization_msgs::Marker path_marker;
   path_marker = visualization_msgs::Marker();
   path_marker.header = header;
-  path_marker.ns = "goal";
+  path_marker.ns = "goal_path";
   path_marker.id = 1;
   path_marker.type = visualization_msgs::Marker::LINE_STRIP;
   path_marker.action = visualization_msgs::Marker::ADD;
   path_marker.pose.orientation = make_quaternion();
-  path_marker.scale.x = 0.15f;
+  path_marker.scale.x = 0.1f;
   path_marker.color = eigen_to_color(color_goal_);
   path_marker.lifetime = ros::Duration(0.0);
   path_marker.frame_locked = true;
