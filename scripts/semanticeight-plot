@@ -121,16 +121,18 @@ plot_data() {
 	set ylabel 'Volume (m³)';
 	plot for [f in data_files] f using 2:8 notitle linetype rgb 'blue' dashtype \".\",\
 		for [f in data_files] f using 2:9 notitle linetype rgb 'red' dashtype \".\",\
-		'$average_data_file' using 2:8 title 'Free' linetype rgb 'blue' linewidth 3,\
-		'$average_data_file' using 2:9 title 'Occupied' linetype rgb 'red' linewidth 3,;
+		'$average_data_file' using 2:8 title 'Free' linetype rgb 'red' linewidth 3,\
+		'$average_data_file' using 2:9 title 'Occupied' linetype rgb 'green' linewidth 3,\
+		'$average_data_file' using 2:10 title 'Explored' linetype rgb 'blue' linewidth 3,;
 
 	set key right bottom;
 	set xlabel 'Frame';
 	set ylabel 'Volume (m³)';
 	plot for [f in data_files] f using (\$1+1):8 notitle linetype rgb 'blue' dashtype \".\",\
 		for [f in data_files] f using (\$1+1):9 notitle linetype rgb 'red' dashtype \".\",\
-		'$average_data_file' using (\$1+1):8 title 'Free' linetype rgb 'blue' linewidth 3,\
-		'$average_data_file' using (\$1+1):9 title 'Occupied' linetype rgb 'red' linewidth 3,;
+		'$average_data_file' using (\$1+1):8 title 'Free' linetype rgb 'red' linewidth 3,\
+		'$average_data_file' using (\$1+1):9 title 'Occupied' linetype rgb 'green' linewidth 3,\
+		'$average_data_file' using (\$1+1):10 title 'Explored' linetype rgb 'blue' linewidth 3,;
 
 
 	set xlabel 'Planning iteration';
