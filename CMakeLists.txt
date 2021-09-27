@@ -13,6 +13,7 @@ project(supereight_ros VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 option(WITH_MASKRCNN "Compile with libmaskrcnn-trt" ON)
+option(WITH_ASAN "Compile with the address sanitizer" OFF)
 
 # Select the supereight voxel and sensor implementations to use.
 set(VOXEL_IMPL MultiresOFusion MultiresTSDF)
@@ -55,6 +56,16 @@ if (WITH_OPENMP)
     message(STATUS "Compiling with OpenMP support")
   endif ()
 endif ()
+
+if(WITH_ASAN)
+  add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+  link_libraries(-fsanitize=address)
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    link_libraries(-static-libsan)
+  else()
+    link_libraries(-static-libasan)
+  endif()
+endif()
 
 # Compile supereight
 set(SE_VOXEL_IMPLS ${VOXEL_IMPL} CACHE STRING "The voxel implementations to compile")
