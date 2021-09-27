@@ -62,7 +62,7 @@ supereight:
 
   exploration:
     enable_exploration:        true
-    num_candidates:            10
+    num_candidates:            20
     raycast_width:             36
     raycast_height:            10
     linear_velocity:           1.0
