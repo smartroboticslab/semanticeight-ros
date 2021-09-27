@@ -616,13 +616,13 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
 
     if (node_config_.visualize_360_raycasting) {
       // Entropy
-      const se::Image<uint32_t> entropy_render = planner_->renderEntropy(sensor_);
+      const se::Image<uint32_t> entropy_render = planner_->renderCurrentEntropy(sensor_);
       const sensor_msgs::Image entropy_render_msg = RGBA_to_msg(entropy_render.data(),
           Eigen::Vector2i(entropy_render.width(), entropy_render.height()), depth_image->header);
       entropy_render_pub_.publish(entropy_render_msg);
 
       // Entropy depth
-      const se::Image<uint32_t> entropy_depth_render = planner_->renderEntropyDepth(sensor_);
+      const se::Image<uint32_t> entropy_depth_render = planner_->renderCurrentEntropyDepth(sensor_);
       const sensor_msgs::Image entropy_depth_render_msg = RGBA_to_msg(entropy_depth_render.data(),
           Eigen::Vector2i(entropy_depth_render.width(), entropy_depth_render.height()),
           depth_image->header);
@@ -745,20 +745,26 @@ void SupereightNode::plan() {
           }
           if (supereight_config_.rendering_rate > 0 && supereight_config_.output_render_file != "") {
             stdfs::create_directories(supereight_config_.output_render_file);
-            const std::string prefix = supereight_config_.output_render_file + "/";
-            std::stringstream path_suffix_ss;
-            path_suffix_ss << std::setw(5) << std::setfill('0') << num_planning_iterations_ << ".png";
-            const std::string suffix = path_suffix_ss.str();
+            std::stringstream prefix_ss;
+            prefix_ss << supereight_config_.output_render_file << "/planning_" << std::setw(5) << std::setfill('0') << num_planning_iterations_ << "_";
+            const std::string prefix = prefix_ss.str();
 
             const se::CandidateView& goal_view = planner_->goalView();
-            const se::Image<uint32_t> entropy_render = planner_->renderEntropy(sensor_);
-            const se::Image<uint32_t> entropy_depth_render = planner_->renderEntropyDepth(sensor_);
+            const se::Image<uint32_t> entropy_render = goal_view.renderEntropy(sensor_);
+            const se::Image<uint32_t> entropy_depth_render = planner_->renderCurrentEntropyDepth(sensor_);
             const se::Image<uint32_t> min_scale_render = planner_->renderMinScale(sensor_);
-            const int w = entropy_render.width();
-            const int h = entropy_render.height();
-            lodepng_encode32_file((prefix + "goal_entropy_" + suffix).c_str(), (unsigned char*) entropy_render.data(), entropy_render.width(), entropy_render.height());
-            lodepng_encode32_file((prefix + "goal_depth_" + suffix).c_str(), (unsigned char*) entropy_depth_render.data(), entropy_depth_render.width(), entropy_depth_render.height());
-            lodepng_encode32_file((prefix + "goal_min_scale_" + suffix).c_str(), (unsigned char*) min_scale_render.data(), min_scale_render.width(), min_scale_render.height());
+            lodepng_encode32_file((prefix + "goal_entropy.png").c_str(), (unsigned char*) entropy_render.data(), entropy_render.width(), entropy_render.height());
+            lodepng_encode32_file((prefix + "goal_depth.png").c_str(), (unsigned char*) entropy_depth_render.data(), entropy_depth_render.width(), entropy_depth_render.height());
+            lodepng_encode32_file((prefix + "goal_min_scale.png").c_str(), (unsigned char*) min_scale_render.data(), min_scale_render.width(), min_scale_render.height());
+            // Visualize the individual candidates
+            const auto& candidates = planner_->candidateViews();
+            for (size_t i = 0; i < candidates.size(); ++i) {
+              std::stringstream suffix_ss;
+              suffix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i << "_entropy_" << candidates[i].entropy_ << "_yaw_" << candidates[i].yaw_M_ << ".png";
+              const std::string suffix = suffix_ss.str();
+              const se::Image<uint32_t> entropy_render = candidates[i].renderEntropy(sensor_);
+              lodepng_encode32_file((prefix + suffix).c_str(), (unsigned char*) entropy_render.data(), entropy_render.width(), entropy_render.height());
+            }
           }
           num_planning_iterations_++;
         }
