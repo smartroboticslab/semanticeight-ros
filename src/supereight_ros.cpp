@@ -737,6 +737,12 @@ void SupereightNode::plan() {
           num_planning_iterations_++;
           num_failed_planning_iterations_++;
         } else {
+          ROS_WARN("Planning %d, next goal is candidate %zu",
+              num_planning_iterations_, planner_->goalViewIndex());
+          for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
+            ROS_WARN("Planning %d, candidate %2zu: %s",
+                num_planning_iterations_, i, planner_->candidateViews()[i].utilityStr().c_str());
+          }
           if (node_config_.visualization_rate > 0) {
             visualizeCandidates();
             visualizeCandidatePaths();
