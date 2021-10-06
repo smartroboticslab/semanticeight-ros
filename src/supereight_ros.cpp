@@ -161,6 +161,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
   }
 
   t_MW_ = supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
+  T_WM_ = Eigen::Matrix4f::Identity();
+  T_WM_.topRightCorner<3,1>() = -t_MW_;
   T_CB_ = supereight_config_.T_BC.inverse();
   init_t_WB_ = Eigen::Vector3f::Constant(NAN);
   image_res_ = node_config_.input_res / supereight_config_.sensor_downsampling_factor;
