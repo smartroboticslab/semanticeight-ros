@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+usage() {
+	printf 'Usage: %s [rosout.log]...\n' "$(basename "$0")"
+	grep -E '[[:space:]].) #' "$0" | sed -e 's/) #//g' -e 's/^[ \t]*/  -/g'
+}
+
+extract_candidates() {
+	sed -n 's/^.*t_WB: //p'
+}
+
+points_to_ply() {
+	points=$(cat)
+	num_points=$(printf '%s\n' "$points" | wc -l)
+	printf 'ply\n'
+	printf 'format ascii 1.0\n'
+	printf 'comment Candidate view positions\n'
+	printf 'element vertex %d\n' "$num_points"
+	printf 'property float x\n'
+	printf 'property float y\n'
+	printf 'property float z\n'
+	printf 'property uchar red\n'
+	printf 'property uchar green\n'
+	printf 'property uchar blue\n'
+	printf 'end_header\n'
+	printf '%s\n' "$points" | sed 's/$/ 255 0 0/'
+}
+
+
+
+if [ "$#" -eq 0 ]; then
+	usage
+	exit 2
+fi
+
+while [ "$#" -gt 0 ]; do
+	extract_candidates < "$1"
+	shift
+done | points_to_ply
+
