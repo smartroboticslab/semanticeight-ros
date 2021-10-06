@@ -742,8 +742,14 @@ void SupereightNode::plan() {
           ROS_WARN("Planning %d, next goal is candidate %zu",
               num_planning_iterations_, planner_->goalViewIndex());
           for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
-            ROS_WARN("Planning %d, candidate %2zu: %s",
+            ROS_WARN("Planning %d candidate %2zu utility: %s",
                 num_planning_iterations_, i, planner_->candidateViews()[i].utilityStr().c_str());
+          }
+          for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
+            const Eigen::Vector3f goal_t_WB =
+              (T_WM_ * planner_->candidateViews()[i].goalT_MB().topRightCorner<4,1>()).head<3>();
+            ROS_WARN("Planning %d candidate %2zu t_WB: % .3f % .3f % .3f",
+                num_planning_iterations_, i, goal_t_WB.x(), goal_t_WB.y(), goal_t_WB.z());
           }
           if (node_config_.visualization_rate > 0) {
             visualizeCandidates();
