@@ -81,6 +81,8 @@ namespace se {
      */
     void saveMap();
 
+    int saveCandidates();
+
     /*!
      * \brief Access the supereight pipeline directly if needed.
      *
