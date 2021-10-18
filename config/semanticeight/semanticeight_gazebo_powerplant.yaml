@@ -20,6 +20,9 @@ supereight:
     near_plane:                 0.02
     far_plane:                  7.0
 
+  exploration:
+    delta_t:                    0.20
+
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.
 

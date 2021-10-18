@@ -245,6 +245,7 @@ namespace se {
     nh.getParam("supereight/exploration/raycast_height", config.raycast_height);
     nh.getParam("supereight/exploration/linear_velocity", config.linear_velocity);
     nh.getParam("supereight/exploration/angular_velocity", config.angular_velocity);
+    nh.getParam("supereight/exploration/delta_t", config.delta_t);
     nh.getParam("supereight/exploration/robot_radius", config.robot_radius);
     nh.getParam("supereight/exploration/safety_radius", config.safety_radius);
     nh.getParam("supereight/exploration/min_control_point_radius", config.min_control_point_radius);
