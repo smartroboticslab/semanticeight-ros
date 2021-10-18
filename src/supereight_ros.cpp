@@ -787,17 +787,11 @@ void SupereightNode::plan() {
           num_planning_iterations_++;
         }
       }
-      // Publish the next goal.
-      Eigen::Matrix4f T_WB;
-      if (planner_->goalT_WB(T_WB)) {
-        std_msgs::Header header;
-        header.stamp = ros::Time::now();
-        header.frame_id = world_frame_id_;
-        if (node_config_.experiment_type == "gazebo") {
-          path_pub_.publish(pose_to_traj_msg(T_WB, header));
-        } else {
-          path_pub_.publish(pose_to_path_msg(T_WB, header));
-        }
+      // Change the path publishing method depending on the dataset type.
+      if (node_config_.experiment_type == "gazebo") {
+        publish_path_open_loop(*planner_, path_pub_, world_frame_id_, node_config_.experiment_type, supereight_config_.delta_t);
+      } else {
+        publish_path_vertex(*planner_, path_pub_, world_frame_id_, node_config_.experiment_type);
       }
     }
   }

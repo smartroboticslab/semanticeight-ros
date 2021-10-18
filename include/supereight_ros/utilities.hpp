@@ -16,15 +16,17 @@
 
 #include <boost/circular_buffer.hpp>
 
-#include <sensor_msgs/Image.h>
-#include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Path.h>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
 #include <std_msgs/ColorRGBA.h>
+#include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
-#include "supereight_ros/eigen_ros_conversions.hpp"
+#include "se/exploration_planner.hpp"
 #include "se/segmentation_result.hpp"
+#include "supereight_ros/eigen_ros_conversions.hpp"
 
 
 
@@ -215,6 +217,16 @@ namespace se {
    */
   Eigen::Matrix4f pose_msg_to_eigen(const geometry_msgs::PoseStamped& pose_msg);
 
+  void publish_path_vertex(const se::ExplorationPlanner& planner,
+                           const ros::Publisher&         path_pub,
+                           const std::string&            world_frame_id,
+                           const std::string&            experiment_type);
+
+  void publish_path_open_loop(const se::ExplorationPlanner& planner,
+                              const ros::Publisher&         path_pub,
+                              const std::string&            world_frame_id,
+                              const std::string&            experiment_type,
+                              float                         delta_t);
 } // namespace se
 
 #include "utilities_impl.hpp"

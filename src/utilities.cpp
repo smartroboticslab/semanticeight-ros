@@ -10,6 +10,7 @@
 #include <cstring>
 #include <limits>
 #include <map>
+#include <thread>
 
 #include <cv_bridge/cv_bridge.h>
 #include <ros/ros.h>
@@ -361,5 +362,42 @@ namespace se {
     return pose;
   }
 
+  void publish_path_vertex(const se::ExplorationPlanner& planner,
+                           const ros::Publisher&         path_pub,
+                           const std::string&            world_frame_id,
+                           const std::string&            experiment_type) {
+    Eigen::Matrix4f T_WB;
+    if (planner.goalT_WB(T_WB)) {
+      std_msgs::Header header;
+      header.stamp = ros::Time::now();
+      header.frame_id = world_frame_id;
+      if (experiment_type == "gazebo") {
+        path_pub.publish(pose_to_traj_msg(T_WB, header));
+      } else {
+        path_pub.publish(pose_to_path_msg(T_WB, header));
+      }
+    }
+  }
+
+  void publish_path_open_loop(const se::ExplorationPlanner& planner,
+                              const ros::Publisher&         path_pub,
+                              const std::string&            world_frame_id,
+                              const std::string&            experiment_type,
+                              float                         delta_t) {
+    Eigen::Matrix4f T_WB;
+    // Publish each path vertex and wait for delta_t.
+    while (planner.goalT_WB(T_WB)) {
+      std_msgs::Header header;
+      header.stamp = ros::Time::now();
+      header.frame_id = world_frame_id;
+      if (experiment_type == "gazebo") {
+        path_pub.publish(pose_to_traj_msg(T_WB, header));
+      } else {
+        path_pub.publish(pose_to_path_msg(T_WB, header));
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.0f * delta_t)));
+    }
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
 } // namespace se
 
