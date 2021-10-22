@@ -222,11 +222,11 @@ namespace se {
                            const std::string&            world_frame_id,
                            const std::string&            experiment_type);
 
-  void publish_path_open_loop(const se::ExplorationPlanner& planner,
-                              const ros::Publisher&         path_pub,
-                              const std::string&            world_frame_id,
-                              const std::string&            experiment_type,
-                              float                         delta_t);
+  void publish_path_open_loop(se::ExplorationPlanner& planner,
+                              const ros::Publisher&   path_pub,
+                              const std::string&      world_frame_id,
+                              const std::string&      experiment_type,
+                              float                   delta_t);
 } // namespace se
 
 #include "utilities_impl.hpp"
