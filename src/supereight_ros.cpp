@@ -235,6 +235,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       supereight_config_.use_pose_history,
       supereight_config_.raycast_width,
       supereight_config_.raycast_height,
+      supereight_config_.delta_t,
       supereight_config_.linear_velocity,
       supereight_config_.angular_velocity, {
         "", Eigen::Vector3f::Zero(), Eigen::Vector3f::Zero(),
