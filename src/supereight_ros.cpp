@@ -738,7 +738,6 @@ void SupereightNode::plan() {
         ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
 
         if (path_WB.empty()) {
-          num_planning_iterations_++;
           num_failed_planning_iterations_++;
         } else {
           ROS_WARN("Planning %d, next goal is candidate %zu",
@@ -790,8 +789,8 @@ void SupereightNode::plan() {
             se::write_path_tsv(filename_ss.str(), path_WB);
           }
           saveCandidates();
-          num_planning_iterations_++;
         }
+        num_planning_iterations_++;
       }
       // Change the path publishing method depending on the dataset type.
       if (node_config_.experiment_type == "gazebo") {
