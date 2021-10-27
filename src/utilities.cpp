@@ -14,13 +14,9 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <ros/ros.h>
-#include <tf/tf.h>
-#include <tf/transform_datatypes.h>
-#include <tf_conversions/tf_eigen.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include <mav_msgs/conversions.h>
 #include <mav_msgs/default_topics.h>
 
 #include "se/image_utils.hpp"
@@ -215,25 +211,13 @@ namespace se {
                                                             const std_msgs::Header& header) {
     trajectory_msgs::MultiDOFJointTrajectory path_msg;
     path_msg.header = header;
-    path_msg.points.resize(path_WB.size());
+    path_msg.joint_names.emplace_back("MAV_body");
+    path_msg.points.reserve(path_WB.size());
     for (size_t i = 0; i < path_WB.size(); ++i) {
-      const Eigen::Matrix4f T_WB = path_WB[i];
-      const Eigen::Vector3f t_WB = T_WB.topRightCorner<3,1>();
-      const Eigen::Quaterniond q_WB((T_WB.topLeftCorner<3,3>()).cast<double>());
-
-      mav_msgs::EigenTrajectoryPoint point;
-      point.position_W.x() = t_WB.x();
-      point.position_W.y() = t_WB.y();
-      point.position_W.z() = t_WB.z();
-      // Take the constant tracking error of the controller into account
-      point.position_W.z() += 0.2;
-      tf::Quaternion q_tf_WB;
-      tf::quaternionEigenToTF(q_WB, q_tf_WB);
-      double yaw = tf::getYaw(q_tf_WB);
-      point.setFromYaw(yaw);
-
       trajectory_msgs::MultiDOFJointTrajectoryPoint point_msg;
-      mav_msgs::msgMultiDofJointTrajectoryPointFromEigen(point, &point_msg);
+      point_msg.transforms.push_back(eigen_to_transform(path_WB[i]));
+      // Take the constant tracking error of the controller into account
+      point_msg.transforms.front().translation.z += 0.2;
       path_msg.points.push_back(point_msg);
     }
     return path_msg;
