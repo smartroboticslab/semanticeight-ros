@@ -784,6 +784,7 @@ void SupereightNode::plan() {
             }
           }
           if (supereight_config_.output_mesh_file != "") {
+            stdfs::create_directories(supereight_config_.output_mesh_file);
             std::stringstream filename_ss;
             filename_ss << supereight_config_.output_mesh_file << "/planning_" << std::setw(5) << std::setfill('0') << num_planning_iterations_ << "_goal_path_W.tsv";
             se::write_path_tsv(filename_ss.str(), path_WB);
