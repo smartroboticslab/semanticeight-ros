@@ -1066,16 +1066,19 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d&  T_WB,
     ROS_DEBUG("Pose buffer:        %lu/%lu", pose_buffer_.size(), pose_buffer_.capacity());
   }
 
-  // Update the Body-World transform.
-  geometry_msgs::TransformStamped T_WB_msg;
-  T_WB_msg.header = header;
-  T_WB_msg.header.frame_id = world_frame_id_;
-  T_WB_msg.child_frame_id = body_frame_id_;
-  const Eigen::Quaterniond q_WB (T_WB.topLeftCorner<3, 3>());
-  tf::quaternionEigenToMsg(q_WB, T_WB_msg.transform.rotation);
-  const Eigen::Vector3d t_WB = T_WB.topRightCorner<3, 1>();
-  tf::vectorEigenToMsg(t_WB, T_WB_msg.transform.translation);
-  pose_tf_broadcaster_.sendTransform(T_WB_msg);
+  // Update the Body-World transform. In the case of Gazebo a frame with the same name is already
+  // being published.
+  if (node_config_.experiment_type != "gazebo") {
+    geometry_msgs::TransformStamped T_WB_msg;
+    T_WB_msg.header = header;
+    T_WB_msg.header.frame_id = world_frame_id_;
+    T_WB_msg.child_frame_id = body_frame_id_;
+    const Eigen::Quaterniond q_WB (T_WB.topLeftCorner<3, 3>());
+    tf::quaternionEigenToMsg(q_WB, T_WB_msg.transform.rotation);
+    const Eigen::Vector3d t_WB = T_WB.topRightCorner<3, 1>();
+    tf::vectorEigenToMsg(t_WB, T_WB_msg.transform.translation);
+    pose_tf_broadcaster_.sendTransform(T_WB_msg);
+  }
 
   if (node_config_.visualization_rate > 0) {
     visualizeMAV();
