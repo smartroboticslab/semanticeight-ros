@@ -42,7 +42,7 @@ get_data_tsv() {
 get_planning_data_tsv() {
 	maybe_gunzip "$1" | awk '
 		BEGIN { OFS = "\t"; print "Planning iteration", "Time", "Planning" }
-		/Planning[[:space:]]+[0-9]/ {
+		/Planning[[:space:]]+[0-9]+\.?[0-9]*[[:space:]]s$/ {
 			if (start_t == 0)
 				start_t = $1
 			print iteration++, ($1 - start_t), $(NF-1)
