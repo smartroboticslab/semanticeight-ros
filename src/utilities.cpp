@@ -42,15 +42,6 @@ namespace se {
 
 
 
-  int append_line(const std::string& filename, const std::string& line) {
-    std::ofstream f(filename, std::ios::app);
-    f << line << "\n";
-    f.close();
-    return f.good();
-  }
-
-
-
   void to_supereight_depth(const sensor_msgs::ImageConstPtr& input_depth,
                            const float                       far_plane,
                            float*                            output_depth) {

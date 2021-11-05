@@ -60,7 +60,11 @@ namespace se {
 
 
   std::string current_ros_log_dir();
-  int append_line(const std::string& filename, const std::string& line);
+
+
+
+  template<typename T>
+  int append_tsv_line(const std::string& filename, const std::vector<T>& line_data);
 
 
 

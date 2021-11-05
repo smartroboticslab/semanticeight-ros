@@ -153,9 +153,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       world_frame_id_("world"),
       map_frame_id_("map"),
       body_frame_id_("body"),
-      camera_frame_id_("camera"),
-      stat_tsv_file_(current_ros_log_dir() + "/stats.tsv"),
-      planning_stat_tsv_file_(current_ros_log_dir() + "/planning_stats.tsv") {
+      camera_frame_id_("camera") {
 
   readConfig(nh_private);
   if (node_config_.experiment_type == "gazebo") {
@@ -319,11 +317,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
     }
   }
 
-  if (append_line(stat_tsv_file_, "Frame\tTimestamp\tMatching\tPreprocessing\tTracking\tIntegration\tObject integration\tRendering\tVisualization\tFree volume\tOccupied volume\tExplored volume")) {
-    ROS_WARN_ONCE("Can't write %s", stat_tsv_file_.c_str());
-  } else {
-    ROS_INFO("Writing statistics to %s", stat_tsv_file_.c_str());
-  }
+  initStats();
 
   // Start the planner thread.
   if (supereight_config_.enable_exploration) {
@@ -460,7 +454,6 @@ void SupereightNode::matchAndFuse() {
     depth_buffer_.pop_front();
   }
   end_time = std::chrono::steady_clock::now();
-  times_matching_.push_back(std::chrono::duration<double>(end_time - start_time).count());
 
   if (node_config_.run_segmentation) {
     // If the network_mutex_ can be locked it means there is no thread running runNetwork().
@@ -486,6 +479,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
                           const sensor_msgs::ImageConstPtr& color_image,
                           const se::SegmentationResult&     segmentation) {
   const std::lock_guard<std::mutex> fusion_lock (fusion_mutex_);
+  newStatFrame("Fusion");
 
   ROS_INFO("-----------------------------------------");
   ROS_INFO("Frame %d", frame_);
@@ -510,7 +504,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     pipeline_->preprocessSegmentation(segmentation);
   }
   end_time = std::chrono::steady_clock::now();
-  times_preprocessing_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+  sampleStat("Fusion", "Preprocessing", std::chrono::duration<double>(end_time - start_time).count());
 
   // Tracking
   start_time = std::chrono::steady_clock::now();
@@ -540,7 +534,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
   supereight_pose_pub_.publish(se_T_WB_msg);
   end_time = std::chrono::steady_clock::now();
-  times_tracking_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+  sampleStat("Fusion", "Tracking", std::chrono::duration<double>(end_time - start_time).count());
 
   // Integration
   // Integrate only if tracking was successful or it is one of the first 4
@@ -553,14 +547,14 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
       start_time = std::chrono::steady_clock::now();
       integrated = pipeline_->integrate(sensor_, frame_);
       end_time = std::chrono::steady_clock::now();
-      times_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+      sampleStat("Fusion", "Integration", std::chrono::duration<double>(end_time - start_time).count());
 
       start_time = std::chrono::steady_clock::now();
       if (node_config_.enable_objects) {
         integrated = pipeline_->integrateObjects(sensor_, frame_);
       }
       end_time = std::chrono::steady_clock::now();
-      times_object_integration_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+      sampleStat("Fusion", "Object integration", std::chrono::duration<double>(end_time - start_time).count());
     }
 
     {
@@ -569,8 +563,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     }
   } else {
     integrated = false;
-    times_integration_.push_back(0);
-    times_object_integration_.push_back(0);
+    sampleStat("Fusion", "Integration", 0.0);
+    sampleStat("Fusion", "Object integration", 0.0);
   }
 
   // Rendering
@@ -642,7 +636,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     }
   }
   end_time = std::chrono::steady_clock::now();
-  times_rendering_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+  sampleStat("Fusion", "Rendering", std::chrono::duration<double>(end_time - start_time).count());
 
   // Visualization
   start_time = std::chrono::steady_clock::now();
@@ -659,14 +653,23 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
     visualizePoseHistory();
   }
   end_time = std::chrono::steady_clock::now();
-  times_visualization_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+  sampleStat("Fusion", "Visualization", std::chrono::duration<double>(end_time - start_time).count());
 
-  printFrameTimes();
-  ROS_INFO("Free volume:     %10.3f m^3", pipeline_->free_volume);
-  ROS_INFO("Occupied volume: %10.3f m^3", pipeline_->occupied_volume);
-  ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
-  ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
-  append_line(stat_tsv_file_, statsToTSV());
+  sampleStat("Fusion", "Frame", frame_);
+  sampleStat("Fusion", "Timestamp", ros::Time::now().toSec());
+  sampleStat("Fusion", "Free volume", pipeline_->free_volume);
+  sampleStat("Fusion", "Occupied volume", pipeline_->occupied_volume);
+  sampleStat("Fusion", "Explored volume", pipeline_->explored_volume);
+  sampleStat("Fusion", "t_WB x", se_t_WB.x());
+  sampleStat("Fusion", "t_WB y", se_t_WB.y());
+  sampleStat("Fusion", "t_WB z", se_t_WB.z());
+  sampleStat("Fusion", "q_WB x", se_q_WB.x());
+  sampleStat("Fusion", "q_WB y", se_q_WB.y());
+  sampleStat("Fusion", "q_WB z", se_q_WB.z());
+  sampleStat("Fusion", "q_WB w", se_q_WB.w());
+  writeFrameStats("Fusion");
+
+  printStats();
 
   if (supereight_config_.rendering_rate > 0 && (frame_ + 1) % supereight_config_.rendering_rate == 0 && supereight_config_.output_render_file != "") {
     stdfs::create_directories(supereight_config_.output_render_file);
@@ -725,12 +728,6 @@ void SupereightNode::plan() {
     const std::lock_guard<std::mutex> map_lock (map_mutex_);
     pipeline_->freeInitialPosition(sensor_, (node_config_.experiment_type == "gazebo" ? "sphere" : "cylinder"));
   }
-  // Create the log file.
-  if (append_line(planning_stat_tsv_file_, "Planning iteration\tTimestamp\tPlanning time")) {
-    ROS_WARN_ONCE("Can't write %s", planning_stat_tsv_file_.c_str());
-  } else {
-    ROS_INFO("Writing planning statistics to %s", planning_stat_tsv_file_.c_str());
-  }
   // Exploration planning
   while (num_failed_planning_iterations_ < max_failed_planning_iterations_ || max_failed_planning_iterations_ == 0) {
     bool goal_reached = false;
@@ -740,6 +737,7 @@ void SupereightNode::plan() {
     }
     if (goal_reached || num_planning_iterations_ == 0) {
       if (planner_->needsNewGoal()) {
+        newStatFrame("Planning");
         se::Path path_WB;
         {
           const std::lock_guard<std::mutex> map_lock (map_mutex_);
@@ -747,15 +745,34 @@ void SupereightNode::plan() {
           const auto start_time = std::chrono::steady_clock::now();
           path_WB = planner_->computeNextPath_WB(pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
           const auto end_time = std::chrono::steady_clock::now();
-          times_planning_.push_back(std::chrono::duration<double>(end_time - start_time).count());
+          sampleStat("Planning", "Planning time", std::chrono::duration<double>(end_time - start_time).count());
         }
+        // Save and print statistics.
+        sampleStat("Planning", "Planning iteration", num_planning_iterations_);
+        sampleStat("Planning", "Timestamp", ros::Time::now().toSec());
         ROS_WARN("Planning iteration %d", num_planning_iterations_);
-        ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
-        append_line(planning_stat_tsv_file_, planningStatsToTSV());
+        ROS_WARN("%-25s %.5f s", "Planning", getStat("Planning", "Planning time"));
 
         if (path_WB.empty()) {
           num_failed_planning_iterations_++;
         } else {
+          // Save more statistics.
+          const auto& goal_candidate = planner_->candidateViews()[planner_->goalViewIndex()];
+          const Eigen::Matrix4f goal_T_WB = T_WM_ * goal_candidate.goalT_MB();
+          const Eigen::Vector3f goal_t_WB = goal_T_WB.topRightCorner<3,1>();
+          const Eigen::Quaternionf goal_q_WB (goal_T_WB.topLeftCorner<3,3>());
+          sampleStat("Planning", "Goal utility", goal_candidate.utility());
+          sampleStat("Planning", "Goal entropy gain", goal_candidate.entropy_);
+          sampleStat("Planning", "Goal LoD gain", goal_candidate.lod_gain_);
+          sampleStat("Planning", "Goal path time", goal_candidate.path_time_);
+          sampleStat("Planning", "Goal t_WB x", goal_t_WB.x());
+          sampleStat("Planning", "Goal t_WB y", goal_t_WB.y());
+          sampleStat("Planning", "Goal t_WB z", goal_t_WB.z());
+          sampleStat("Planning", "Goal q_WB x", goal_q_WB.x());
+          sampleStat("Planning", "Goal q_WB y", goal_q_WB.y());
+          sampleStat("Planning", "Goal q_WB z", goal_q_WB.z());
+          sampleStat("Planning", "Goal q_WB w", goal_q_WB.w());
+
           ROS_WARN("Planning %d, next goal is candidate %zu",
               num_planning_iterations_, planner_->goalViewIndex());
           for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
@@ -808,6 +825,7 @@ void SupereightNode::plan() {
           saveCandidates();
         }
         num_planning_iterations_++;
+        writeFrameStats("Planning");
       }
       // Change the path publishing method depending on the dataset type.
       if (node_config_.experiment_type == "gazebo") {
@@ -1202,58 +1220,6 @@ visualization_msgs::Marker SupereightNode::mapDimMsg() const {
 
 
 
-void SupereightNode::printFrameTimes() const {
-  double total_time = 0.0;
-  total_time += times_matching_.back();
-  total_time += times_preprocessing_.back();
-  total_time += times_tracking_.back();
-  total_time += times_integration_.back();
-  total_time += times_object_integration_.back();
-  total_time += times_rendering_.back();
-  total_time += times_visualization_.back();
-  ROS_INFO("%-25s %.5f s", "Matching",           times_matching_.back());
-  ROS_INFO("%-25s %.5f s", "Preprocessing",      times_preprocessing_.back());
-  ROS_INFO("%-25s %.5f s", "Tracking",           times_tracking_.back());
-  ROS_INFO("%-25s %.5f s", "Integration",        times_integration_.back());
-  ROS_INFO("%-25s %.5f s", "Object integration", times_object_integration_.back());
-  ROS_INFO("%-25s %.5f s", "Rendering",          times_rendering_.back());
-  ROS_INFO("%-25s %.5f s", "Visualization",      times_visualization_.back());
-  ROS_INFO("Frame total               %.5f s", total_time);
-}
-
-
-
-std::string SupereightNode::statsToTSV() const {
-  std::stringstream s;
-  s << std::setprecision(6) << std::fixed
-    << frame_ << "\t"
-    << ros::Time::now().toSec() << "\t"
-    << times_matching_.back() << "\t"
-    << times_preprocessing_.back() << "\t"
-    << times_tracking_.back() << "\t"
-    << times_integration_.back() << "\t"
-    << times_object_integration_.back() << "\t"
-    << times_rendering_.back() << "\t"
-    << times_visualization_.back() << "\t"
-    << pipeline_->free_volume << "\t"
-    << pipeline_->occupied_volume << "\t"
-    << pipeline_->explored_volume;
-  return s.str();
-}
-
-
-
-std::string SupereightNode::planningStatsToTSV() const {
-  std::stringstream s;
-  s << std::setprecision(6) << std::fixed
-    << num_planning_iterations_ << "\t"
-    << ros::Time::now().toSec() << "\t"
-    << times_planning_.back();
-  return s.str();
-}
-
-
-
 void SupereightNode::runNetwork(const Eigen::Matrix4f&            T_WC,
                                 const sensor_msgs::ImageConstPtr& depth_image,
                                 const sensor_msgs::ImageConstPtr& color_image) {
@@ -1281,10 +1247,97 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f&            T_WC,
 #endif // SE_WITH_MASKRCNN
 
   std::chrono::time_point<std::chrono::steady_clock> end_time = std::chrono::steady_clock::now();
-  times_network_.push_back(std::chrono::duration<double>(end_time - start_time).count());
-  ROS_INFO("%-25s %.5f s", "Network", times_network_.back());
+  sampleStat("Network", "Timestamp", ros::Time::now().toSec());
+  sampleStat("Network", "Network time", std::chrono::duration<double>(end_time - start_time).count());
+  ROS_INFO("%-25s %.5f s", "Network", getStat("Network", "Network time"));
 
   fuse(T_WC, depth_image, color_image, segmentation);
+}
+
+
+
+void SupereightNode::initStats() {
+  const std::string log_dir = current_ros_log_dir();
+  for (const auto& p : stat_names_) {
+    const std::string& section = p.first;
+    // Initialize all stat sections.
+    stats_.emplace(section, 0);
+    // Generate the TSV log filename.
+    std::string section_lower = section;
+    std::transform(section_lower.begin(), section_lower.end(), section_lower.begin(),
+        [](auto c){ return std::tolower(c); });
+    stat_tsv_filenames_[section] = log_dir + "/stats_" + section_lower + ".tsv";
+    // Write the TSV header.
+    if (append_tsv_line(stat_tsv_filenames_.at(section), stat_names_.at(section))) {
+      ROS_WARN_ONCE("Can't write %s", stat_tsv_filenames_.at(section).c_str());
+    } else {
+      ROS_INFO("Writing statistics to %s", stat_tsv_filenames_.at(section).c_str());
+    }
+  }
+}
+
+
+
+void SupereightNode::newStatFrame(const std::string& section) {
+  //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+  // Add default-initialized FrameStats to the back of the vector.
+  stats_.at(section).emplace_back();
+  // Initialize the frame stats to zero.
+  for (const auto& name : stat_names_.at(section)) {
+    stats_.at(section).back()[name] = 0.0;
+  }
+}
+
+
+
+void SupereightNode::sampleStat(const std::string& section, const std::string& stat, double value) {
+  //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+  stats_.at(section).back().at(stat) = value;
+}
+
+
+
+double SupereightNode::getStat(const std::string& section, const std::string& stat) const {
+  //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+  return stats_.at(section).back().at(stat);
+}
+
+
+
+std::vector<double> SupereightNode::getLastStats(const std::string& section) const {
+  //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+  const FrameStats& last_stat_map = stats_.at(section).back();
+  const std::vector<std::string>& stat_names = stat_names_.at(section);
+  std::vector<double> last_stats(stat_names.size());
+  // Get the latest data stored for each key. Return 0 if no data is available.
+  std::transform(stat_names.begin(), stat_names.end(), last_stats.begin(),
+      [&](const std::string& s) -> double { return last_stat_map.at(s); });
+  return last_stats;
+}
+
+
+
+void SupereightNode::printStats() const {
+  double total_time = 0.0;
+  total_time += getStat("Fusion", "Preprocessing");
+  total_time += getStat("Fusion", "Tracking");
+  total_time += getStat("Fusion", "Integration");
+  total_time += getStat("Fusion", "Object integration");
+  total_time += getStat("Fusion", "Rendering");
+  total_time += getStat("Fusion", "Visualization");
+  ROS_INFO("%-25s %.5f s", "Preprocessing",      getStat("Fusion", "Preprocessing"));
+  ROS_INFO("%-25s %.5f s", "Tracking",           getStat("Fusion", "Tracking"));
+  ROS_INFO("%-25s %.5f s", "Integration",        getStat("Fusion", "Integration"));
+  ROS_INFO("%-25s %.5f s", "Object integration", getStat("Fusion", "Object integration"));
+  ROS_INFO("%-25s %.5f s", "Rendering",          getStat("Fusion", "Rendering"));
+  ROS_INFO("%-25s %.5f s", "Visualization",      getStat("Fusion", "Visualization"));
+  ROS_INFO("Frame total               %.5f s", total_time);
+}
+
+
+
+void SupereightNode::writeFrameStats(const std::string& section) const {
+  append_tsv_line(stat_tsv_filenames_.at(section), getLastStats(section));
 }
 }  // namespace se
 

@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -225,10 +226,6 @@ namespace se {
 
     visualization_msgs::Marker mapDimMsg() const;
 
-    void printFrameTimes() const;
-    std::string statsToTSV() const;
-    std::string planningStatsToTSV() const;
-
     void runNetwork(const Eigen::Matrix4f&            T_WC,
                     const sensor_msgs::ImageConstPtr& depth_image,
                     const sensor_msgs::ImageConstPtr& color_image);
@@ -364,19 +361,32 @@ namespace se {
     // Constant messages
     visualization_msgs::Marker map_dim_msg_;
 
-    // Timings
-    std::vector<double> times_matching_;
-    std::vector<double> times_preprocessing_;
-    std::vector<double> times_tracking_;
-    std::vector<double> times_integration_;
-    std::vector<double> times_object_integration_;
-    std::vector<double> times_rendering_;
-    std::vector<double> times_visualization_;
-    std::vector<double> times_network_;
-    std::vector<double> times_planning_;
+    // Statistics
+    // Statistics for a single frame.
+    typedef std::map<std::string,double> FrameStats;
+    // Statistics for a all frames for a single section, e.g. Planning.
+    typedef std::vector<FrameStats> SectionStats;
+    // Statistics for all sections.
+    typedef std::map<std::string,SectionStats> Stats;
+    // Valid statistic names for each section in the order in which they should be printed.
+    typedef std::map<std::string,std::vector<std::string>> StatNames;
 
-    std::string stat_tsv_file_;
-    std::string planning_stat_tsv_file_;
+    const StatNames stat_names_ = {
+      {"Fusion", {"Frame", "Timestamp", "Preprocessing", "Tracking", "Integration", "Object integration", "Rendering", "Visualization", "Free volume", "Occupied volume", "Explored volume", "t_WB x", "t_WB y", "t_WB z", "q_WB x", "q_WB y", "q_WB z", "q_WB w"}},
+      {"Planning", {"Planning iteration", "Timestamp", "Planning time", "Goal utility", "Goal entropy gain", "Goal LoD gain", "Goal path time", "Goal t_WB x", "Goal t_WB y", "Goal t_WB z", "Goal q_WB x", "Goal q_WB y", "Goal q_WB z", "Goal q_WB w"}},
+      {"Network", {"Timestamp", "Network time"}}
+    };
+    Stats stats_;
+    std::map<std::string,std::string> stat_tsv_filenames_;
+    //std::mutex stat_mutex_;
+
+    void initStats();
+    void newStatFrame(const std::string& section);
+    void sampleStat(const std::string& section, const std::string& stat, double value);
+    double getStat(const std::string& section, const std::string& stat) const;
+    std::vector<double> getLastStats(const std::string& section) const;
+    void printStats() const;
+    void writeFrameStats(const std::string& section) const;
   };
 
 } // namespace se
