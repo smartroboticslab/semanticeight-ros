@@ -4,49 +4,18 @@
 #   that the average does not extend all the way to the shortest data line.
 set -eu
 
-# Usage: maybe_gunzip FILE
-# Unzip FILE if its extension is .gz or cat it otherwise.
-maybe_gunzip() {
-	case "$1" in
-		*.gz)
-			gunzip -c "$1"
-			;;
-
-
-		*)
-			cat "$1"
-			;;
-	esac
-}
-
-# Usage: get_data_tsv LOGFILE
-# It assumes that the lines for each frame are encountered in a specific order.
-get_data_tsv() {
-	maybe_gunzip "$1" | awk '
-		BEGIN { OFS = "\t"; print "Frame", "Time", "Matching", "Preprocessing", "Tracking", "Integration", "Object integration", "Free volume", "Occupied volume", "Explored volume"}
-		# Initialize the starting timestamp from the matching data
-		/Matching/ {
-			if (start_t == 0)
-				start_t = $1
-			printf "%d\t%s\t", frame++, ($1 - start_t)
+# Usage: get_column_index FILE COLUMN
+get_column_index() {
+	awk '
+		BEGIN { FS = "\t" }
+		NR == 1 {
+			for (i = 1; i <= NF; i++) {
+				if ($i == "'"$2"'") {
+					print i
+				}
+			}
 		}
-		# Just print the data column
-		/(Matching|Preprocessing|Tracking|Integration|Object integration|Free volume:|Occupied volume:|Explored volume:)[[:space:]]+[0-9]/ {
-			printf "%f\t", $(NF-1)
-		}
-		# End the line
-		/Explored volume/ { printf "\n" }'
-}
-
-# Usage: get_planning_data_tsv LOGFILE
-get_planning_data_tsv() {
-	maybe_gunzip "$1" | awk '
-		BEGIN { OFS = "\t"; print "Planning iteration", "Time", "Planning" }
-		/Planning[[:space:]]+[0-9]+\.?[0-9]*[[:space:]]s$/ {
-			if (start_t == 0)
-				start_t = $1
-			print iteration++, ($1 - start_t), $(NF-1)
-		}'
+	' "$1"
 }
 
 # Usage: get_average_data LOGFILE...
@@ -89,16 +58,10 @@ get_average_data() {
 plot_data() {
 	data_files=""
 	planning_files=""
-	# Iterate over each run/log
+	# Iterate over each log directory.
 	while [ "$#" -gt 0 ]; do
-		# Extract the frame integration data
-		t=$(mktemp) || exit 1
-		data_files="$data_files	$t"
-		get_data_tsv "$1" > "$t"
-		# Extract the planning data
-		t=$(mktemp) || exit 1
-		planning_files="$planning_files	$t"
-		get_planning_data_tsv "$1" > "$t"
+		data_files="$data_files	$1/stats.tsv"
+		planning_files="$planning_files	$1/planning_stats.tsv"
 		shift
 	done
 	# Average all runs
@@ -106,6 +69,17 @@ plot_data() {
 	get_average_data $data_files > "$average_data_file"
 	average_planning_file=$(mktemp) || exit 1
 	get_average_data $planning_files > "$average_planning_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_data_file" 'Frame')
+	stamp_idx=$(get_column_index "$average_data_file" 'Timestamp')
+	match_idx=$(get_column_index "$average_data_file" 'Matching')
+	obj_int_idx=$(get_column_index "$average_data_file" 'Object integration')
+	free_idx=$(get_column_index "$average_data_file" 'Free volume')
+	occ_idx=$(get_column_index "$average_data_file" 'Occupied volume')
+	expl_idx=$(get_column_index "$average_data_file" 'Explored volume')
+	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
+	plan_stamp_idx=$(get_column_index "$average_planning_file" 'Timestamp')
+	plan_time_idx=$(get_column_index "$average_planning_file" 'Planning time')
 
 	# Plot the data.
 	gnuplot -p -e "
@@ -119,32 +93,34 @@ plot_data() {
 	set key right bottom;
 	set xlabel 'Time (s)';
 	set ylabel 'Volume (m³)';
-	plot for [f in data_files] f using 2:8 notitle linetype rgb 'blue' dashtype \".\",\
-		for [f in data_files] f using 2:9 notitle linetype rgb 'red' dashtype \".\",\
-		'$average_data_file' using 2:8 title 'Free' linetype rgb 'red' linewidth 3,\
-		'$average_data_file' using 2:9 title 'Occupied' linetype rgb 'green' linewidth 3,\
-		'$average_data_file' using 2:10 title 'Explored' linetype rgb 'blue' linewidth 3,;
+	plot for [f in data_files] f using $stamp_idx:$free_idx notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in data_files] f using $stamp_idx:$occ_idx notitle linetype rgb 'red' dashtype \".\",\
+		for [f in data_files] f using $stamp_idx:$expl_idx notitle linetype rgb 'green' dashtype \".\",\
+		'$average_data_file' using $stamp_idx:$free_idx title 'Free' linetype rgb 'blue' linewidth 3,\
+		'$average_data_file' using $stamp_idx:$occ_idx title 'Occupied' linetype rgb 'red' linewidth 3,\
+		'$average_data_file' using $stamp_idx:$expl_idx title 'Explored' linetype rgb 'green' linewidth 3,;
 
 	set key right bottom;
 	set xlabel 'Frame';
 	set ylabel 'Volume (m³)';
-	plot for [f in data_files] f using (\$1+1):8 notitle linetype rgb 'blue' dashtype \".\",\
-		for [f in data_files] f using (\$1+1):9 notitle linetype rgb 'red' dashtype \".\",\
-		'$average_data_file' using (\$1+1):8 title 'Free' linetype rgb 'red' linewidth 3,\
-		'$average_data_file' using (\$1+1):9 title 'Occupied' linetype rgb 'green' linewidth 3,\
-		'$average_data_file' using (\$1+1):10 title 'Explored' linetype rgb 'blue' linewidth 3,;
+	plot for [f in data_files] f using (\$$frame_idx+1):$free_idx notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in data_files] f using (\$$frame_idx+1):$occ_idx notitle linetype rgb 'red' dashtype \".\",\
+		for [f in data_files] f using (\$$frame_idx+1):$expl_idx notitle linetype rgb 'green' dashtype \".\",\
+		'$average_data_file' using (\$$frame_idx+1):$free_idx title 'Free' linetype rgb 'blue' linewidth 3,\
+		'$average_data_file' using (\$$frame_idx+1):$occ_idx title 'Occupied' linetype rgb 'red' linewidth 3,\
+		'$average_data_file' using (\$$frame_idx+1):$expl_idx title 'Explored' linetype rgb 'green' linewidth 3,;
 
 
 	set xlabel 'Planning iteration';
 	set ylabel 'Planning time (s)';
-	plot for [f in planning_files] f using (\$1+1):3 notitle linetype rgb 'blue' dashtype \".\",\
-		'$average_planning_file' using (\$1+1):3 notitle linetype rgb 'blue' linewidth 3;
+	plot for [f in planning_files] f using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' dashtype \".\",\
+		'$average_planning_file' using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' linewidth 3;
 
-	set key right top;
+	set key left top;
 	set xlabel 'Frame';
 	set ylabel 'Frame time (s)';
-	plot for [i=3:7:1] \
-		'$average_data_file' using (\$1+1):(sum [col=i:7] column(col)) title columnheader(i) with filledcurves x1;
+	plot for [i=$match_idx:$obj_int_idx:1] \
+		'$average_data_file' using (\$$frame_idx+1):(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1;
 
 	unset multiplot;"
 
@@ -158,25 +134,19 @@ plot_data() {
 		set key right top;
 		set xlabel 'Time (s)';
 		set ylabel 'Frame time (s)';
-		plot for [i=3:6:1] \
-			'$average_data_file' using 2:(sum [col=i:6] column(col)) title columnheader(i) with filledcurves x1,\
-			'$average_planning_file' using 2:3 title 'Planning' with points linetype rgb 'red' linewidth 3;
+		plot for [i=$match_idx:$obj_int_idx:1] \
+			'$average_data_file' using $stamp_idx:(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1,\
+			'$average_planning_file' using $plan_stamp_idx:$plan_time_idx title 'Planning' with points linetype rgb 'red' linewidth 3;
 		"
 	fi
 
 	# Remove temporary files.
 	rm -f "$average_planning_file"
 	rm -f "$average_data_file"
-	for t in $planning_files; do
-		rm -f "$t"
-	done
-	for t in $data_files; do
-		rm -f "$t"
-	done
 }
 
 usage() {
-	printf 'Usage: %s [rosout.log]...\n' "$(basename "$0")"
+	printf 'Usage: %s LOGDIR...\n' "${0##*/}"
 	grep -E '[[:space:]].) #' "$0" | sed -e 's/) #//g' -e 's/^[ \t]*/  -/g'
 }
 
@@ -190,7 +160,7 @@ while getopts 'eo:h' opt_name; do
 		e) #      Display extra plots
 			extra_plots=1
 			;;
-		o) #=FILE Save to FILE instead of displaying
+		o) # FILE Save to FILE instead of displaying
 			save_command="set terminal png size 1920,1080; set output '$OPTARG';"
 			;;
 		h) #      Display this help message
