@@ -226,6 +226,8 @@ namespace se {
     visualization_msgs::Marker mapDimMsg() const;
 
     void printFrameTimes() const;
+    std::string statsToTSV() const;
+    std::string planningStatsToTSV() const;
 
     void runNetwork(const Eigen::Matrix4f&            T_WC,
                     const sensor_msgs::ImageConstPtr& depth_image,
@@ -372,6 +374,9 @@ namespace se {
     std::vector<double> times_visualization_;
     std::vector<double> times_network_;
     std::vector<double> times_planning_;
+
+    std::string stat_tsv_file_;
+    std::string planning_stat_tsv_file_;
   };
 
 } // namespace se

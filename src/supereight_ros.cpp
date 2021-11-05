@@ -153,7 +153,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       world_frame_id_("world"),
       map_frame_id_("map"),
       body_frame_id_("body"),
-      camera_frame_id_("camera") {
+      camera_frame_id_("camera"),
+      stat_tsv_file_(current_ros_log_dir() + "/stats.tsv"),
+      planning_stat_tsv_file_(current_ros_log_dir() + "/planning_stats.tsv") {
 
   readConfig(nh_private);
   if (node_config_.experiment_type == "gazebo") {
@@ -321,6 +323,12 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
       ros::Duration(1.0).sleep();
     }
+  }
+
+  if (append_line(stat_tsv_file_, "Frame\tTimestamp\tMatching\tPreprocessing\tTracking\tIntegration\tObject integration\tRendering\tVisualization\tFree volume\tOccupied volume\tExplored volume")) {
+    ROS_WARN_ONCE("Can't write %s", stat_tsv_file_.c_str());
+  } else {
+    ROS_INFO("Writing statistics to %s", stat_tsv_file_.c_str());
   }
 }
 
@@ -658,6 +666,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f&            T_WC,
   ROS_INFO("Occupied volume: %10.3f m^3", pipeline_->occupied_volume);
   ROS_INFO("Explored volume: %10.3f m^3", pipeline_->explored_volume);
   ROS_INFO("Tracked: %d   Integrated: %d", tracked, integrated);
+  append_line(stat_tsv_file_, statsToTSV());
 
   if (supereight_config_.rendering_rate > 0 && (frame_ + 1) % supereight_config_.rendering_rate == 0 && supereight_config_.output_render_file != "") {
     stdfs::create_directories(supereight_config_.output_render_file);
@@ -716,6 +725,12 @@ void SupereightNode::plan() {
     const std::lock_guard<std::mutex> map_lock (map_mutex_);
     pipeline_->freeInitialPosition(sensor_, (node_config_.experiment_type == "gazebo" ? "sphere" : "cylinder"));
   }
+  // Create the log file.
+  if (append_line(planning_stat_tsv_file_, "Planning iteration\tTimestamp\tPlanning time")) {
+    ROS_WARN_ONCE("Can't write %s", planning_stat_tsv_file_.c_str());
+  } else {
+    ROS_INFO("Writing planning statistics to %s", planning_stat_tsv_file_.c_str());
+  }
   // Exploration planning
   while (num_failed_planning_iterations_ < max_failed_planning_iterations_ || max_failed_planning_iterations_ == 0) {
     bool goal_reached = false;
@@ -736,6 +751,7 @@ void SupereightNode::plan() {
         }
         ROS_WARN("Planning iteration %d", num_planning_iterations_);
         ROS_WARN("%-25s %.5f s", "Planning", times_planning_.back());
+        append_line(planning_stat_tsv_file_, planningStatsToTSV());
 
         if (path_WB.empty()) {
           num_failed_planning_iterations_++;
@@ -1203,6 +1219,37 @@ void SupereightNode::printFrameTimes() const {
   ROS_INFO("%-25s %.5f s", "Rendering",          times_rendering_.back());
   ROS_INFO("%-25s %.5f s", "Visualization",      times_visualization_.back());
   ROS_INFO("Frame total               %.5f s", total_time);
+}
+
+
+
+std::string SupereightNode::statsToTSV() const {
+  std::stringstream s;
+  s << std::setprecision(6) << std::fixed
+    << frame_ << "\t"
+    << ros::Time::now().toSec() << "\t"
+    << times_matching_.back() << "\t"
+    << times_preprocessing_.back() << "\t"
+    << times_tracking_.back() << "\t"
+    << times_integration_.back() << "\t"
+    << times_object_integration_.back() << "\t"
+    << times_rendering_.back() << "\t"
+    << times_visualization_.back() << "\t"
+    << pipeline_->free_volume << "\t"
+    << pipeline_->occupied_volume << "\t"
+    << pipeline_->explored_volume;
+  return s.str();
+}
+
+
+
+std::string SupereightNode::planningStatsToTSV() const {
+  std::stringstream s;
+  s << std::setprecision(6) << std::fixed
+    << num_planning_iterations_ << "\t"
+    << ros::Time::now().toSec() << "\t"
+    << times_planning_.back();
+  return s.str();
 }
 
 

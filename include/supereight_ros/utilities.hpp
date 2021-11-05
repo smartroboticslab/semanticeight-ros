@@ -60,6 +60,7 @@ namespace se {
 
 
   std::string current_ros_log_dir();
+  int append_line(const std::string& filename, const std::string& line);
 
 
 
