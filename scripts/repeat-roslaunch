@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+# Usage: store_run_data OUTDIR INDEX
+store_run_data() {
+	# Resolve the symlink to the latest log directory.
+	log_dir=$(readlink -f "$HOME/.ros/log/latest")
+	# Store the log directory in OUTDIR prefixed with the run index.
+	outdir=$(printf '%s/%03d_%s' "$1" "$2" "$(basename "$log_dir")")
+	mkdir -p "$1"
+	cp -r "$log_dir" "$outdir"
+	# Move the renders/meshes instead of copying because the next run
+	# renders/meshes will be written in the same directories.
+	mesh_dir="$HOME/meshes_ros"
+	if [ -r "$mesh_dir" ]; then
+		mv "$mesh_dir" "$outdir"
+	fi
+	render_dir="$HOME/renders_ros"
+	if [ -r "$render_dir" ]; then
+		mv "$render_dir" "$outdir"
+	fi
+}
+
+if [ "$#" -lt 2 ]; then
+	printf 'Usage: %s NUM COMMAND [ARG]...\n' "$(basename "$0")"
+	exit 2
+fi
+
+dir="$HOME/semanticeight_logs_$(date '+%Y%m%d_%H%M%S')"
+n="$1"
+shift
+
+# Run the command n times and save the logs.
+i=1
+while [ "$i" -le "$n" ]; do
+	printf 'Run %d/%d\n' "$i" "$n"
+	"$@"
+	store_run_data "$dir" "$i"
+	i=$((i+1))
+done
+
