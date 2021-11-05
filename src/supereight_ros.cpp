@@ -291,12 +291,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
 
   setupRos();
 
-  // Start the planner thread.
-  if (supereight_config_.enable_exploration) {
-    std::thread t (std::bind(&SupereightNode::plan, this));
-    t.detach();
-  }
-
   exploration_start_time_ = std::chrono::steady_clock::now();
   ROS_INFO("Initialization finished");
 
@@ -329,6 +323,12 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
     ROS_WARN_ONCE("Can't write %s", stat_tsv_file_.c_str());
   } else {
     ROS_INFO("Writing statistics to %s", stat_tsv_file_.c_str());
+  }
+
+  // Start the planner thread.
+  if (supereight_config_.enable_exploration) {
+    std::thread t (std::bind(&SupereightNode::plan, this));
+    t.detach();
   }
 }
 
