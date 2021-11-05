@@ -24,6 +24,24 @@
 
 
 namespace se {
+  std::string current_ros_log_dir() {
+    std::string ros_log_dir;
+    const char* ros_log_dir_env = std::getenv("ROS_LOG_DIR");
+    if (ros_log_dir_env) {
+      ros_log_dir = ros_log_dir_env;
+      if (ros_log_dir.back() == '/') {
+        ros_log_dir.erase(ros_log_dir.size() - 1, 1);
+      }
+    } else {
+      const char* home_env = std::getenv("HOME");
+      ros_log_dir = home_env;
+      ros_log_dir += "/.ros/log";
+    }
+    return ros_log_dir + "/latest";
+  }
+
+
+
   void to_supereight_depth(const sensor_msgs::ImageConstPtr& input_depth,
                            const float                       far_plane,
                            float*                            output_depth) {

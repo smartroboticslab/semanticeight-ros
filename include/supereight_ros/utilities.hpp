@@ -59,6 +59,10 @@ namespace se {
 
 
 
+  std::string current_ros_log_dir();
+
+
+
   static float to_log_odds(const float probability) {
     return std::log2f(probability / (1.0f - probability));
   }
