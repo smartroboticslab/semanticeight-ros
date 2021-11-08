@@ -117,6 +117,8 @@ namespace se {
     // Exploration only ///////////////////////////////////////////////////////
     out << str_utils::vector_to_pretty_str(config.aabb_min_W,               "AABB min_w") << "\n";
     out << str_utils::vector_to_pretty_str(config.aabb_max_W,               "AABB max_w") << "\n";
+    out << str_utils::vector_to_pretty_str(config.sampling_min_W,           "Sampling min_w") << "\n";
+    out << str_utils::vector_to_pretty_str(config.sampling_max_W,           "Sampling max_w") << "\n";
     out << str_utils::bool_to_pretty_str(config.enable_exploration,         "Enable exploration") << "\n";
     out << str_utils::value_to_pretty_str(config.num_candidates,            "Num candidates") << "\n";
     out << str_utils::value_to_pretty_str(config.exploration_weight,        "Exploration weight") << "\n";
@@ -230,7 +232,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh,
       supereight_config_.pyramid,
       supereight_config_));
   se::ExplorationConfig exploration_config = {
-    supereight_config_.num_candidates, {
+    supereight_config_.num_candidates,
+    (pipeline_->T_MW() * supereight_config_.sampling_min_W.homogeneous()).head<3>(),
+    (pipeline_->T_MW() * supereight_config_.sampling_max_W.homogeneous()).head<3>(), {
       supereight_config_.exploration_weight,
       supereight_config_.use_pose_history,
       supereight_config_.raycast_width,

@@ -237,6 +237,18 @@ namespace se {
         config.aabb_max_W[i] = aabb_max_W_vector[i];
       }
     }
+    std::vector<float> sampling_min_W_vector;
+    if (nh.getParam("supereight/map/sampling_min_W", sampling_min_W_vector)) {
+      for (size_t i = 0; i < sampling_min_W_vector.size(); ++i) {
+        config.sampling_min_W[i] = sampling_min_W_vector[i];
+      }
+    }
+    std::vector<float> sampling_max_W_vector;
+    if (nh.getParam("supereight/map/sampling_max_W", sampling_max_W_vector)) {
+      for (size_t i = 0; i < sampling_max_W_vector.size(); ++i) {
+        config.sampling_max_W[i] = sampling_max_W_vector[i];
+      }
+    }
     nh.getParam("supereight/exploration/enable_exploration", config.enable_exploration);
     nh.getParam("supereight/exploration/num_candidates", config.num_candidates);
     nh.getParam("supereight/exploration/exploration_weight", config.exploration_weight);

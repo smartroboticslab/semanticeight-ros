@@ -29,7 +29,7 @@ supereight:
     sequence_name:              ""
     sequence_type:              "ros"
     output_render_path:         ""
-    enable_meshing:             false
+    enable_meshing:             true
     output_mesh_path:           "/home/srl/meshes_ros"
     # Rates
     tracking_rate:              1
@@ -48,6 +48,8 @@ supereight:
     size:                       256
     dim:                        40.96
     t_MW_factor:                [0.501, 0.501, 0.501]
+    sampling_min_W:             [-10000, -10000, -10000]
+    sampling_max_W:             [ 10000,  10000,  10000]
 
   sensor:
     intrinsics:                 [525, 525, 319.5, 239.5]
