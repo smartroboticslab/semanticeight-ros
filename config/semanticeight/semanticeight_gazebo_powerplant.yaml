@@ -18,6 +18,7 @@ supereight:
     aabb_max_W:                 [ 16.5,  15.5, 26.0]
     sampling_min_W:             [-.inf, -.inf,  0.7]
     sampling_max_W:             [ .inf,  .inf, 25.0]
+    frontier_cluster_min_volume: 0.512
 
   sensor:
     near_plane:                 0.02

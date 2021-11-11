@@ -225,6 +225,7 @@ namespace se {
     // Couldn't find a way to get the filename of the YAML file loaded from ROS.
 
     // Exploration only ///////////////////////////////////////////////////////
+    nh.getParam("supereight/map/frontier_cluster_min_volume", config.frontier_cluster_min_volume);
     std::vector<float> aabb_min_W_vector;
     if (nh.getParam("supereight/map/aabb_min_W", aabb_min_W_vector)) {
       for (size_t i = 0; i < aabb_min_W_vector.size(); ++i) {

@@ -115,6 +115,7 @@ namespace se {
     out << "\n";
 
     // Exploration only ///////////////////////////////////////////////////////
+    out << str_utils::value_to_pretty_str(config.frontier_cluster_min_volume, "Frontier cluster min volume") << "\n";
     out << str_utils::vector_to_pretty_str(config.aabb_min_W,               "AABB min_w") << "\n";
     out << str_utils::vector_to_pretty_str(config.aabb_max_W,               "AABB max_w") << "\n";
     out << str_utils::vector_to_pretty_str(config.sampling_min_W,           "Sampling min_w") << "\n";
