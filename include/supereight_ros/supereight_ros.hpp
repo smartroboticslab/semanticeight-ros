@@ -380,9 +380,11 @@ namespace se {
     std::map<std::string,std::string> stat_tsv_filenames_;
     //std::mutex stat_mutex_;
 
+    double start_time_;
     void initStats();
     void newStatFrame(const std::string& section);
     void sampleStat(const std::string& section, const std::string& stat, double value);
+    void sampleTime(const std::string& section, const std::string& stat, double value = ros::WallTime::now().toSec());
     double getStat(const std::string& section, const std::string& stat) const;
     std::vector<double> getLastStats(const std::string& section) const;
     void printStats() const;
