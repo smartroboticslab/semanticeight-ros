@@ -18,6 +18,23 @@ get_column_index() {
 	' "$1"
 }
 
+# Usage: get_axis_limit LIMITS PLOT AXIS
+# LIMITS is a string in the form X1:Y1,X2:Y2,X3:Y3,X4:Y4.
+# PLOT is the plot index in the range [1,4] inclusive.
+# AXIS is either x or y.
+get_axis_limit() {
+	printf '%s\n' "$1" | awk '
+		BEGIN {
+			RS = ","
+			FS = ":"
+			a["x"] = 1
+			a["y"] = 2
+		}
+		NR == '"$2"' {
+			print $a[tolower("'"$3"'")]
+		}'
+}
+
 # Usage: get_average_data LOGFILE...
 get_average_data() {
 	# Sort the lines of all files so that lines for the same frame are
@@ -59,6 +76,7 @@ get_average_data() {
 plot_data() {
 	# Set default values for options.
 	extra_plots=${extra_plots:-0}
+	axis_limits=${axis_limits:-''}
 	save_command=${save_command:-''}
 
 	data_files=""
@@ -98,6 +116,8 @@ plot_data() {
 	set key right bottom;
 	set xlabel 'Time (s)';
 	set ylabel 'Volume (m³)';
+	set xrange [0:$(get_axis_limit "$axis_limits" 1 x)];
+	set yrange [0:$(get_axis_limit "$axis_limits" 1 y)];
 	plot for [f in data_files] f using $stamp_idx:$free_idx notitle linetype rgb 'blue' dashtype \".\",\
 		for [f in data_files] f using $stamp_idx:$occ_idx notitle linetype rgb 'red' dashtype \".\",\
 		for [f in data_files] f using $stamp_idx:$expl_idx notitle linetype rgb 'green' dashtype \".\",\
@@ -108,6 +128,8 @@ plot_data() {
 	set key right bottom;
 	set xlabel 'Frame';
 	set ylabel 'Volume (m³)';
+	set xrange [0:$(get_axis_limit "$axis_limits" 2 x)];
+	set yrange [0:$(get_axis_limit "$axis_limits" 2 y)];
 	plot for [f in data_files] f using (\$$frame_idx+1):$free_idx notitle linetype rgb 'blue' dashtype \".\",\
 		for [f in data_files] f using (\$$frame_idx+1):$occ_idx notitle linetype rgb 'red' dashtype \".\",\
 		for [f in data_files] f using (\$$frame_idx+1):$expl_idx notitle linetype rgb 'green' dashtype \".\",\
@@ -118,12 +140,16 @@ plot_data() {
 
 	set xlabel 'Planning iteration';
 	set ylabel 'Planning time (s)';
+	set xrange [0:$(get_axis_limit "$axis_limits" 3 x)];
+	set yrange [0:$(get_axis_limit "$axis_limits" 3 y)];
 	plot for [f in planning_files] f using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' linewidth 3;
 
 	set key left top;
 	set xlabel 'Frame';
 	set ylabel 'Frame time (s)';
+	set xrange [0:$(get_axis_limit "$axis_limits" 4 x)];
+	set yrange [0:$(get_axis_limit "$axis_limits" 4 y)];
 	plot for [i=$pre_idx:$obj_int_idx:1] \
 		'$average_data_file' using (\$$frame_idx+1):(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1;
 
@@ -153,20 +179,26 @@ plot_data() {
 usage() {
 	printf 'Usage: %s LOGDIR...\n' "${0##*/}"
 	grep -E '[[:space:]].) #' "$0" | sed -e 's/) #//g' -e 's/^[ \t]*/  -/g'
+	printf 'LIMITS is in the form X1:Y1,X2:Y2,X3:Y3,X4:Y4\n'
+	printf 'where X* and Y* are the maximum x and y axis limits.\n'
+	printf 'They are applied to the plots in row-major order.\n'
 }
 
 
 
 # Parse command line options.
-while getopts 'eo:h' opt_name; do
+while getopts 'el:o:h' opt_name; do
 	case "$opt_name" in
-		e) #      Display extra plots
+		e) #        Display extra plots
 			extra_plots=1
 			;;
-		o) # FILE Save to FILE instead of displaying
+		l) # LIMITS Set the axis limits
+			axis_limits="$OPTARG"
+			;;
+		o) # FILE   Save to FILE instead of displaying
 			save_command="set terminal png size 1920,1080; set output '$OPTARG';"
 			;;
-		h) #      Display this help message
+		h) #        Display this help message
 			usage
 			exit 0
 			;;
