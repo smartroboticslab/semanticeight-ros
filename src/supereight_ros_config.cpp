@@ -151,8 +151,10 @@ namespace se {
     config.enable_ground_truth = !enable_tracking;
     nh.getParam("supereight_ros/enable_rendering", config.enable_render);
     nh.getParam("supereight/general/output_render_path", config.output_render_file);
+    config.output_render_file = str_utils::expand_user(config.output_render_file);
     nh.getParam("supereight/general/enable_meshing", config.enable_meshing);
     nh.getParam("supereight/general/output_mesh_path", config.output_mesh_file);
+    config.output_mesh_file = str_utils::expand_user(config.output_mesh_file);
     nh.getParam("supereight/general/tracking_rate", config.tracking_rate);
     nh.getParam("supereight/general/integration_rate", config.integration_rate);
     nh.getParam("supereight/general/rendering_rate", config.rendering_rate);
