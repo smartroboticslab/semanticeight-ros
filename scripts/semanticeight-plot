@@ -55,7 +55,12 @@ get_average_data() {
 		}'
 }
 
+# Usage: plot_data FILE...
 plot_data() {
+	# Set default values for options.
+	extra_plots=${extra_plots:-0}
+	save_command=${save_command:-''}
+
 	data_files=""
 	planning_files=""
 	# Iterate over each log directory.
@@ -153,8 +158,6 @@ usage() {
 
 
 # Parse command line options.
-extra_plots=0
-save_command=''
 while getopts 'eo:h' opt_name; do
 	case "$opt_name" in
 		e) #      Display extra plots
