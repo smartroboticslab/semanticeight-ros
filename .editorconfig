@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+# SPDX-FileCopyrightText: 2021 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2021 Sotiris Papatheodorou, Imperial College London
 # SPDX-License-Identifier: CC0-1.0
 
 # EditorConfig documentation:
@@ -10,16 +11,25 @@ root = true
 end_of_line = lf
 charset = utf-8
 insert_final_newline = true
-
-[{*.{c,h,cpp,hpp,cxx,hxx,launch}, CMakeLists.txt, package.xml}]
-indent_style = space
-indent_size = 2
 trim_trailing_whitespace = true
-max_line_length = 100
 
-[*.sh, *.bash]
-indent_style = tab
+[*.{c,h,cpp,hpp}]
 indent_size = 4
-trim_trailing_whitespace = true
+max_line_length = 100
+indent_style = space
+
+[CMakeLists.txt]
+indent_size = 4
+max_line_length = 100
+indent_style = space
+
+[*.{md,py}]
+indent_size = 4
 max_line_length = 80
+indent_style = space
+
+[*.{sh,bash}]
+indent_size = 4
+max_line_length = 80
+indent_style = tab
 
