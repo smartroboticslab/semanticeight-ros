@@ -6,21 +6,19 @@
 #ifndef __SUPEREIGHT_ROS_CONFIG_HPP
 #define __SUPEREIGHT_ROS_CONFIG_HPP
 
-#include <string>
-
 #include <Eigen/Dense>
-
 #include <ros/ros.h>
+#include <string>
 
 #include "se/config.h"
 
 
 
 namespace se {
-  /*!
-   * \brief Configuration for se::SupereightNode
-   */
-  struct SupereightNodeConfig {
+/*!
+ * \brief Configuration for se::SupereightNode
+ */
+struct SupereightNodeConfig {
     /*!
      * Use the ICP tracking from supereight to compute the camera pose.
      */
@@ -123,40 +121,39 @@ namespace se {
     /** Run Mask R-CNN on the input images.
      */
     bool run_segmentation;
-  };
+};
 
 
 
-  /*!
-   * \brief Read an se::SupereightNodeConfig from a ROS node's parameters.
-   *
-   * \param[in] nh The handle of the ROS node containing the parameters.
-   *
-   * \return An se::SupereightNodeConfig.
-   */
-  SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh);
+/*!
+ * \brief Read an se::SupereightNodeConfig from a ROS node's parameters.
+ *
+ * \param[in] nh The handle of the ROS node containing the parameters.
+ *
+ * \return An se::SupereightNodeConfig.
+ */
+SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh);
 
 
 
-  /*!
-   * \brief Print the values of an se::SupereightNodeConfig using ROS_INFO.
-   *
-   * \param[in] config The se::SupereightNodeConfig struct to print.
-   */
-  void print_supereight_node_config(const SupereightNodeConfig& config);
+/*!
+ * \brief Print the values of an se::SupereightNodeConfig using ROS_INFO.
+ *
+ * \param[in] config The se::SupereightNodeConfig struct to print.
+ */
+void print_supereight_node_config(const SupereightNodeConfig& config);
 
 
 
-  /*!
-   * \brief Read an se::Configuration from a ROS node's parameters.
-   *
-   * \param[in] nh The handle of the ROS node containing the parameters.
-   *
-   * \return An se::Configuration.
-   */
-  Configuration read_supereight_config(const ros::NodeHandle& nh);
+/*!
+ * \brief Read an se::Configuration from a ROS node's parameters.
+ *
+ * \param[in] nh The handle of the ROS node containing the parameters.
+ *
+ * \return An se::Configuration.
+ */
+Configuration read_supereight_config(const ros::NodeHandle& nh);
 
 } // namespace se
 
 #endif
-

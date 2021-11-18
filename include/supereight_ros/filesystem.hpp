@@ -10,20 +10,17 @@
 #ifndef __FILESYSTEM_HPP
 #define __FILESYSTEM_HPP
 
-#if        (defined(__GNUC__)        && __GNUC__        >= 8) \
-        || (defined(__clang_major__) && __clang_major__ >= 7) \
-        || (defined(_MSC_VER)        && _MSC_VER        >= 1914)
-#include <filesystem>
+#if (defined(__GNUC__) && __GNUC__ >= 8) || (defined(__clang_major__) && __clang_major__ >= 7) \
+    || (defined(_MSC_VER) && _MSC_VER >= 1914)
+#    include <filesystem>
 namespace stdfs = std::filesystem;
 
-#elif      (defined(__GNUC__)        && __GNUC__        >= 6) \
-        || (defined(__clang_major__) && __clang_major__ >= 6)
-#include <experimental/filesystem>
+#elif (defined(__GNUC__) && __GNUC__ >= 6) || (defined(__clang_major__) && __clang_major__ >= 6)
+#    include <experimental/filesystem>
 namespace stdfs = std::experimental::filesystem;
 
 #else
-#error A compiler with support for std::filesystem is required
+#    error A compiler with support for std::filesystem is required
 #endif
 
 #endif // __FILESYSTEM_HPP
-

@@ -6,33 +6,30 @@
 #ifndef __SUPEREIGHT_ROS_HPP
 #define __SUPEREIGHT_ROS_HPP
 
+#include <Eigen/Dense>
+#include <boost/circular_buffer.hpp>
 #include <chrono>
 #include <cstdint>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <map>
 #include <memory>
 #include <mutex>
-#include <string>
-#include <vector>
-
-#include <Eigen/Dense>
-
-#include <boost/circular_buffer.hpp>
-
-#include <ros/ros.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Path.h>
+#include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Header.h>
+#include <string>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <vector>
 #include <visualization_msgs/MarkerArray.h>
 
 #include "se/DenseSLAMSystem.h"
 #include "se/exploration_planner.hpp"
 #include "se/octree_iterator.hpp"
 #ifdef SE_WITH_MASKRCNN
-#include "maskrcnn_trt/maskrcnn.hpp"
+#    include "maskrcnn_trt/maskrcnn.hpp"
 #endif // SE_WITH_MASKRCNN
 
 #include "supereight_ros/supereight_ros_config.hpp"
@@ -41,13 +38,12 @@
 
 namespace se {
 
-  /*!
-   * \brief A ROS node that wraps a supereight pipeline.
-   */
-  class SupereightNode {
-  public:
-    SupereightNode(const ros::NodeHandle& nh,
-                   const ros::NodeHandle& nh_private);
+/*!
+ * \brief A ROS node that wraps a supereight pipeline.
+ */
+class SupereightNode {
+    public:
+    SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
 
     /*!
      * \brief Integrate the measurements using the supereight pipeline.
@@ -67,10 +63,10 @@ namespace se {
      */
     void matchAndFuse();
 
-    void fuse(const Eigen::Matrix4f&            T_WC,
+    void fuse(const Eigen::Matrix4f& T_WC,
               const sensor_msgs::ImageConstPtr& depth_image,
               const sensor_msgs::ImageConstPtr& color_image,
-              const se::SegmentationResult&     segmentation);
+              const se::SegmentationResult& segmentation);
 
     void plan();
 
@@ -89,15 +85,16 @@ namespace se {
      *
      * \return An std::shared_ptr to the supereight pipeline.
      */
-    std::shared_ptr<DenseSLAMSystem> getSupereightPipeline() {
-      return pipeline_;
+    std::shared_ptr<DenseSLAMSystem> getSupereightPipeline()
+    {
+        return pipeline_;
     }
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 
 
-  private:
+    private:
     /*!
      * \brief Read the supereight and se::SupereightNode YAML configuration
      * files.
@@ -170,8 +167,7 @@ namespace se {
      *                   convention (x forward, y left, z up).
      * \param[in] header The header of the body pose message.
      */
-    void poseCallback(const Eigen::Matrix4d&  T_WB,
-                      const std_msgs::Header& header);
+    void poseCallback(const Eigen::Matrix4d& T_WB, const std_msgs::Header& header);
 
     void SemClassCallback(const sensor_msgs::ImageConstPtr& class_msg);
 
@@ -202,15 +198,17 @@ namespace se {
     void visualizePoseHistory();
 
     template<typename VoxelImplT>
-    bool is_free(const se::Volume<typename VoxelImplT::VoxelType>& volume) const {
-      constexpr bool is_tsdf = VoxelImplT::invert_normals;
-      return (is_tsdf && volume.data.x > 0.0f) || (!is_tsdf && volume.data.x < 0.0f);
+    bool is_free(const se::Volume<typename VoxelImplT::VoxelType>& volume) const
+    {
+        constexpr bool is_tsdf = VoxelImplT::invert_normals;
+        return (is_tsdf && volume.data.x > 0.0f) || (!is_tsdf && volume.data.x < 0.0f);
     }
 
     template<typename VoxelImplT>
-    bool is_occupied(const se::Volume<typename VoxelImplT::VoxelType>& volume) const {
-      constexpr bool is_tsdf = VoxelImplT::invert_normals;
-      return (is_tsdf && volume.data.x <= 0.0f) || (!is_tsdf && volume.data.x > 0.0f);
+    bool is_occupied(const se::Volume<typename VoxelImplT::VoxelType>& volume) const
+    {
+        constexpr bool is_tsdf = VoxelImplT::invert_normals;
+        return (is_tsdf && volume.data.x <= 0.0f) || (!is_tsdf && volume.data.x > 0.0f);
     }
 
     geometry_msgs::TransformStamped T_MW_Msg() const;
@@ -226,7 +224,7 @@ namespace se {
 
     visualization_msgs::Marker mapDimMsg() const;
 
-    void runNetwork(const Eigen::Matrix4f&            T_WC,
+    void runNetwork(const Eigen::Matrix4f& T_WC,
                     const sensor_msgs::ImageConstPtr& depth_image,
                     const sensor_msgs::ImageConstPtr& color_image);
 
@@ -254,7 +252,7 @@ namespace se {
     std::chrono::time_point<std::chrono::steady_clock> exploration_start_time_;
 
     // Image buffers
-    std::unique_ptr<float>    input_depth_;
+    std::unique_ptr<float> input_depth_;
     std::unique_ptr<uint32_t> input_rgba_;
     std::unique_ptr<uint32_t> rgba_render_;
     std::unique_ptr<uint32_t> depth_render_;
@@ -333,10 +331,10 @@ namespace se {
 
     // Circular buffers for incoming messages
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;
-    boost::circular_buffer<sensor_msgs::ImageConstPtr>      depth_buffer_;
-    boost::circular_buffer<sensor_msgs::ImageConstPtr>      rgb_buffer_;
-    boost::circular_buffer<sensor_msgs::ImageConstPtr>      class_buffer_;
-    boost::circular_buffer<sensor_msgs::ImageConstPtr>      instance_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr> depth_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr> rgb_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr> class_buffer_;
+    boost::circular_buffer<sensor_msgs::ImageConstPtr> instance_buffer_;
     std::mutex pose_buffer_mutex_;
     std::mutex depth_buffer_mutex_;
     std::mutex rgb_buffer_mutex_;
@@ -363,35 +361,66 @@ namespace se {
 
     // Statistics
     // Statistics for a single frame.
-    typedef std::map<std::string,double> FrameStats;
+    typedef std::map<std::string, double> FrameStats;
     // Statistics for a all frames for a single section, e.g. Planning.
     typedef std::vector<FrameStats> SectionStats;
     // Statistics for all sections.
-    typedef std::map<std::string,SectionStats> Stats;
+    typedef std::map<std::string, SectionStats> Stats;
     // Valid statistic names for each section in the order in which they should be printed.
-    typedef std::map<std::string,std::vector<std::string>> StatNames;
+    typedef std::map<std::string, std::vector<std::string>> StatNames;
 
-    const StatNames stat_names_ = {
-      {"Fusion", {"Frame", "Timestamp", "Preprocessing", "Tracking", "Integration", "Object integration", "Rendering", "Visualization", "Free volume", "Occupied volume", "Explored volume", "t_WB x", "t_WB y", "t_WB z", "q_WB x", "q_WB y", "q_WB z", "q_WB w"}},
-      {"Planning", {"Planning iteration", "Timestamp", "Planning time", "Goal utility", "Goal entropy gain", "Goal LoD gain", "Goal path time", "Goal t_WB x", "Goal t_WB y", "Goal t_WB z", "Goal q_WB x", "Goal q_WB y", "Goal q_WB z", "Goal q_WB w"}},
-      {"Network", {"Timestamp", "Network time"}}
-    };
+    const StatNames stat_names_ = {{"Fusion",
+                                    {"Frame",
+                                     "Timestamp",
+                                     "Preprocessing",
+                                     "Tracking",
+                                     "Integration",
+                                     "Object integration",
+                                     "Rendering",
+                                     "Visualization",
+                                     "Free volume",
+                                     "Occupied volume",
+                                     "Explored volume",
+                                     "t_WB x",
+                                     "t_WB y",
+                                     "t_WB z",
+                                     "q_WB x",
+                                     "q_WB y",
+                                     "q_WB z",
+                                     "q_WB w"}},
+                                   {"Planning",
+                                    {"Planning iteration",
+                                     "Timestamp",
+                                     "Planning time",
+                                     "Goal utility",
+                                     "Goal entropy gain",
+                                     "Goal LoD gain",
+                                     "Goal path time",
+                                     "Goal t_WB x",
+                                     "Goal t_WB y",
+                                     "Goal t_WB z",
+                                     "Goal q_WB x",
+                                     "Goal q_WB y",
+                                     "Goal q_WB z",
+                                     "Goal q_WB w"}},
+                                   {"Network", {"Timestamp", "Network time"}}};
     Stats stats_;
-    std::map<std::string,std::string> stat_tsv_filenames_;
+    std::map<std::string, std::string> stat_tsv_filenames_;
     //std::mutex stat_mutex_;
 
     double start_time_;
     void initStats();
     void newStatFrame(const std::string& section);
     void sampleStat(const std::string& section, const std::string& stat, double value);
-    void sampleTime(const std::string& section, const std::string& stat, double value = ros::WallTime::now().toSec());
+    void sampleTime(const std::string& section,
+                    const std::string& stat,
+                    double value = ros::WallTime::now().toSec());
     double getStat(const std::string& section, const std::string& stat) const;
     std::vector<double> getLastStats(const std::string& section) const;
     void printStats() const;
     void writeFrameStats(const std::string& section) const;
-  };
+};
 
 } // namespace se
 
 #endif // SUPEREIGHT_ROS_HPP
-
