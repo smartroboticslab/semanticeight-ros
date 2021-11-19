@@ -1316,8 +1316,7 @@ void SupereightNode::setupRos()
         path_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/supereight/path", 5);
     }
     else if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "srl") {
-        path_pub_ =
-            nh_.advertise<mav_interface_msgs::FullStateTrajectory>("/supereight/path_nmpc", 5);
+        path_pub_ = nh_.advertise<mav_interface_msgs::FullStateTrajectory>("/supereight/path", 5);
     }
     else {
         path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", 5);

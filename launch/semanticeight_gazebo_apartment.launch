@@ -47,7 +47,7 @@
       <remap from="/camera/depth_image" to="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/depth/disparity"/>
       <remap from="/camera/rgb_image"   to="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/camera/image_raw"/>
       <remap from="/pose"               to="/$(arg mav_name)$(arg subscript)/ground_truth/transform"/>
-      <remap from="/supereight/path_nmpc"    to="/autopilot/trajectory"/>
+      <remap from="/supereight/path"    to="/autopilot/trajectory"/>
     </node>
   </group>
 
