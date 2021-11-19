@@ -150,6 +150,7 @@ void print_supereight_node_config(const SupereightNodeConfig& config)
     ROS_INFO("  visualization_rate:       %d", config.visualization_rate);
     ROS_INFO("  visualization_max_z:      %f", config.visualization_max_z);
     ROS_INFO("  experiment_type:          %s", config.experiment_type.c_str());
+    ROS_INFO("  control_interface:        %s", config.control_interface.c_str());
 }
 
 
