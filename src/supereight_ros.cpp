@@ -967,6 +967,8 @@ void SupereightNode::plan()
                     const std::lock_guard<std::mutex> map_lock(map_mutex_);
                     const std::lock_guard<std::mutex> pose_lock(pose_mutex_);
                     const auto start_time = std::chrono::steady_clock::now();
+                    planner_->setPlanningT_WB(transform_to_eigen(pose_buffer_.back().transform)
+                                              * T_CB_);
                     path_WB = planner_->computeNextPath_WB(
                         pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
                     const auto end_time = std::chrono::steady_clock::now();

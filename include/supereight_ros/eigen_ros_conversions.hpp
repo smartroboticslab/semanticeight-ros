@@ -22,15 +22,18 @@ inline geometry_msgs::Point eigen_to_point(const Eigen::Vector3f& p);
 inline geometry_msgs::Vector3 make_vector3(float x, float y, float z);
 inline geometry_msgs::Vector3 make_vector3(float x = 0.0f);
 inline geometry_msgs::Vector3 eigen_to_vector3(const Eigen::Vector3f& p);
+inline Eigen::Vector3f vector3_to_eigen(const geometry_msgs::Vector3& p);
 
 // Quaternion
 inline geometry_msgs::Quaternion
 make_quaternion(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 1.0f);
 inline geometry_msgs::Quaternion eigen_to_quaternion(const Eigen::Quaternionf& q);
+inline Eigen::Quaternionf quaternion_to_eigen(const geometry_msgs::Quaternion& q);
 
 inline geometry_msgs::Pose eigen_to_pose(const Eigen::Matrix4f& T);
 
 inline geometry_msgs::Transform eigen_to_transform(const Eigen::Matrix4f& T);
+inline Eigen::Matrix4f transform_to_eigen(const geometry_msgs::Transform& tf);
 
 inline std_msgs::ColorRGBA make_color(float r, float g, float b, float a);
 

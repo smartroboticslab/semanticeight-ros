@@ -35,6 +35,13 @@ inline geometry_msgs::Point eigen_to_point(const Eigen::Vector3f& p)
 
 
 
+inline Eigen::Vector3f vector3_to_eigen(const geometry_msgs::Vector3& p)
+{
+    return Eigen::Vector3f(p.x, p.y, p.z);
+}
+
+
+
 inline geometry_msgs::Vector3 make_vector3(float x, float y, float z)
 {
     geometry_msgs::Vector3 v;
@@ -86,6 +93,13 @@ inline geometry_msgs::Quaternion eigen_to_quaternion(const Eigen::Quaternionf& q
 
 
 
+inline Eigen::Quaternionf quaternion_to_eigen(const geometry_msgs::Quaternion& q)
+{
+    return Eigen::Quaternionf(q.w, q.x, q.y, q.z);
+}
+
+
+
 inline geometry_msgs::Pose eigen_to_pose(const Eigen::Matrix4f& T)
 {
     geometry_msgs::Pose p;
@@ -102,6 +116,16 @@ inline geometry_msgs::Transform eigen_to_transform(const Eigen::Matrix4f& T)
     t.translation = eigen_to_vector3(T.topRightCorner<3, 1>());
     t.rotation = eigen_to_quaternion(Eigen::Quaternionf(T.topLeftCorner<3, 3>()));
     return t;
+}
+
+
+
+inline Eigen::Matrix4f transform_to_eigen(const geometry_msgs::Transform& tf)
+{
+    Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+    T.topRightCorner<3, 1>() = vector3_to_eigen(tf.translation);
+    T.topLeftCorner<3, 3>() = quaternion_to_eigen(tf.rotation).toRotationMatrix();
+    return T;
 }
 
 
