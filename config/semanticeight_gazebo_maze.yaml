@@ -16,8 +16,8 @@ supereight:
     t_MW_factor:                [0.501, 0.501, 0.501]
     aabb_min_W:                 [-10.0, -10.0, 0.0]
     aabb_max_W:                 [ 10.0,  10.0, 2.5]
-    sampling_min_W:             [-.inf, -.inf, 1.2]
-    sampling_max_W:             [ .inf,  .inf, 1.8]
+    sampling_min_W:             [-10000, -10000, 1.2]
+    sampling_max_W:             [ 10000,  10000, 1.8]
     frontier_cluster_min_volume: 0.064
 
   exploration:

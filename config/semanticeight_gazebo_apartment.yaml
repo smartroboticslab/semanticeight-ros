@@ -21,7 +21,7 @@ supereight:
     frontier_cluster_min_volume: 0.016
 
   exploration:
-    delta_t:                    0.50
+    delta_t:                   0.50
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.

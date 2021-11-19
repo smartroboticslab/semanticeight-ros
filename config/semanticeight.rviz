@@ -68,6 +68,8 @@ Visualization Manager:
       Name: Goal
       Namespaces:
         goal: true
+        goal_path: true
+        goal_yaw: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -289,9 +291,17 @@ Visualization Manager:
         All Enabled: false
         body:
           Value: true
+        firefly/base_link:
+          Value: true
         camera:
           Value: false
+        firefly/odometry_sensor1:
+          Value: false
+        firefly/vi_sensor/base_link:
+          Value: false
         habitat_world:
+          Value: false
+        firefly/vi_sensor/camera_depth_optical_center_link:
           Value: false
         map:
           Value: false
@@ -309,7 +319,14 @@ Visualization Manager:
             body:
               camera:
                 {}
+            firefly/base_link:
+              firefly/vi_sensor/camera_depth_optical_center_link:
+                {}
             habitat_world:
+              {}
+            firefly/odometry_sensor1:
+              {}
+            firefly/vi_sensor/base_link:
               {}
       Update Interval: 0
       Value: true

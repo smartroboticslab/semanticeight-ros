@@ -3,7 +3,7 @@
 <!-- SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
-  <include file="$(find supereight_ros)/launch/semanticeight_gazebo.launch">
+  <include file="$(find supereight_ros)/launch/semanticeight_gazebo_apartment.launch">
     <arg name="world_name" value="maze"/>
     <arg name="waypoint_x" value="0.0"/>
     <arg name="waypoint_y" value="-4.0"/>

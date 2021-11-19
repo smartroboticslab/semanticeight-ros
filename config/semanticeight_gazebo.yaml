@@ -22,6 +22,7 @@ supereight_ros:
   visualize_360_raycasting: true
   max_exploration_time: .NaN
   run_segmentation: false
+  control_interface: "srl"
 
 # Supereight settings
 supereight:
@@ -55,7 +56,7 @@ supereight:
     T_BC:                       [ 0, -0.09983341664682817,  0.9950041652780257,   0.1155739796873748,
                                  -1,  0,                    0,                    0.055,
                                   0, -0.9950041652780257,  -0.09983341664682817, -0.02502997417539525,
-                                  0,  0,                    0,                    1] 
+                                  0,  0,                    0,                    1]
     init_T_WB:                  [1, 0, 0, 0,
                                  0, 1, 0, 0,
                                  0, 0, 1, 0,
@@ -76,7 +77,7 @@ supereight:
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
-    solving_time:              0.5
+    solving_time:              0.1
 
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the

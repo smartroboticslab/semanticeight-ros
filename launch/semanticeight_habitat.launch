@@ -9,8 +9,8 @@
   <!-- habitat-ros node and MAV simulator -->
   <remap from="/supereight/path" to="/mav_sim/goal_path"/>
   <include file="$(find habitat_ros)/launch/habitat_ros_sim.launch">
-    <arg name="habitat_ros_config_file"         value="$(find supereight_ros)/config/habitat.yaml"/>
-    <arg name="habitat_ros_mav_sim_config_file" value="$(find supereight_ros)/config/habitat_sim.yaml"/>
+    <arg name="habitat_ros_config_file"         value="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
+    <arg name="habitat_ros_mav_sim_config_file" value="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
   </include>
 
   <!-- supereight-ros node -->
@@ -22,8 +22,7 @@
         required="true"
         launch-prefix="">
     <!-- Include rosparam yaml files -->
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight.yaml"/>
-    <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
     <!-- Remap topic names -->
     <remap from="/camera/depth_image" to="/habitat/depth/image_raw"/>
     <remap from="/camera/rgb_image"   to="/habitat/rgb/image_raw"/>
