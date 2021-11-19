@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <mav_interface_msgs/conversions.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
@@ -24,7 +25,6 @@
 #include "se/exploration_planner.hpp"
 #include "se/segmentation_result.hpp"
 #include "supereight_ros/eigen_ros_conversions.hpp"
-
 
 
 namespace se {
@@ -231,6 +231,18 @@ void publish_path_open_loop(se::ExplorationPlanner& planner,
                             const std::string& world_frame_id,
                             const std::string& experiment_type,
                             float delta_t);
+
+void publish_full_state_trajectory(se::ExplorationPlanner& planner,
+                                   const ros::Publisher& path_pub,
+                                   const se::Configuration& config);
+
+Eigen::Quaternionf constraintReferenceOrientation(const Eigen::Matrix4f& T_WB);
+
+
+double computePositionError(const Eigen::Vector3d& r_WB_1, const Eigen::Vector3d& r_WB_2);
+
+double computeAngleError(const Eigen::Quaterniond& q_WB_1, const Eigen::Quaterniond& q_WB_2);
+
 } // namespace se
 
 #include "utilities_impl.hpp"

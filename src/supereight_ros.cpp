@@ -436,12 +436,14 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     exploration_start_time_ = std::chrono::steady_clock::now();
     ROS_INFO("Initialization finished");
 
-    if (node_config_.experiment_type == "gazebo") {
+    // Rotors Control interface
+    if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "rotors") {
         for (double i = 0.0; i <= 0.2; i += 0.05) {
             mav_msgs::EigenTrajectoryPoint point;
             nh.param<double>("wp_x", point.position_W.x(), 0.0);
             nh.param<double>("wp_y", point.position_W.y(), 0.0);
             nh.param<double>("wp_z", point.position_W.z(), 1.0);
+
             // Take the constant tracking error of the controller into account
             point.position_W.z() += 0.2;
             tf::Quaternion q_tf_WB = tf::Quaternion(tf::Vector3(0.0, 0.0, 1.0), 0);
@@ -456,9 +458,51 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
             mav_msgs::msgMultiDofJointTrajectoryPointFromEigen(point, &point_msg);
             path_msg.points.push_back(point_msg);
             path_pub_.publish(path_msg);
-
-            ros::Duration(1.0).sleep();
         }
+    }
+    else if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "srl") {
+        // Desired position for the beginning of the experiment
+        Eigen::Vector3d desiredPosition;
+        nh.param<double>("wp_x", desiredPosition.x(), 0.0);
+        nh.param<double>("wp_y", desiredPosition.y(), 0.0);
+        nh.param<double>("wp_z", desiredPosition.z(), 1.0);
+
+        // Create a take off trajectory and an initial Waypoint. Use 0 altitude for the the initial Waypoint.
+        mav_interface_msgs::FullStateStampedEigen initialStateEigen(
+            0, Eigen::Vector3d(desiredPosition(0), desiredPosition(1), 0.0));
+
+        // Create an initial waypoint at the exact same location as the starting state of the take off trajectory. Use large
+        // tolerances to pop the initial Waypoint immediately
+        mav_interface_msgs::WaypointEigen initialWaypointEigen(
+            desiredPosition, initialStateEigen.orientation, 0.5, 0.5);
+
+        // Take off trajectory will last 4.0 seconds. ToDo -> Use the exploration velocity for these.
+        const uint64_t takeOffDurationNanoseconds = 4.0 * 1e+9;
+        mav_interface_msgs::FullStateStampedEigen finalStateEigen(takeOffDurationNanoseconds,
+                                                                  desiredPosition);
+
+        // Convert the above to ROS messages and asseble the trajectory.
+        mav_interface_msgs::Waypoint waypointMsg;
+        mav_interface_msgs::FullStateStamped initialStateMsg;
+        mav_interface_msgs::FullStateStamped finalStateMsg;
+
+        WaypointEigen2Msg(initialWaypointEigen, waypointMsg);
+        FullStateStampedEigen2Msg(initialStateEigen, initialStateMsg);
+        FullStateStampedEigen2Msg(finalStateEigen, finalStateMsg);
+
+        mav_interface_msgs::FullStateTrajectory trajectoryMsg;
+        trajectoryMsg.header.stamp = ros::Time::now();
+        trajectoryMsg.initialWaypoint = waypointMsg;
+        trajectoryMsg.trajectory.push_back(initialStateMsg);
+        trajectoryMsg.trajectory.push_back(finalStateMsg);
+
+        // Publish
+        // ros::Duration(1.0).sleep();
+        // path_pub_.publish(trajectoryMsg);
+        ros::Duration(4.0).sleep();
+    }
+    else {
+        // Placeholder for Real life experiments
     }
 
     initStats();
@@ -955,10 +999,29 @@ void SupereightNode::plan()
     while (num_failed_planning_iterations_ < max_failed_planning_iterations_
            || max_failed_planning_iterations_ == 0) {
         bool goal_reached = false;
-        {
+
+        // When using the srl controller, check the autopilot status to determine if the goal has been reached
+        if (node_config_.control_interface == "srl") {
+            mav_interface_msgs::AutopilotStatusService srv;
+
+            // Check that the autopilot is Initialised and in Idle mode, meaning that there are no remaining tasks in the
+            // reference Queue
+            if (mav_status_service_.call(srv)) {
+                const bool autopilotInitialised = srv.response.status.initialised;
+                const bool autopilotIdle = srv.response.status.taskType == srv.response.status.Idle;
+                goal_reached = autopilotInitialised && autopilotIdle;
+            }
+            else {
+                goal_reached = false;
+            }
+        }
+        else {
+            // We are not using the SRL controller
             const std::lock_guard<std::mutex> pose_lock(pose_mutex_);
             goal_reached = planner_->goalReached();
         }
+
+
         if (goal_reached || num_planning_iterations_ == 0) {
             if (planner_->needsNewGoal()) {
                 newStatFrame("Planning");
@@ -1091,12 +1154,17 @@ void SupereightNode::plan()
                 writeFrameStats("Planning");
             }
             // Change the path publishing method depending on the dataset type.
-            if (node_config_.experiment_type == "gazebo") {
+            if (node_config_.experiment_type == "gazebo"
+                && node_config_.control_interface == "rotors") {
                 publish_path_open_loop(*planner_,
                                        path_pub_,
                                        world_frame_id_,
                                        node_config_.experiment_type,
                                        supereight_config_.delta_t);
+            }
+            else if (node_config_.experiment_type == "gazebo"
+                     && node_config_.control_interface == "srl") {
+                publish_full_state_trajectory(*planner_, path_pub_, supereight_config_);
             }
             else {
                 publish_path_vertex(
@@ -1242,12 +1310,19 @@ void SupereightNode::setupRos()
     // Publishers
     supereight_pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/supereight/pose",
                                                                      node_config_.pose_buffer_size);
-    if (node_config_.experiment_type == "gazebo") {
+
+    // Initialise the reference publisher depending on the simulator and controller used
+    if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "rotors") {
         path_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/supereight/path", 5);
+    }
+    else if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "srl") {
+        path_pub_ =
+            nh_.advertise<mav_interface_msgs::FullStateTrajectory>("/supereight/path_nmpc", 5);
     }
     else {
         path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", 5);
     }
+
     static_tf_broadcaster_.sendTransform(T_MW_Msg());
     static_tf_broadcaster_.sendTransform(T_BC_Msg());
     // Render publishers
@@ -1297,6 +1372,10 @@ void SupereightNode::setupRos()
     mav_sphere_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav/sphere", 2);
     pose_history_pub_ =
         nh_.advertise<visualization_msgs::Marker>("/supereight/planner/pose_history", 2);
+
+    // ROS services. // ToDo -> use default namespace and bind everything in the launch file
+    mav_status_service_ =
+        nh_.serviceClient<mav_interface_msgs::AutopilotStatusService>("/autopilot/statusService");
 }
 
 

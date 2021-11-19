@@ -409,4 +409,130 @@ void publish_path_open_loop(se::ExplorationPlanner& planner,
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
+
+double computePositionError(const Eigen::Vector3d& r_WB_1, const Eigen::Vector3d& r_WB_2)
+{
+    return (r_WB_1 - r_WB_2).norm();
+}
+
+double computeAngleError(const Eigen::Quaterniond& q_WB_1, const Eigen::Quaterniond& q_WB_2)
+{
+    const Eigen::Quaterniond q_B1B2 = q_WB_1.conjugate().normalized() * q_WB_2.normalized();
+
+    return 2.0 * std::acos(std::fabs(q_B1B2.w()));
+}
+
+Eigen::Quaternionf constraintReferenceOrientation(const Eigen::Matrix4f& T_WB)
+{
+    // Get the reference x_WB
+    const Eigen::Vector3f x_WB = T_WB.topLeftCorner<3, 1>();
+
+    // Project to the X-Y plane
+    const Eigen::Vector3f x_WB_projected = Eigen::Vector3f(x_WB(0), x_WB(1), 0.0).normalized();
+
+    // Make sure Projection not zero. Random epsilon
+    const Eigen::Vector3f X_WB_constrained =
+        x_WB_projected.norm() < 1e-3 ? Eigen::Vector3f(1.0, 0.0, 0.0) : x_WB_projected;
+
+    // Make sure constraint Z axis is pointing up.
+    const Eigen::Vector3f Z_WB_constrained(0.0, 0.0, 1.0);
+
+    Eigen::Matrix3f R_WB_constrained = Eigen::Matrix3f::Identity();
+    R_WB_constrained.col(0) = X_WB_constrained;
+    R_WB_constrained.col(1) = Z_WB_constrained.cross(X_WB_constrained);
+    R_WB_constrained.col(2) = Z_WB_constrained;
+
+    return Eigen::Quaternionf(R_WB_constrained);
+}
+
+void publish_full_state_trajectory(se::ExplorationPlanner& planner,
+                                   const ros::Publisher& path_pub,
+                                   const se::Configuration& config)
+{
+    // Fetch Initial T_WB from planner. This coincides with the current MAV pose and should be set as an initial waypoint
+    // and the starting point of the trajectory
+    Eigen::Matrix4f T_WB;
+
+    if (!planner.goalT_WB(T_WB)) {
+        return;
+    }
+    planner.popGoalT_WB();
+
+    // Get reference position and orientation from T_WB
+    const Eigen::Vector3d initialPosition(T_WB.cast<double>().topRightCorner<3, 1>());
+    const Eigen::Quaterniond initialOrientation =
+        constraintReferenceOrientation(T_WB).cast<double>();
+
+    // Initial Waypoint same as the current MAV pose T_WB
+    mav_interface_msgs::Waypoint initialWaypointMsg;
+    mav_interface_msgs::WaypointEigen2Msg(
+        mav_interface_msgs::WaypointEigen(initialPosition, initialOrientation, 0.50, 0.15),
+        initialWaypointMsg);
+
+    // Initial Trajectory state same as the current MAV pose T_WB
+    mav_interface_msgs::FullStateStamped fullstateReferenceMsg;
+    mav_interface_msgs::FullStateStampedEigen2Msg(
+        mav_interface_msgs::FullStateStampedEigen(0, initialPosition, initialOrientation),
+        fullstateReferenceMsg);
+
+    // Assemble the Full trajectory Msg.
+    mav_interface_msgs::FullStateTrajectory trajectoryMsg;
+    trajectoryMsg.initialWaypoint = initialWaypointMsg;
+    trajectoryMsg.trajectory.push_back(fullstateReferenceMsg);
+    trajectoryMsg.flushReferenceQueue = false;
+
+    // Add the additional references from the planner making sure the velocity constraints are satisfied.
+    uint64_t previousTimestampNanoseconds = 0;
+    Eigen::Vector3d previousPosition = initialPosition;
+    Eigen::Quaterniond previousOrientation = initialOrientation;
+
+    while (planner.goalT_WB(T_WB)) {
+        planner.popGoalT_WB();
+
+        // Compute position and orientation from T_WB
+        const Eigen::Vector3d position = T_WB.cast<double>().topRightCorner<3, 1>();
+        const Eigen::Quaterniond orientation = constraintReferenceOrientation(T_WB).cast<double>();
+
+        // Compute time required to reach that point assuming instantaneous acceleration. // ToDo -> Use a proper motion
+        // model for the above.
+        const double positionDiffMeters = computePositionError(position, previousPosition);
+        const double orientationDiffRad = computeAngleError(orientation, previousOrientation);
+
+        // ToDo -> Make sure exploration velocities are not zero when read from the config
+        const double linearVelocityMax =
+            std::max(std::fabs(config.linear_velocity), 0.1f); // Maximum velocity in m/s
+        const double angularVelocityMax =
+            std::max(std::fabs(config.angular_velocity), 0.1f); // Maximum angulkar velocity
+                                                                /*
+                                                                                          const double timeRequiredSeconds =
+                                                                                              std::max(positionDiffMeters / linearVelocityMax, orientationDiffRad / angularVelocityMax);
+                                                                                              */
+        const double timeRequiredSeconds = std::max(positionDiffMeters / linearVelocityMax,
+                                                    orientationDiffRad / angularVelocityMax);
+
+        const Eigen::Vector3d linearVelocity = (position - previousPosition) / timeRequiredSeconds;
+
+        if (timeRequiredSeconds < 1e-3)
+            continue;
+
+        const uint64_t timestampNanoSeconds =
+            previousTimestampNanoseconds + timeRequiredSeconds * 1e+9;
+
+        // Create reference and push
+        mav_interface_msgs::FullStateStamped referenceMsg;
+        mav_interface_msgs::FullStateStampedEigen2Msg(
+            mav_interface_msgs::FullStateStampedEigen(
+                timestampNanoSeconds, position, orientation, linearVelocity),
+            referenceMsg);
+        trajectoryMsg.trajectory.push_back(referenceMsg);
+
+        // Prepare for Next iteration
+        previousTimestampNanoseconds = timestampNanoSeconds;
+        previousPosition = position;
+        previousOrientation = orientation;
+    }
+
+    // Publish
+    path_pub.publish(trajectoryMsg);
+}
 } // namespace se

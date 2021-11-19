@@ -22,7 +22,8 @@ supereight_ros:
   visualize_360_raycasting: true
   max_exploration_time: .NaN
   run_segmentation: false
-
+  control_interface: "srl" 
+  
 # Supereight settings
 supereight:
   general:
@@ -30,7 +31,7 @@ supereight:
     sequence_type:              "ros"
     output_render_path:         ""
     enable_meshing:             true
-    output_mesh_path:           "~/meshes_ros"
+    output_mesh_path:           ""
     # Rates
     tracking_rate:              1
     integration_rate:           1
@@ -76,7 +77,7 @@ supereight:
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
-    solving_time:              0.5
+    solving_time:              0.1
 
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the

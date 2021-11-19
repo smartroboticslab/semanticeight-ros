@@ -13,6 +13,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <map>
+#include <mav_interface_msgs/AutopilotStatusService.h>
+#include <mav_interface_msgs/conversions.h>
 #include <memory>
 #include <mutex>
 #include <nav_msgs/Path.h>
@@ -315,6 +317,9 @@ class SupereightNode {
     ros::Publisher map_goal_pub_;
     ros::Publisher mav_sphere_pub_;
     ros::Publisher pose_history_pub_;
+
+    // ROS service Client
+    ros::ServiceClient mav_status_service_;
 
     // Visualization colors
     const Eigen::Vector4f color_occupied_ = Eigen::Vector4f(1.0, 1.0, 1.0, 1.0);

@@ -11,8 +11,8 @@ supereight_ros:
 # Supereight settings
 supereight:
   map:
-    size:                       256
-    dim:                        25.6
+    size:                       512
+    dim:                        51.2
     t_MW_factor:                [0.501, 0.501, 0.501]
     aabb_min_W:                 [-10.0, -10.0, 0.0]
     aabb_max_W:                 [ 10.0,  10.0, 2.5]

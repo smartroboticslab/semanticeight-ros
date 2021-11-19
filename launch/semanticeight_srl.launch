@@ -3,7 +3,7 @@
 <!-- SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
-  <arg name="world_name" default="apartment"/>
+  <arg name="world_name" default="maze"/>
   <arg name="waypoint_x" default="0.0"/>
   <arg name="waypoint_y" default="-4.0"/>
   <arg name="waypoint_z" default="1.5"/>

@@ -121,6 +121,10 @@ struct SupereightNodeConfig {
     /** Run Mask R-CNN on the input images.
      */
     bool run_segmentation;
+
+    /** What Control interface to use: rotors or srl ?
+     */
+    std::string control_interface;
 };
 
 
