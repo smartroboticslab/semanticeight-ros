@@ -1154,16 +1154,14 @@ void SupereightNode::plan()
                 writeFrameStats("Planning");
             }
             // Change the path publishing method depending on the dataset type.
-            if (node_config_.experiment_type == "gazebo"
-                && node_config_.control_interface == "rotors") {
+            if (node_config_.control_interface == "rotors") {
                 publish_path_open_loop(*planner_,
                                        path_pub_,
                                        world_frame_id_,
                                        node_config_.experiment_type,
                                        supereight_config_.delta_t);
             }
-            else if (node_config_.experiment_type == "gazebo"
-                     && node_config_.control_interface == "srl") {
+            else if (node_config_.control_interface == "srl") {
                 publish_full_state_trajectory(*planner_, path_pub_, supereight_config_);
             }
             else {
@@ -1312,10 +1310,10 @@ void SupereightNode::setupRos()
                                                                      node_config_.pose_buffer_size);
 
     // Initialise the reference publisher depending on the simulator and controller used
-    if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "rotors") {
+    if (node_config_.control_interface == "rotors") {
         path_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/supereight/path", 5);
     }
-    else if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "srl") {
+    else if (node_config_.control_interface == "srl") {
         path_pub_ = nh_.advertise<mav_interface_msgs::FullStateTrajectory>("/supereight/path", 5);
     }
     else {
