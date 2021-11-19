@@ -46,6 +46,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   tf_conversions
   mav_msgs
+  mav_interface_msgs
 )
 
 if (WITH_OPENMP)
