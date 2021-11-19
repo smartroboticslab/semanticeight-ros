@@ -19,6 +19,7 @@ supereight_ros:
   experiment_type: "real"
   visualize_360_raycasting: true
   run_segmentation: false
+  control_interface: "srl"
 
 # Supereight settings
 supereight:

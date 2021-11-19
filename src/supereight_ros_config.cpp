@@ -32,7 +32,7 @@ const std::string default_experiment_type = "habitat";
 constexpr bool default_visualize_360_raycasting = false;
 constexpr double default_max_exploration_time = std::nan("");
 constexpr bool default_run_segmentation = false;
-const std::string default_control_interface = "rotors";
+const std::string default_control_interface = "srl";
 
 
 namespace se {
@@ -122,8 +122,9 @@ SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh)
     }
 
     // Check for valid Control interface
-    if (config.control_interface != "rotors" && config.control_interface != "srl") {
-        ROS_FATAL("Invalid control_interface \"%s\", expected \"rotors\", \"srl\"",
+    if (config.control_interface != "rotors" && config.control_interface != "srl"
+        && config.control_interface != "habitat") {
+        ROS_FATAL("Invalid control_interface \"%s\", expected \"rotors\", \"srl\" or \"habitat\"",
                   config.control_interface.c_str());
         abort();
     }
