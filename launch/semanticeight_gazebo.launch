@@ -52,8 +52,8 @@
           output="screen"
           required="true"
           launch-prefix="">
-      <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/semanticeight_gazebo.yaml"/>
-      <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/semanticeight_gazebo_$(arg world_name).yaml"/>
+      <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_gazebo.yaml"/>
+      <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_gazebo_$(arg world_name).yaml"/>
       <remap from="/camera/depth_image" to="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/depth/disparity"/>
       <remap from="/camera/rgb_image"   to="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/camera/image_raw"/>
       <remap from="/pose"               to="/$(arg mav_name)$(arg subscript)/ground_truth/transform"/>
@@ -61,6 +61,6 @@
     </node>
   </group>
 
-  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight/semanticeight_gazebo.rviz"/>
+  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight_gazebo.rviz"/>
 </launch>
 

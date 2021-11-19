@@ -15,8 +15,8 @@
         required="true"
         launch-prefix="">
     <!-- Include rosparam yaml files -->
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/semanticeight_experiment.yaml"/>
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/semanticeight_experiment_rosbag.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_experiment.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_experiment_rosbag.yaml"/>
     <!-- Remap topic names -->
     <remap from="/camera/depth_image" to="/camera/aligned_depth_to_color/image_raw"/>
     <remap from="/camera/rgb_image"   to="/camera/color/image_raw"/>

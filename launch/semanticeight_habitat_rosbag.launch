@@ -17,8 +17,8 @@
         required="true"
         launch-prefix="">
     <!-- Include rosparam yaml files -->
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/semanticeight.yaml"/>
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight/habitat.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
     <!-- Remap topic names -->
     <remap from="/camera/depth_image" to="/habitat/depth/image_raw"/>
     <remap from="/camera/rgb_image"   to="/habitat/rgb/image_raw"/>
@@ -28,6 +28,6 @@
   </node>
 
   <!-- rviz with appropriate config -->
-  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find supereight_ros)/config/semanticeight/semanticeight.rviz" />
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find supereight_ros)/config/semanticeight.rviz" />
 </launch>
 
