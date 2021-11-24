@@ -7,10 +7,10 @@
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
   <!-- habitat-ros node and MAV simulator -->
-  <remap from="/supereight/path" to="/mav_sim/goal_path"/>
-  <include file="$(find habitat_ros)/launch/habitat_ros_sim.launch">
-    <arg name="habitat_ros_config_file"         value="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
-    <arg name="habitat_ros_mav_sim_config_file" value="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
+  <remap from="/supereight/path" to="/habitat_mav_sim/goal_path"/>
+  <include file="$(find habitat_ros)/launch/habitat_mav_sim.launch">
+    <arg name="habitat_config"         value="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
+    <arg name="habitat_mav_sim_config" value="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
   </include>
 
   <!-- supereight-ros node -->

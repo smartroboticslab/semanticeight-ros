@@ -25,7 +25,7 @@ supereight_ros:
   control_interface: "habitat"
 
 # Habitat-ROS node settings
-habitat_ros:
+habitat:
   # Sensor settings
   width: 640
   height: 480
@@ -52,7 +52,7 @@ habitat_ros:
   visualize_semantics: true
 
 # Simple MAV simulator settings
-habitat_ros_mav_sim:
+habitat_mav_sim:
   sim_freq: 60
   a_max: [1.0, 1.0, 0.5]
   w_max: [0.1, 0.1, 0.05]
