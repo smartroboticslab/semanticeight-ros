@@ -299,7 +299,7 @@ Visualization Manager:
           Value: false
         firefly/vi_sensor/base_link:
           Value: false
-        habitat_world:
+        habitat:
           Value: false
         firefly/vi_sensor/camera_depth_optical_center_link:
           Value: false
@@ -322,7 +322,7 @@ Visualization Manager:
             firefly/base_link:
               firefly/vi_sensor/camera_depth_optical_center_link:
                 {}
-            habitat_world:
+            habitat:
               {}
             firefly/odometry_sensor1:
               {}

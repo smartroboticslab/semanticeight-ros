@@ -213,16 +213,9 @@ class SupereightNode {
         return (is_tsdf && volume.data.x <= 0.0f) || (!is_tsdf && volume.data.x > 0.0f);
     }
 
-    geometry_msgs::TransformStamped T_MW_Msg() const;
+    geometry_msgs::TransformStamped T_WM_Msg() const;
 
     geometry_msgs::TransformStamped T_BC_Msg() const;
-
-    /* \brief Return a translation from the Habitat-Sim world frame to the supereight world frame.
-     * This functions is used to map the initial pose in Habitat-Sim into the identity pose in
-     * supereight-ros.
-     * \warning This function blocks until a single pose is received from Habitat-Sim.
-     */
-    geometry_msgs::TransformStamped T_WWh_Msg() const;
 
     visualization_msgs::Marker mapDimMsg() const;
 

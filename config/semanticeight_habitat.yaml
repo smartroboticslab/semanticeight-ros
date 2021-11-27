@@ -31,7 +31,7 @@ habitat:
   height: 480
   near_plane: 0.1
   far_plane: 20.0
-  fx: 525.0
+  f: 525.0
   fps: 30
   enable_semantics: true
   allowed_classes: []
@@ -46,7 +46,8 @@ habitat:
   #initial_T_WB: [15.00, -5.30, -0.30, 0, 0, 0, 1]
   #scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/1pXnuDYAj8r/1pXnuDYAj8r.glb"
   #initial_T_WB: [11.438, -1.796, 0.364]
-  world_frame_id: "habitat_world"
+  pose_frame_id: "world"
+  pose_frame_at_initial_T_HB: true
 
   # Visualization settings
   visualize_semantics: true
@@ -56,7 +57,7 @@ habitat_mav_sim:
   sim_freq: 60
   a_max: [1.0, 1.0, 0.5]
   w_max: [0.1, 0.1, 0.05]
-  world_frame_id: "habitat_world"
+  world_frame_id: "world"
 
 # Supereight settings
 supereight:

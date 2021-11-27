@@ -1260,12 +1260,6 @@ void SupereightNode::setupRos()
     // Initialize the constant messages
     map_dim_msg_ = mapDimMsg();
 
-    // Setup the Habitat-Sim to supereight translation if we're not doing an experiment. This has to
-    // happen before pose_sub_ is initialized otherwise the same topic might be subscribed to twice.
-    if (node_config_.experiment_type == "habitat") {
-        static_tf_broadcaster_.sendTransform(T_WWh_Msg());
-    }
-
     // Pose subscriber
     if (!node_config_.enable_tracking) {
         if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
@@ -1320,7 +1314,7 @@ void SupereightNode::setupRos()
         path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", 5);
     }
 
-    static_tf_broadcaster_.sendTransform(T_MW_Msg());
+    static_tf_broadcaster_.sendTransform(T_WM_Msg());
     static_tf_broadcaster_.sendTransform(T_BC_Msg());
     // Render publishers
     if (node_config_.enable_rendering) {
@@ -1508,15 +1502,15 @@ void SupereightNode::SemInstanceCallback(const sensor_msgs::ImageConstPtr& insta
 
 
 
-geometry_msgs::TransformStamped SupereightNode::T_MW_Msg() const
+geometry_msgs::TransformStamped SupereightNode::T_WM_Msg() const
 {
     // Transform from world frame to map frame. ROS probably uses a different
     // convention than us?
     static geometry_msgs::TransformStamped tf;
     tf.header.stamp = ros::Time::now();
-    tf.header.frame_id = map_frame_id_;
-    tf.child_frame_id = world_frame_id_;
-    tf::vectorEigenToMsg(t_MW_.cast<double>(), tf.transform.translation);
+    tf.header.frame_id = world_frame_id_;
+    tf.child_frame_id = map_frame_id_;
+    tf::vectorEigenToMsg(T_WM_.topRightCorner<3, 1>().cast<double>(), tf.transform.translation);
     tf.transform.rotation = make_quaternion();
     return tf;
 }
@@ -1536,41 +1530,6 @@ geometry_msgs::TransformStamped SupereightNode::T_BC_Msg() const
     tf::quaternionEigenToMsg(q_BC, tf.transform.rotation);
     const Eigen::Vector3d t_BC = T_BC.topRightCorner<3, 1>();
     tf::vectorEigenToMsg(t_BC, tf.transform.translation);
-    return tf;
-}
-
-
-
-geometry_msgs::TransformStamped SupereightNode::T_WWh_Msg() const
-{
-    static geometry_msgs::TransformStamped tf;
-    tf.header.stamp = ros::Time::now();
-    tf.header.frame_id = world_frame_id_;
-    tf.child_frame_id = "habitat_world";
-    // Wait for a pose from Habitat-Sim and use its translation
-    // Don't use the rotation because it messes stuff up
-    ROS_INFO("Waiting for pose from Habitat-Sim");
-    if (node_config_.pose_topic_type == "geometry_msgs::PoseStamped") {
-        geometry_msgs::PoseStampedConstPtr msg =
-            ros::topic::waitForMessage<geometry_msgs::PoseStamped>("/pose");
-        tf.transform.translation.x = msg->pose.position.x;
-        tf.transform.translation.y = msg->pose.position.y;
-        tf.transform.translation.z = msg->pose.position.z;
-        tf.transform.rotation = make_quaternion();
-    }
-    else if (node_config_.pose_topic_type == "geometry_msgs::TransformStamped") {
-        geometry_msgs::TransformStampedConstPtr msg =
-            ros::topic::waitForMessage<geometry_msgs::TransformStamped>("/pose");
-        tf.transform.translation.x = msg->transform.translation.x;
-        tf.transform.translation.y = msg->transform.translation.y;
-        tf.transform.translation.z = msg->transform.translation.z;
-        tf.transform.rotation = make_quaternion();
-    }
-    else {
-        ROS_FATAL("Invalid pose topic type %s", node_config_.pose_topic_type.c_str());
-        ROS_FATAL("Expected geometry_msgs::PoseStamped or geometry_msgs::TransformStamped");
-        abort();
-    }
     return tf;
 }
 
