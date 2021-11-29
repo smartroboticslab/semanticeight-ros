@@ -21,7 +21,7 @@ supereight_ros:
   visualize_360_raycasting: true
   max_exploration_time: .NaN
   run_segmentation: false
-  control_interface: "habitat"
+  control_interface: "srl"
 
 # Habitat-ROS node settings
 habitat:
