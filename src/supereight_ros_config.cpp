@@ -50,8 +50,14 @@ SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh)
 
     nh.param<bool>("supereight_ros/enable_objects", config.enable_objects, default_enable_objects);
 
+    // Try to read the camera parameters from the habitat-ros config if it exists and if that fails
+    // try the supereight-ros config.
     std::vector<int> input_res_vector;
-    if (nh.getParam("supereight_ros/input_res", input_res_vector)) {
+    if (nh.getParam("habitat/width", config.input_res[0])
+        && nh.getParam("habitat/height", config.input_res[1])) {
+        // Value already set in the condition.
+    }
+    else if (nh.getParam("supereight_ros/input_res", input_res_vector)) {
         for (size_t i = 0; i < input_res_vector.size(); ++i) {
             config.input_res[i] = input_res_vector[i];
         }
