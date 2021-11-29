@@ -7,6 +7,11 @@
   <arg name="waypoint_x" default="0.0"/>
   <arg name="waypoint_y" default="-4.0"/>
   <arg name="waypoint_z" default="1.5"/>
+  
+  <!-- Initial Waypoint sent to the controller -->
+  <param name="wp_x" type="double" value="$(arg waypoint_x)"/>
+  <param name="wp_y" type="double" value="$(arg waypoint_y)"/>
+  <param name="wp_z" type="double" value="$(arg waypoint_z)"/>
 
   <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
@@ -31,10 +36,6 @@
       <arg name="z" value="0.1"/>
     </include>
 
-    <param name="wp_x" type="double" value="$(arg waypoint_x)"/>
-    <param name="wp_y" type="double" value="$(arg waypoint_y)"/>
-    <param name="wp_z" type="double" value="$(arg waypoint_z)"/>
-
     <node pkg="supereight_ros"
           name="semanticeight"
           type="supereight_ros"
@@ -50,7 +51,10 @@
       <remap from="/supereight/path"    to="/autopilot/trajectory"/>
     </node>
   </group>
-
+  
+  <!-- Start the controller -->
+  <include file="$(find mpc)/launch/firefly_rotors.launch"/>
+  
   <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight.rviz"/>
 </launch>
 
