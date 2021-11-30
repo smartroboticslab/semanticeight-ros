@@ -199,6 +199,8 @@ class SupereightNode {
 
     void visualizePoseHistory();
 
+    void visualizePoseGridHistory();
+
     template<typename VoxelImplT>
     bool is_free(const se::Volume<typename VoxelImplT::VoxelType>& volume) const
     {

@@ -24,6 +24,7 @@
 #include <thread>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
+#include "se/io/meshing_io.hpp"
 #include "se/voxel_implementations.hpp"
 #include "supereight_ros/filesystem.hpp"
 #include "supereight_ros/utilities.hpp"
@@ -885,6 +886,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         }
         visualizeFrontiers();
         visualizePoseHistory();
+        visualizePoseGridHistory();
     }
     end_time = std::chrono::steady_clock::now();
     sampleStat(

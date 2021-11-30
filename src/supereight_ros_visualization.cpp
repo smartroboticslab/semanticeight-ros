@@ -561,4 +561,38 @@ void SupereightNode::visualizePoseHistory()
     }
     pose_history_pub_.publish(marker);
 }
+
+
+
+void SupereightNode::visualizePoseGridHistory()
+{
+    // Initialize the message header
+    std_msgs::Header header;
+    header.stamp = ros::Time::now();
+    header.frame_id = map_frame_id_;
+    visualization_msgs::Marker marker;
+    marker.header = header;
+    marker.ns = "pose_grid_history";
+    marker.id = 2;
+    marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position = make_point();
+    marker.pose.orientation = make_quaternion();
+    marker.scale = make_vector3(1.0f);
+    marker.color = eigen_to_color(color_frontier_);
+    marker.lifetime = ros::Duration(0.0);
+    marker.frame_locked = true;
+    // Add all mesh triangles
+    const TriangleMesh mesh = planner_->getPoseGridHistory().wedgeMesh();
+    marker.points.resize(Triangle::num_vertexes * mesh.size());
+    for (size_t t = 0; t < mesh.size(); t++) {
+        for (int v = 0; v < Triangle::num_vertexes; v++) {
+            marker.points[Triangle::num_vertexes * t + v].x = mesh[t].vertexes[v].x();
+            marker.points[Triangle::num_vertexes * t + v].y = mesh[t].vertexes[v].y();
+            marker.points[Triangle::num_vertexes * t + v].z = mesh[t].vertexes[v].z();
+        }
+    }
+    pose_history_pub_.publish(marker);
+}
+
 } // namespace se
