@@ -16,10 +16,14 @@
   <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
-  <!-- habitat-ros node -->
-  <!-- TODO Change the remapping below, supereight publishes a path but habitat-ros receives a single pose -->
-  <remap from="/supereight/path" to="/autopilot/trajectory"/>
+  <remap from="/autopilot/trajectory"                to="/supereight/path"/>
+  <remap from="/habitat/depth/image_raw"             to="/camera/depth_image"/>
+  <remap from="/habitat/rgb/image_raw"               to="/camera/rgb_image"/>
+  <remap from="/habitat/pose"                        to="/pose"/>
+  <remap from="/habitat/semantic_class/image_raw"    to="/camera/class"/>
+  <remap from="/habitat/semantic_instance/image_raw" to="/camera/instance"/>
 
+  <!-- habitat-ros node -->
   <include file="$(find habitat_ros)/launch/habitat.launch">
     <arg name="habitat_config"         value="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
   </include>
@@ -35,11 +39,6 @@
     <!-- Include rosparam yaml files -->
     <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
     <!-- Remap topic names -->
-    <remap from="/camera/depth_image" to="/habitat/depth/image_raw"/>
-    <remap from="/camera/rgb_image"   to="/habitat/rgb/image_raw"/>
-    <remap from="/pose"               to="/habitat/pose"/>
-    <remap from="/camera/class"       to="/habitat/semantic_class/image_raw"/>
-    <remap from="/camera/instance"    to="/habitat/semantic_instance/image_raw"/>
   </node>
 
   <!-- Start the controller -->

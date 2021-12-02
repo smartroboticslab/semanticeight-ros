@@ -7,7 +7,9 @@
   <arg name="waypoint_x" default="0.0"/>
   <arg name="waypoint_y" default="-4.0"/>
   <arg name="waypoint_z" default="1.5"/>
-  
+  <arg name="mav_name" value="firefly"/>
+  <arg name="subscript" value=""/>
+
   <!-- Initial Waypoint sent to the controller -->
   <param name="wp_x" type="double" value="$(arg waypoint_x)"/>
   <param name="wp_y" type="double" value="$(arg waypoint_y)"/>
@@ -18,14 +20,16 @@
   <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models"/>
   <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/resource"/>
 
+  <remap from="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/depth/disparity"  to="/camera/depth_image"/>
+  <remap from="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/camera/image_raw" to="/camera/rgb_image"/>
+  <remap from="/$(arg mav_name)$(arg subscript)/ground_truth/transform"                  to="/pose"/>
+  <remap from="/autopilot/trajectory"                                                    to="/supereight/path"/>
+
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find supereight_ros)/worlds/$(arg world_name).world"/>
     <arg name="gui" value="false"/>
     <arg name="paused" value="false"/>
   </include>
-
-  <arg name="mav_name" value="firefly"/>
-  <arg name="subscript" value=""/>
 
   <group ns="$(arg mav_name)$(arg subscript)">
     <include file="$(find rotors_gazebo)/launch/spawn_mav.launch">
@@ -45,16 +49,12 @@
           launch-prefix="">
       <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_gazebo.yaml"/>
       <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_gazebo_$(arg world_name).yaml"/>
-      <remap from="/camera/depth_image" to="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/depth/disparity"/>
-      <remap from="/camera/rgb_image"   to="/$(arg mav_name)$(arg subscript)/vi_sensor/camera_depth/camera/image_raw"/>
-      <remap from="/pose"               to="/$(arg mav_name)$(arg subscript)/ground_truth/transform"/>
-      <remap from="/supereight/path"    to="/autopilot/trajectory"/>
     </node>
   </group>
-  
+
   <!-- Start the controller -->
   <include file="$(find mpc)/launch/firefly_rotors.launch"/>
-  
+
   <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight.rviz"/>
 </launch>
 

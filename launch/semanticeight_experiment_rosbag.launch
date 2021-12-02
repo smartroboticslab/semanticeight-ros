@@ -6,6 +6,10 @@
   <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
+  <remap to="/camera/aligned_depth_to_color/image_raw" from="/camera/depth_image"/>
+  <remap to="/camera/color/image_raw"                  from="/camera/rgb_image"/>
+  <remap to="/vicon/s550_jetson/s550_jetson"           from="/pose"/>
+
   <!-- supereight-ros node -->
   <node pkg="supereight_ros"
         name="semanticeight"
@@ -18,9 +22,6 @@
     <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_experiment.yaml"/>
     <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_experiment_rosbag.yaml"/>
     <!-- Remap topic names -->
-    <remap from="/camera/depth_image" to="/camera/aligned_depth_to_color/image_raw"/>
-    <remap from="/camera/rgb_image"   to="/camera/color/image_raw"/>
-    <remap from="/pose"               to="/vicon/s550_jetson/s550_jetson"/>
   </node>
 
   <!-- rviz with appropriate config -->
