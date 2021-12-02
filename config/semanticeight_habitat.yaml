@@ -85,7 +85,7 @@ supereight:
     t_MW_factor:                [0.501, 0.501, 0.501]
     sampling_min_W:             [-10000, -10000, -10000]
     sampling_max_W:             [ 10000,  10000,  10000]
-    frontier_cluster_min_volume: 0.064
+    frontier_cluster_min_volume: 0.015625
 
   sensor:
     intrinsics:                 [525, 525, 319.5, 239.5]
