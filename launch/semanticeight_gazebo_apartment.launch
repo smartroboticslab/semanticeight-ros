@@ -55,6 +55,6 @@
   <!-- Start the controller -->
   <include file="$(find mpc)/launch/firefly_rotors.launch"/>
 
-  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight.rviz"/>
+  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight.rviz" launch-prefix="bash -c 'sleep 2; $0 $@'"/>
 </launch>
 
