@@ -69,6 +69,7 @@ Visualization Manager:
       Namespaces:
         goal_frustum: false
         goal_path: true
+        goal_rays: false
         goal_yaw: true
       Queue Size: 100
       Value: true

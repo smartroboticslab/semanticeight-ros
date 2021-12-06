@@ -544,6 +544,34 @@ void SupereightNode::visualizeGoal()
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(3)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(7)).head<3>()));
     map_goal_pub_.publish(frustum_marker);
+    // Initialize the Line message
+    visualization_msgs::Marker ray_marker;
+    ray_marker = visualization_msgs::Marker();
+    ray_marker.header = header;
+    ray_marker.header.frame_id = map_frame_id_;
+    ray_marker.ns = "goal_rays";
+    ray_marker.id = 1;
+    ray_marker.type = visualization_msgs::Marker::LINE_LIST;
+    ray_marker.action = visualization_msgs::Marker::ADD;
+    ray_marker.pose.orientation = make_quaternion();
+    ray_marker.scale.x = 0.02f;
+    ray_marker.color = eigen_to_color(color_goal_);
+    ray_marker.color.a = 0.25f;
+    ray_marker.lifetime = ros::Duration(0.0);
+    ray_marker.frame_locked = true;
+    auto rays = goal_view.rays(sensor_, supereight_config_.T_BC);
+    // Scale and transform the rays
+    const Eigen::Matrix4f goal_T_MB = goal_view.goalT_MB();
+    for (size_t i = 0; i < rays.size(); i++) {
+        rays[i] *= sensor_.far_plane;
+        rays[i] = (goal_T_MB * rays[i].homogeneous()).head<3>();
+    }
+    // Add the rays to the message
+    for (size_t i = 0; i < rays.size(); i++) {
+        ray_marker.points.push_back(eigen_to_point(goal_T_MB.topRightCorner<3, 1>()));
+        ray_marker.points.push_back(eigen_to_point(rays[i]));
+    }
+    map_goal_pub_.publish(ray_marker);
 }
 
 
