@@ -10,7 +10,7 @@ Panels:
     Property Tree Widget:
       Expanded: ~
       Splitter Ratio: 0.5
-    Tree Height: 319
+    Tree Height: 308
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -67,7 +67,7 @@ Visualization Manager:
       Marker Topic: /supereight/planner/goal
       Name: Goal
       Namespaces:
-        goal: true
+        goal_frustum: false
         goal_path: true
         goal_yaw: true
       Queue Size: 100
@@ -93,6 +93,7 @@ Visualization Manager:
       Marker Topic: /supereight/planner/pose_history
       Name: Position history
       Namespaces:
+        pose_grid_history: true
         pose_history: true
       Queue Size: 100
       Value: true

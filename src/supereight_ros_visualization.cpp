@@ -498,6 +498,52 @@ void SupereightNode::visualizeGoal()
         }
         map_goal_pub_.publish(path_marker);
     }
+    // Initialize the Line message
+    visualization_msgs::Marker frustum_marker;
+    frustum_marker = visualization_msgs::Marker();
+    frustum_marker.header = header;
+    frustum_marker.header.frame_id = map_frame_id_;
+    frustum_marker.ns = "goal_frustum";
+    frustum_marker.id = 1;
+    frustum_marker.type = visualization_msgs::Marker::LINE_LIST;
+    frustum_marker.action = visualization_msgs::Marker::ADD;
+    frustum_marker.pose.orientation = make_quaternion();
+    frustum_marker.scale.x = 0.1f;
+    frustum_marker.color = eigen_to_color(color_goal_);
+    frustum_marker.color.a = 0.5f;
+    frustum_marker.lifetime = ros::Duration(0.0);
+    frustum_marker.frame_locked = true;
+    // Add the frustum vertices to the message
+    const Eigen::Matrix4f goal_T_MC = goal_view.goalT_MB() * supereight_config_.T_BC;
+    const auto& v = sensor_.frustum_vertices_;
+    // Near plane
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(0)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(1)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(1)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(2)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(2)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(3)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(3)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(0)).head<3>()));
+    // Far plane
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(4)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(5)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(5)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(6)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(6)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(7)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(7)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(4)).head<3>()));
+    // Sides
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(0)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(4)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(1)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(5)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(2)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(6)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(3)).head<3>()));
+    frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(7)).head<3>()));
+    map_goal_pub_.publish(frustum_marker);
 }
 
 
