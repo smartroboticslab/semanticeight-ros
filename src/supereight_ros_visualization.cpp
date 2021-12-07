@@ -189,7 +189,8 @@ void SupereightNode::visualizeObjectMeshes()
 {
     const Eigen::Matrix4f T_WM = pipeline_->T_WM();
     const Objects& objects = pipeline_->getObjectMaps();
-    const std::vector<std::vector<se::Triangle>> meshes = pipeline_->objectTriangleMeshesV();
+    const std::vector<std::vector<se::Triangle>> meshes =
+        pipeline_->objectTriangleMeshesV(se::meshing::ScaleMode::Scale3);
     if (objects.size() != meshes.size()) {
         ROS_FATAL("Got different numbers of objects and object meshes.");
         abort();
