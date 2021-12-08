@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]
+then
+	printf 'Usage: %s X,Y,Z DIRECTORY\n' "${0##*/}"
+	printf 'Translate all PLY meshes in DIRECTORY by X,Y,Z and save\n'
+	printf 'them in DIRECTORY_gt_frame with a _gt_frame.ply suffix.\n'
+	exit 2
+fi
+
+translation="$1"
+input_dir="$2"
+ply_transform="$HOME/Documents/Git/SRL/dataset-tools/PLY/ply-transform.py"
+
+output_dir="${input_dir%/}_gt_frame"
+mkdir -p "$output_dir"
+
+find "$input_dir" -name '*.ply' | while read -r f
+do
+	new_f="$output_dir/$(basename "$f" '.ply')_gt_frame.ply"
+	printf '%s -t %s %s %s\n' "$ply_transform" "$translation" "$f" "$new_f"
+done | parallel
+
