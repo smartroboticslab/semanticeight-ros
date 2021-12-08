@@ -853,20 +853,18 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 
         if (node_config_.visualize_360_raycasting) {
             // Entropy
-            const se::Image<uint32_t> entropy_render = planner_->renderCurrentEntropy(sensor_);
+            se::Image<uint32_t> entropy_render(1, 1);
+            se::Image<uint32_t> depth_render(1, 1);
+            planner_->renderCurrentEntropyDepth(entropy_render, depth_render, sensor_);
             const sensor_msgs::Image entropy_render_msg =
                 RGBA_to_msg(entropy_render.data(),
                             Eigen::Vector2i(entropy_render.width(), entropy_render.height()),
                             depth_image->header);
             entropy_render_pub_.publish(entropy_render_msg);
-
-            // Entropy depth
-            const se::Image<uint32_t> entropy_depth_render =
-                planner_->renderCurrentEntropyDepth(sensor_);
-            const sensor_msgs::Image entropy_depth_render_msg = RGBA_to_msg(
-                entropy_depth_render.data(),
-                Eigen::Vector2i(entropy_depth_render.width(), entropy_depth_render.height()),
-                depth_image->header);
+            const sensor_msgs::Image entropy_depth_render_msg =
+                RGBA_to_msg(depth_render.data(),
+                            Eigen::Vector2i(depth_render.width(), depth_render.height()),
+                            depth_image->header);
             entropy_depth_render_pub_.publish(entropy_depth_render_msg);
         }
     }
@@ -1105,10 +1103,10 @@ void SupereightNode::plan()
                                   << "_";
                         const std::string prefix = prefix_ss.str();
 
-                        const se::CandidateView& goal_view = planner_->goalView();
-                        const se::Image<uint32_t> entropy_render = goal_view.renderEntropy(sensor_);
-                        const se::Image<uint32_t> entropy_depth_render =
-                            planner_->renderCurrentEntropyDepth(sensor_);
+                        se::Image<uint32_t> entropy_render(1, 1);
+                        se::Image<uint32_t> entropy_depth_render(1, 1);
+                        planner_->renderCurrentEntropyDepth(
+                            entropy_render, entropy_depth_render, sensor_);
                         const se::Image<uint32_t> min_scale_render =
                             planner_->renderMinScale(sensor_);
                         lodepng_encode32_file((prefix + "goal_entropy.png").c_str(),

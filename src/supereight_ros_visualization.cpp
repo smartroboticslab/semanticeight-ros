@@ -560,17 +560,12 @@ void SupereightNode::visualizeGoal()
     ray_marker.color.a = 0.25f;
     ray_marker.lifetime = ros::Duration(0.0);
     ray_marker.frame_locked = true;
-    auto rays = goal_view.rays(sensor_, supereight_config_.T_BC);
-    // Scale and transform the rays
+    auto rays_M = goal_view.rays();
     const Eigen::Matrix4f goal_T_MB = goal_view.goalT_MB();
-    for (size_t i = 0; i < rays.size(); i++) {
-        rays[i] *= sensor_.far_plane;
-        rays[i] = (goal_T_MB * rays[i].homogeneous()).head<3>();
-    }
     // Add the rays to the message
-    for (size_t i = 0; i < rays.size(); i++) {
+    for (size_t i = 0; i < rays_M.size(); i++) {
         ray_marker.points.push_back(eigen_to_point(goal_T_MB.topRightCorner<3, 1>()));
-        ray_marker.points.push_back(eigen_to_point(rays[i]));
+        ray_marker.points.push_back(eigen_to_point(rays_M[i]));
     }
     map_goal_pub_.publish(ray_marker);
 }
