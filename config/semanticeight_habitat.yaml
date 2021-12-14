@@ -80,7 +80,7 @@ supereight:
     pyramid:                    [10, 5, 4]
 
   map:
-    size:                       256
+    size:                       1024
     dim:                        40.96
     t_MW_factor:                [0.501, 0.501, 0.501]
     sampling_min_W:             [-10000, -10000, -10000]
@@ -110,7 +110,7 @@ supereight:
     raycast_height:            10
     linear_velocity:           1.5
     angular_velocity:          0.75
-    robot_radius:              0.3
+    robot_radius:              0.05
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
