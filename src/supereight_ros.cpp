@@ -1147,8 +1147,8 @@ void SupereightNode::plan()
                                     << std::setw(5) << std::setfill('0') << num_planning_iterations_
                                     << "_goal_path_W.tsv";
                         se::write_path_tsv(filename_ss.str(), path_WB);
+                        saveCandidates();
                     }
-                    saveCandidates();
                 }
                 num_planning_iterations_++;
                 writeFrameStats("Planning");
