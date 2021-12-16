@@ -890,8 +890,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     sampleStat(
         "Fusion", "Visualization", std::chrono::duration<double>(end_time - start_time).count());
 
-    sampleStat("Fusion", "Frame", frame_);
     sampleTime("Fusion", "Timestamp");
+    sampleStat("Fusion", "Frame", frame_);
     sampleStat("Fusion", "Free volume", pipeline_->free_volume);
     sampleStat("Fusion", "Occupied volume", pipeline_->occupied_volume);
     sampleStat("Fusion", "Explored volume", pipeline_->explored_volume);
@@ -1040,8 +1040,8 @@ void SupereightNode::plan()
                                std::chrono::duration<double>(end_time - start_time).count());
                 }
                 // Save and print statistics.
-                sampleStat("Planning", "Planning iteration", num_planning_iterations_);
                 sampleTime("Planning", "Timestamp");
+                sampleStat("Planning", "Planning iteration", num_planning_iterations_);
                 ROS_WARN("Planning iteration %d", num_planning_iterations_);
                 ROS_WARN("%-25s %.5f s", "Planning", getStat("Planning", "Planning time"));
 
@@ -1571,6 +1571,7 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f& T_WC,
     if (!network_lock.try_lock()) {
         return;
     }
+    newStatFrame("Network");
 
     std::chrono::time_point<std::chrono::steady_clock> start_time =
         std::chrono::steady_clock::now();
@@ -1601,6 +1602,7 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f& T_WC,
 
 void SupereightNode::initStats()
 {
+    const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     start_time_ = ros::WallTime::now().toSec();
     const std::string log_dir = current_ros_log_dir();
     for (const auto& p : stat_names_) {
@@ -1628,7 +1630,7 @@ void SupereightNode::initStats()
 
 void SupereightNode::newStatFrame(const std::string& section)
 {
-    //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+    const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     // Add default-initialized FrameStats to the back of the vector.
     stats_.at(section).emplace_back();
     // Initialize the frame stats to zero.
@@ -1641,7 +1643,7 @@ void SupereightNode::newStatFrame(const std::string& section)
 
 void SupereightNode::sampleStat(const std::string& section, const std::string& stat, double value)
 {
-    //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+    const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     stats_.at(section).back().at(stat) = value;
 }
 
@@ -1649,7 +1651,7 @@ void SupereightNode::sampleStat(const std::string& section, const std::string& s
 
 void SupereightNode::sampleTime(const std::string& section, const std::string& stat, double value)
 {
-    //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+    const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     stats_.at(section).back().at(stat) = value - start_time_;
 }
 
@@ -1657,7 +1659,7 @@ void SupereightNode::sampleTime(const std::string& section, const std::string& s
 
 double SupereightNode::getStat(const std::string& section, const std::string& stat) const
 {
-    //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+    const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     return stats_.at(section).back().at(stat);
 }
 
@@ -1665,7 +1667,7 @@ double SupereightNode::getStat(const std::string& section, const std::string& st
 
 std::vector<double> SupereightNode::getLastStats(const std::string& section) const
 {
-    //const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
+    const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     const FrameStats& last_stat_map = stats_.at(section).back();
     const std::vector<std::string>& stat_names = stat_names_.at(section);
     std::vector<double> last_stats(stat_names.size());

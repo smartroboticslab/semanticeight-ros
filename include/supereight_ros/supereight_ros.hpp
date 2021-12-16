@@ -406,7 +406,7 @@ class SupereightNode {
                                    {"Network", {"Timestamp", "Network time"}}};
     Stats stats_;
     std::map<std::string, std::string> stat_tsv_filenames_;
-    //std::mutex stat_mutex_;
+    mutable std::mutex stat_mutex_;
 
     double start_time_;
     void initStats();
