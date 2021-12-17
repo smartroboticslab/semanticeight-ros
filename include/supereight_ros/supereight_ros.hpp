@@ -68,7 +68,8 @@ class SupereightNode {
     void fuse(const Eigen::Matrix4f& T_WC,
               const sensor_msgs::ImageConstPtr& depth_image,
               const sensor_msgs::ImageConstPtr& color_image,
-              const se::SegmentationResult& segmentation);
+              const se::SegmentationResult& segmentation,
+              const ros::Time& depth_timestamp);
 
     void plan();
 
@@ -223,7 +224,8 @@ class SupereightNode {
 
     void runNetwork(const Eigen::Matrix4f& T_WC,
                     const sensor_msgs::ImageConstPtr& depth_image,
-                    const sensor_msgs::ImageConstPtr& color_image);
+                    const sensor_msgs::ImageConstPtr& color_image,
+                    const ros::Time& depth_timestamp);
 
 
 

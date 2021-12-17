@@ -535,7 +535,8 @@ void SupereightNode::matchAndFuse()
     // Message association
     // Depth
     sensor_msgs::ImageConstPtr current_depth_msg;
-    double depth_timestamp;
+    ros::Time depth_timestamp;
+    double depth_timestamp_s;
     { // Block to reduce the scope of depth_lock.
         const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
         if (depth_buffer_.empty()) {
@@ -543,7 +544,8 @@ void SupereightNode::matchAndFuse()
         }
         else {
             current_depth_msg = depth_buffer_.front();
-            depth_timestamp = ros::Time(current_depth_msg->header.stamp).toSec();
+            depth_timestamp = ros::Time(current_depth_msg->header.stamp);
+            depth_timestamp_s = depth_timestamp.toSec();
         }
     }
 
@@ -556,7 +558,7 @@ void SupereightNode::matchAndFuse()
         }
         else {
             const bool found = get_closest_element(rgb_buffer_,
-                                                   depth_timestamp,
+                                                   depth_timestamp_s,
                                                    node_config_.max_timestamp_diff,
                                                    get_image_timestamp,
                                                    current_rgb_msg);
@@ -576,7 +578,7 @@ void SupereightNode::matchAndFuse()
         }
         else {
             const bool found = get_closest_element(class_buffer_,
-                                                   depth_timestamp,
+                                                   depth_timestamp_s,
                                                    node_config_.max_timestamp_diff,
                                                    get_image_timestamp,
                                                    current_class_msg);
@@ -596,7 +598,7 @@ void SupereightNode::matchAndFuse()
         }
         else {
             const bool found = get_closest_element(instance_buffer_,
-                                                   depth_timestamp,
+                                                   depth_timestamp_s,
                                                    node_config_.max_timestamp_diff,
                                                    get_image_timestamp,
                                                    current_instance_msg);
@@ -625,7 +627,7 @@ void SupereightNode::matchAndFuse()
             geometry_msgs::TransformStamped prev_pose;
             geometry_msgs::TransformStamped next_pose;
             const InterpResult result =
-                get_surrounding_poses(pose_buffer_, depth_timestamp, prev_pose, next_pose);
+                get_surrounding_poses(pose_buffer_, depth_timestamp_s, prev_pose, next_pose);
             if (result == InterpResult::query_smaller) {
                 // Remove the depth image, it will never be matched to poses.
                 const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
@@ -639,7 +641,7 @@ void SupereightNode::matchAndFuse()
             }
 
             // Interpolate to associate a pose to the depth image.
-            external_T_WC = interpolate_pose(prev_pose, next_pose, depth_timestamp);
+            external_T_WC = interpolate_pose(prev_pose, next_pose, depth_timestamp_s);
         }
     }
 
@@ -672,7 +674,8 @@ void SupereightNode::matchAndFuse()
                                     this,
                                     external_T_WC,
                                     current_depth_msg,
-                                    current_rgb_msg));
+                                    current_rgb_msg,
+                                    depth_timestamp));
             t.detach();
             // Don't call fuse with this depth frame as it will be done by runNetwork();
             return;
@@ -680,7 +683,7 @@ void SupereightNode::matchAndFuse()
     }
 
     // Call fuse() if runNetwork() wasn't called.
-    fuse(external_T_WC, current_depth_msg, current_rgb_msg, input_segmentation_);
+    fuse(external_T_WC, current_depth_msg, current_rgb_msg, input_segmentation_, depth_timestamp);
 }
 
 
@@ -688,7 +691,8 @@ void SupereightNode::matchAndFuse()
 void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                           const sensor_msgs::ImageConstPtr& depth_image,
                           const sensor_msgs::ImageConstPtr& color_image,
-                          const se::SegmentationResult& segmentation)
+                          const se::SegmentationResult& segmentation,
+                          const ros::Time& depth_timestamp)
 {
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     newStatFrame("Fusion");
@@ -745,6 +749,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     geometry_msgs::PoseStamped se_T_WB_msg;
     se_T_WB_msg.header = depth_image->header;
     se_T_WB_msg.header.frame_id = world_frame_id_;
+    se_T_WB_msg.header.stamp = depth_timestamp;
     tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
     tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
     supereight_pose_pub_.publish(se_T_WB_msg);
@@ -1562,7 +1567,8 @@ visualization_msgs::Marker SupereightNode::mapDimMsg() const
 
 void SupereightNode::runNetwork(const Eigen::Matrix4f& T_WC,
                                 const sensor_msgs::ImageConstPtr& depth_image,
-                                const sensor_msgs::ImageConstPtr& color_image)
+                                const sensor_msgs::ImageConstPtr& color_image,
+                                const ros::Time& depth_timestamp)
 {
     // runNetwork() should only be run by a single thread at a time so that matchAndFuse() can fall
     // back to calling fuse(). Return if the lock can't be acquired (another thread is already
@@ -1595,7 +1601,7 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f& T_WC,
         "Network", "Network time", std::chrono::duration<double>(end_time - start_time).count());
     ROS_INFO("%-25s %.5f s", "Network", getStat("Network", "Network time"));
 
-    fuse(T_WC, depth_image, color_image, segmentation);
+    fuse(T_WC, depth_image, color_image, segmentation, depth_timestamp);
 }
 
 
