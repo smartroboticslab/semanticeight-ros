@@ -508,6 +508,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
 
     initStats();
 
+    // Start the matching thread.
+    std::thread matchingThread(std::bind(&SupereightNode::matchAndFuse, this));
+    matchingThread.detach();
+
     // Start the planner thread.
     if (supereight_config_.enable_exploration) {
         std::thread t(std::bind(&SupereightNode::plan, this));
@@ -519,171 +523,177 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
 
 void SupereightNode::matchAndFuse()
 {
-    // matchAndFuse() should only be run by a single thread at a time. Return
-    // if the lock can't be acquired (another thread is already running).
-    std::unique_lock<std::mutex> matching_lock(matching_mutex_, std::defer_lock_t());
-    if (!matching_lock.try_lock()) {
-        return;
-    }
-
-    std::chrono::time_point<std::chrono::steady_clock> start_time;
-    std::chrono::time_point<std::chrono::steady_clock> end_time;
-    start_time = std::chrono::steady_clock::now();
-
-
-
-    // Message association
-    // Depth
-    sensor_msgs::ImageConstPtr current_depth_msg;
-    ros::Time depth_timestamp;
-    double depth_timestamp_s;
-    { // Block to reduce the scope of depth_lock.
-        const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
-        if (depth_buffer_.empty()) {
-            return;
+    while (true) {
+        // matchAndFuse() should only be run by a single thread at a time. Return
+        // if the lock can't be acquired (another thread is already running).
+        std::unique_lock<std::mutex> matching_lock(matching_mutex_, std::defer_lock_t());
+        if (!matching_lock.try_lock()) {
+            continue;
         }
-        else {
-            current_depth_msg = depth_buffer_.front();
-            depth_timestamp = ros::Time(current_depth_msg->header.stamp);
-            depth_timestamp_s = depth_timestamp.toSec();
-        }
-    }
 
-    // RGB
-    sensor_msgs::ImageConstPtr current_rgb_msg;
-    if (node_config_.enable_rgb) {
-        const std::lock_guard<std::mutex> rgb_lock(rgb_buffer_mutex_);
-        if (rgb_buffer_.empty()) {
-            return;
-        }
-        else {
-            const bool found = get_closest_element(rgb_buffer_,
-                                                   depth_timestamp_s,
-                                                   node_config_.max_timestamp_diff,
-                                                   get_image_timestamp,
-                                                   current_rgb_msg);
-            if (!found) {
-                return;
+        std::chrono::time_point<std::chrono::steady_clock> start_time;
+        std::chrono::time_point<std::chrono::steady_clock> end_time;
+        start_time = std::chrono::steady_clock::now();
+
+
+
+        // Message association
+        // Depth
+        sensor_msgs::ImageConstPtr current_depth_msg;
+        ros::Time depth_timestamp;
+        double depth_timestamp_s;
+        { // Block to reduce the scope of depth_lock.
+            const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
+            if (depth_buffer_.empty()) {
+                continue;
+            }
+            else {
+                current_depth_msg = depth_buffer_.front();
+                depth_timestamp = ros::Time(current_depth_msg->header.stamp);
+                depth_timestamp_s = depth_timestamp.toSec();
             }
         }
-    }
 
-    bool semantics_found = true;
-    // Class
-    sensor_msgs::ImageConstPtr current_class_msg;
-    if (node_config_.enable_objects) {
-        const std::lock_guard<std::mutex> class_lock(class_buffer_mutex_);
-        if (class_buffer_.empty()) {
-            semantics_found = false;
+        // RGB
+        sensor_msgs::ImageConstPtr current_rgb_msg;
+        if (node_config_.enable_rgb) {
+            const std::lock_guard<std::mutex> rgb_lock(rgb_buffer_mutex_);
+            if (rgb_buffer_.empty()) {
+                continue;
+            }
+            else {
+                const bool found = get_closest_element(rgb_buffer_,
+                                                       depth_timestamp_s,
+                                                       node_config_.max_timestamp_diff,
+                                                       get_image_timestamp,
+                                                       current_rgb_msg);
+                if (!found) {
+                    continue;
+                }
+            }
         }
-        else {
-            const bool found = get_closest_element(class_buffer_,
-                                                   depth_timestamp_s,
-                                                   node_config_.max_timestamp_diff,
-                                                   get_image_timestamp,
-                                                   current_class_msg);
-            if (!found) {
+
+        bool semantics_found = true;
+        // Class
+        sensor_msgs::ImageConstPtr current_class_msg;
+        if (node_config_.enable_objects) {
+            const std::lock_guard<std::mutex> class_lock(class_buffer_mutex_);
+            if (class_buffer_.empty()) {
                 semantics_found = false;
-                ROS_WARN_ONCE("No matching semantic class images found");
+            }
+            else {
+                const bool found = get_closest_element(class_buffer_,
+                                                       depth_timestamp_s,
+                                                       node_config_.max_timestamp_diff,
+                                                       get_image_timestamp,
+                                                       current_class_msg);
+                if (!found) {
+                    semantics_found = false;
+                    ROS_WARN_ONCE("No matching semantic class images found");
+                }
             }
         }
-    }
 
-    // Instance
-    sensor_msgs::ImageConstPtr current_instance_msg;
-    if (node_config_.enable_objects) {
-        const std::lock_guard<std::mutex> instance_lock(instance_buffer_mutex_);
-        if (instance_buffer_.empty()) {
-            semantics_found = false;
-        }
-        else {
-            const bool found = get_closest_element(instance_buffer_,
-                                                   depth_timestamp_s,
-                                                   node_config_.max_timestamp_diff,
-                                                   get_image_timestamp,
-                                                   current_instance_msg);
-            if (!found) {
+        // Instance
+        sensor_msgs::ImageConstPtr current_instance_msg;
+        if (node_config_.enable_objects) {
+            const std::lock_guard<std::mutex> instance_lock(instance_buffer_mutex_);
+            if (instance_buffer_.empty()) {
                 semantics_found = false;
-                ROS_WARN_ONCE("No matching semantic instance images found");
+            }
+            else {
+                const bool found = get_closest_element(instance_buffer_,
+                                                       depth_timestamp_s,
+                                                       node_config_.max_timestamp_diff,
+                                                       get_image_timestamp,
+                                                       current_instance_msg);
+                if (!found) {
+                    semantics_found = false;
+                    ROS_WARN_ONCE("No matching semantic instance images found");
+                }
             }
         }
-    }
 
-    // Pose
-    Eigen::Matrix4f external_T_WC;
-    if (!node_config_.enable_tracking) {
-        const std::lock_guard<std::mutex> pose_lock(pose_buffer_mutex_);
-        if (pose_buffer_.empty()) {
-            // Clear the depth and RGB buffers if no poses have arrived yet. These
-            // images will never be associated to poses.
-            depth_buffer_.clear();
-            rgb_buffer_.clear();      // OK to call even when RGB images are not used
-            class_buffer_.clear();    // OK to call even when class images are not used
-            instance_buffer_.clear(); // OK to call even when instance images are not used
-            return;
-        }
-        else {
-            // Find the two closest poses and interpolate to the depth timestamp.
-            geometry_msgs::TransformStamped prev_pose;
-            geometry_msgs::TransformStamped next_pose;
-            const InterpResult result =
-                get_surrounding_poses(pose_buffer_, depth_timestamp_s, prev_pose, next_pose);
-            if (result == InterpResult::query_smaller) {
-                // Remove the depth image, it will never be matched to poses.
-                const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
-                depth_buffer_.pop_front();
-                return;
+        // Pose
+        Eigen::Matrix4f external_T_WC;
+        if (!node_config_.enable_tracking) {
+            const std::lock_guard<std::mutex> pose_lock(pose_buffer_mutex_);
+            if (pose_buffer_.empty()) {
+                // Clear the depth and RGB buffers if no poses have arrived yet. These
+                // images will never be associated to poses.
+                depth_buffer_.clear();
+                rgb_buffer_.clear();      // OK to call even when RGB images are not used
+                class_buffer_.clear();    // OK to call even when class images are not used
+                instance_buffer_.clear(); // OK to call even when instance images are not used
+                continue;
             }
-            else if (result == InterpResult::query_greater) {
-                // Remove the first poses, they will never be matched to depth images.
-                pose_buffer_.erase_begin(pose_buffer_.size() - 1);
-                return;
+            else {
+                // Find the two closest poses and interpolate to the depth timestamp.
+                geometry_msgs::TransformStamped prev_pose;
+                geometry_msgs::TransformStamped next_pose;
+                const InterpResult result =
+                    get_surrounding_poses(pose_buffer_, depth_timestamp_s, prev_pose, next_pose);
+                if (result == InterpResult::query_smaller) {
+                    // Remove the depth image, it will never be matched to poses.
+                    const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
+                    depth_buffer_.pop_front();
+                    continue;
+                }
+                else if (result == InterpResult::query_greater) {
+                    // Remove the first poses, they will never be matched to depth images.
+                    pose_buffer_.erase_begin(pose_buffer_.size() - 1);
+                    continue;
+                }
+
+                // Interpolate to associate a pose to the depth image.
+                external_T_WC = interpolate_pose(prev_pose, next_pose, depth_timestamp_s);
             }
-
-            // Interpolate to associate a pose to the depth image.
-            external_T_WC = interpolate_pose(prev_pose, next_pose, depth_timestamp_s);
         }
-    }
 
-    // Copy the semantics into the appropriate buffer.
-    if (node_config_.enable_objects) {
-        if (semantics_found) {
-            input_segmentation_ =
-                to_supereight_segmentation(current_class_msg, current_instance_msg);
+        // Copy the semantics into the appropriate buffer.
+        if (node_config_.enable_objects) {
+            if (semantics_found) {
+                input_segmentation_ =
+                    to_supereight_segmentation(current_class_msg, current_instance_msg);
+            }
+            else {
+                input_segmentation_ = se::SegmentationResult(0, 0);
+            }
         }
-        else {
-            input_segmentation_ = se::SegmentationResult(0, 0);
+
+        // The currect depth image is going to be integrated, remove it from the
+        // buffer to avoid integrating it again.
+        { // Block to reduce the scope of depth_lock.
+            const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
+            depth_buffer_.pop_front();
         }
-    }
+        end_time = std::chrono::steady_clock::now();
 
-    // The currect depth image is going to be integrated, remove it from the
-    // buffer to avoid integrating it again.
-    { // Block to reduce the scope of depth_lock.
-        const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
-        depth_buffer_.pop_front();
-    }
-    end_time = std::chrono::steady_clock::now();
-
-    if (node_config_.run_segmentation) {
-        // If the network_mutex_ can be locked it means there is no thread running runNetwork().
-        if (network_mutex_.try_lock()) {
-            // Release the lock so that it can be acquired in runNetwork().
-            network_mutex_.unlock();
-            // Run the network in a background thread.
-            std::thread t(std::bind(&SupereightNode::runNetwork,
-                                    this,
-                                    external_T_WC,
-                                    current_depth_msg,
-                                    current_rgb_msg,
-                                    depth_timestamp));
-            t.detach();
-            // Don't call fuse with this depth frame as it will be done by runNetwork();
-            return;
+        if (node_config_.run_segmentation) {
+            // If the network_mutex_ can be locked it means there is no thread running runNetwork().
+            if (network_mutex_.try_lock()) {
+                // Release the lock so that it can be acquired in runNetwork().
+                network_mutex_.unlock();
+                // Run the network in a background thread.
+                std::thread t(std::bind(&SupereightNode::runNetwork,
+                                        this,
+                                        external_T_WC,
+                                        current_depth_msg,
+                                        current_rgb_msg,
+                                        depth_timestamp));
+                t.detach();
+                // Don't call fuse with this depth frame as it will be done by runNetwork();
+                continue;
+            }
         }
-    }
 
-    // Call fuse() if runNetwork() wasn't called.
-    fuse(external_T_WC, current_depth_msg, current_rgb_msg, input_segmentation_, depth_timestamp);
+        // Call fuse() if runNetwork() wasn't called.
+        fuse(external_T_WC,
+             current_depth_msg,
+             current_rgb_msg,
+             input_segmentation_,
+             depth_timestamp);
+    }
 }
 
 

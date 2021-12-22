@@ -35,7 +35,6 @@ int main(int argc, char** argv)
 
     while (keep_running) {
         ros::spinOnce();
-        node->matchAndFuse();
     }
 
     // Save the map to a file if needed
