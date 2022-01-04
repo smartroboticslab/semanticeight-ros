@@ -19,7 +19,6 @@
 #include <mav_msgs/default_topics.h>
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h>
-#include <tf2_ros/transform_listener.h>
 #include <tf_conversions/tf_eigen.h>
 #include <thread>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
@@ -167,6 +166,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
 #ifdef SE_WITH_MASKRCNN
         network_(network_config_),
 #endif // SE_WITH_MASKRCNN
+        tf_listener_(tf_buffer_),
         world_frame_id_("world"),
         map_frame_id_("map"),
         body_frame_id_("body"),
@@ -1194,15 +1194,34 @@ void SupereightNode::plan()
 void SupereightNode::saveMap()
 {
     if (supereight_config_.enable_meshing && !supereight_config_.output_mesh_file.empty()) {
+        Eigen::Matrix4f T_HW = Eigen::Matrix4f::Identity();
+        if (node_config_.experiment_type == "habitat") {
+            geometry_msgs::TransformStamped tf;
+            try {
+                tf = tf_buffer_.lookupTransform("habitat", "world", ros::Time(0));
+                T_HW(0, 3) = tf.transform.translation.x;
+                T_HW(1, 3) = tf.transform.translation.y;
+                T_HW(2, 3) = tf.transform.translation.z;
+                T_HW.topLeftCorner<3, 3>() = Eigen::Quaternionf(tf.transform.rotation.w,
+                                                                tf.transform.rotation.x,
+                                                                tf.transform.rotation.y,
+                                                                tf.transform.rotation.z)
+                                                 .toRotationMatrix();
+            }
+            catch (tf2::TransformException& ex) {
+                ROS_WARN("%s", ex.what());
+            }
+        }
+
         stdfs::create_directories(supereight_config_.output_mesh_file);
         std::stringstream output_mesh_meter_file_ss;
         output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh_" << std::setw(5)
                                   << std::setfill('0') << frame_ << ".ply";
-        pipeline_->saveMesh(output_mesh_meter_file_ss.str());
+        pipeline_->saveMesh(output_mesh_meter_file_ss.str(), T_HW);
         std::stringstream output_mesh_object_file_ss;
         output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_"
                                    << std::setw(5) << std::setfill('0') << frame_ << "_object";
-        pipeline_->saveObjectMeshes(output_mesh_object_file_ss.str());
+        pipeline_->saveObjectMeshes(output_mesh_object_file_ss.str(), T_HW);
         std::stringstream output_path_ply_file_ss;
         output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
                                 << std::setfill('0') << frame_ << ".ply";

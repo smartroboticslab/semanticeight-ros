@@ -24,6 +24,7 @@
 #include <string>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
 #include <vector>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -277,6 +278,8 @@ class SupereightNode {
     ros::Subscriber rgb_sub_;
     ros::Subscriber class_sub_;
     ros::Subscriber instance_sub_;
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
 
     // Publishers
     ros::Publisher supereight_pose_pub_;
