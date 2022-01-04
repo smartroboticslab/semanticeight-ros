@@ -1198,11 +1198,11 @@ void SupereightNode::saveMap()
         std::stringstream output_mesh_meter_file_ss;
         output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh_" << std::setw(5)
                                   << std::setfill('0') << frame_ << ".ply";
-        pipeline_->dumpMesh("", output_mesh_meter_file_ss.str().c_str());
+        pipeline_->saveMesh(output_mesh_meter_file_ss.str());
         std::stringstream output_mesh_object_file_ss;
         output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_"
                                    << std::setw(5) << std::setfill('0') << frame_ << "_object";
-        pipeline_->dumpObjectMeshes(output_mesh_object_file_ss.str().c_str(), false);
+        pipeline_->saveObjectMeshes(output_mesh_object_file_ss.str());
         std::stringstream output_path_ply_file_ss;
         output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
                                 << std::setfill('0') << frame_ << ".ply";
