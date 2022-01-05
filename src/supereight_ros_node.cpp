@@ -14,33 +14,13 @@
 // Needed due to the way the TICK and TOCK macros are defined.
 PerfStats Stats;
 
-volatile static bool keep_running = true;
-
-static void signal_handler(int)
-{
-    keep_running = false;
-}
-
-
-
 int main(int argc, char** argv)
 {
-    signal(SIGINT, signal_handler);
-
     // Initialize the ROS node
-    ros::init(argc, argv, "supereight_ros_node", ros::init_options::NoSigintHandler);
+    ros::init(argc, argv, "supereight_ros_node");
     ros::NodeHandle nh;
     ros::NodeHandle nh_private("~");
     std::unique_ptr<se::SupereightNode> node(new se::SupereightNode(nh, nh_private));
-
-    while (keep_running) {
-        ros::spinOnce();
-    }
-
-    // Save the map to a file if needed
-    node->saveMap();
-
-    ROS_INFO("supereight_ros node exited successfully");
-    ros::shutdown();
-    exit(EXIT_SUCCESS);
+    ros::spin();
+    return 0;
 }

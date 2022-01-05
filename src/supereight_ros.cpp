@@ -20,7 +20,6 @@
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h>
 #include <tf_conversions/tf_eigen.h>
-#include <thread>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
 #include "se/io/meshing_io.hpp"
@@ -167,6 +166,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         network_(network_config_),
 #endif // SE_WITH_MASKRCNN
         tf_listener_(tf_buffer_),
+        keep_running_(true),
         world_frame_id_("world"),
         map_frame_id_("map"),
         body_frame_id_("body"),
@@ -509,21 +509,36 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     initStats();
 
     // Start the matching thread.
-    std::thread matchingThread(std::bind(&SupereightNode::matchAndFuse, this));
-    matchingThread.detach();
+    matching_thread_ = std::thread(std::bind(&SupereightNode::matchAndFuse, this));
 
     // Start the planner thread.
     if (supereight_config_.enable_exploration) {
-        std::thread t(std::bind(&SupereightNode::plan, this));
-        t.detach();
+        planning_thread_ = std::thread(std::bind(&SupereightNode::plan, this));
     }
+}
+
+
+
+SupereightNode::~SupereightNode()
+{
+    // Wait for all threads to finish
+    keep_running_ = false;
+    if (planning_thread_.joinable()) {
+        planning_thread_.join();
+    }
+    if (matching_thread_.joinable()) {
+        matching_thread_.join();
+    }
+    // Save the map to a file if needed
+    saveMap();
+    ROS_INFO("supereight_ros node stopped successfully");
 }
 
 
 
 void SupereightNode::matchAndFuse()
 {
-    while (true) {
+    while (keep_running_) {
         // matchAndFuse() should only be run by a single thread at a time. Return
         // if the lock can't be acquired (another thread is already running).
         std::unique_lock<std::mutex> matching_lock(matching_mutex_, std::defer_lock_t());
@@ -1009,8 +1024,9 @@ void SupereightNode::plan()
             sensor_, (node_config_.experiment_type == "gazebo" ? "sphere" : "cylinder"));
     }
     // Exploration planning
-    while (num_failed_planning_iterations_ < max_failed_planning_iterations_
-           || max_failed_planning_iterations_ == 0) {
+    while ((num_failed_planning_iterations_ < max_failed_planning_iterations_
+            || max_failed_planning_iterations_ == 0)
+           && keep_running_) {
         bool goal_reached = false;
 
         // When using the srl controller, check the autopilot status to determine if the goal has been reached

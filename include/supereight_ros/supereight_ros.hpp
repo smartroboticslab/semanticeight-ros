@@ -25,6 +25,7 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <thread>
 #include <vector>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -47,6 +48,7 @@ namespace se {
 class SupereightNode {
     public:
     SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private);
+    ~SupereightNode();
 
     /*!
      * \brief Integrate the measurements using the supereight pipeline.
@@ -351,6 +353,11 @@ class SupereightNode {
     std::mutex map_mutex_;
     std::mutex pose_mutex_;
     std::mutex network_mutex_;
+
+    // Threads
+    std::thread matching_thread_;
+    std::thread planning_thread_;
+    atomic_bool keep_running_;
 
     /*!
      * Global/map coordinate frame. Will always look up TF transforms to this
