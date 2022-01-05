@@ -20,7 +20,7 @@ int append_tsv_line(const std::string& filename, const std::vector<T>& line_data
 
 template<typename T, typename GetTimestampF>
 bool get_closest_element(const boost::circular_buffer<T>& buffer,
-                         const double query_timestamp,
+                         const ros::Time& query_timestamp,
                          const double threshold,
                          GetTimestampF get_timestamp,
                          T& closest_element)
@@ -28,8 +28,7 @@ bool get_closest_element(const boost::circular_buffer<T>& buffer,
     // Find the minimum time difference.
     double min_time_diff = std::numeric_limits<double>::infinity();
     for (const auto e : buffer) {
-        const double img_timestamp = ros::Time(get_timestamp(e)).toSec();
-        const double time_diff = std::fabs(img_timestamp - query_timestamp);
+        const double time_diff = std::fabs((get_timestamp(e) - query_timestamp).toSec());
 
         if (time_diff <= min_time_diff) {
             min_time_diff = time_diff;

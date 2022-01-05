@@ -254,7 +254,7 @@ trajectory_msgs::MultiDOFJointTrajectory path_to_traj_msg(const se::Path& path_W
 
 Eigen::Matrix4f interpolate_pose(const geometry_msgs::TransformStamped& prev_pose,
                                  const geometry_msgs::TransformStamped& next_pose,
-                                 const double query_timestamp)
+                                 const ros::Time& query_timestamp)
 {
     // Return the prev_pose if both poses have the exact same timestamp
     if ((prev_pose.header.stamp.sec == next_pose.header.stamp.sec)
@@ -280,9 +280,10 @@ Eigen::Matrix4f interpolate_pose(const geometry_msgs::TransformStamped& prev_pos
                                            next_pose.transform.rotation.z);
 
     // Interpolate translation and rotation separately
-    const double prev_timestamp = ros::Time(prev_pose.header.stamp).toSec();
-    const double next_timestamp = ros::Time(next_pose.header.stamp).toSec();
-    const float alpha = (query_timestamp - prev_timestamp) / (next_timestamp - prev_timestamp);
+    const double prev_timestamp = prev_pose.header.stamp.toSec();
+    const double next_timestamp = next_pose.header.stamp.toSec();
+    const double current_timestamp = query_timestamp.toSec();
+    const float alpha = (current_timestamp - prev_timestamp) / (next_timestamp - prev_timestamp);
     const Eigen::Vector3f inter_translation =
         (1.f - alpha) * prev_translation + alpha * next_translation;
     const Eigen::Quaternionf inter_rotation = prev_rotation.slerp(alpha, next_rotation);
@@ -299,13 +300,12 @@ Eigen::Matrix4f interpolate_pose(const geometry_msgs::TransformStamped& prev_pos
 
 InterpResult
 get_surrounding_poses(const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
-                      const double query_timestamp,
+                      const ros::Time& query_timestamp,
                       geometry_msgs::TransformStamped& prev_pose,
                       geometry_msgs::TransformStamped& next_pose)
 {
     for (size_t i = 0; i < buffer.size(); ++i) {
-        const double pose_timestamp = ros::Time(buffer[i].header.stamp).toSec();
-
+        const ros::Time& pose_timestamp = buffer[i].header.stamp;
         if (pose_timestamp == query_timestamp) {
             // Found an exact timestamp.
             prev_pose = buffer[i];

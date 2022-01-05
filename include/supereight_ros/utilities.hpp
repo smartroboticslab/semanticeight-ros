@@ -152,7 +152,7 @@ trajectory_msgs::MultiDOFJointTrajectory path_to_traj_msg(const se::Path& path_W
  */
 Eigen::Matrix4f interpolate_pose(const geometry_msgs::TransformStamped& prev_pose,
                                  const geometry_msgs::TransformStamped& next_pose,
-                                 const double query_timestamp);
+                                 const ros::Time& query_timestamp);
 
 
 
@@ -171,7 +171,7 @@ Eigen::Matrix4f interpolate_pose(const geometry_msgs::TransformStamped& prev_pos
  */
 InterpResult
 get_surrounding_poses(const boost::circular_buffer<geometry_msgs::TransformStamped>& buffer,
-                      const double query_timestamp,
+                      const ros::Time& query_timestamp,
                       geometry_msgs::TransformStamped& prev_pose,
                       geometry_msgs::TransformStamped& next_pose);
 
@@ -194,7 +194,7 @@ get_surrounding_poses(const boost::circular_buffer<geometry_msgs::TransformStamp
  */
 template<typename T, typename GetTimestampF>
 bool get_closest_element(const boost::circular_buffer<T>& buffer,
-                         const double query_timestamp,
+                         const ros::Time& query_timestamp,
                          const double threshold,
                          GetTimestampF get_timestamp,
                          T& closest_element);

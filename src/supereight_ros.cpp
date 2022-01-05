@@ -541,7 +541,6 @@ void SupereightNode::matchAndFuse()
         // Depth
         sensor_msgs::ImageConstPtr current_depth_msg;
         ros::Time depth_timestamp;
-        double depth_timestamp_s;
         { // Block to reduce the scope of depth_lock.
             const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
             if (depth_buffer_.empty()) {
@@ -550,7 +549,6 @@ void SupereightNode::matchAndFuse()
             else {
                 current_depth_msg = depth_buffer_.front();
                 depth_timestamp = ros::Time(current_depth_msg->header.stamp);
-                depth_timestamp_s = depth_timestamp.toSec();
             }
         }
 
@@ -563,7 +561,7 @@ void SupereightNode::matchAndFuse()
             }
             else {
                 const bool found = get_closest_element(rgb_buffer_,
-                                                       depth_timestamp_s,
+                                                       depth_timestamp,
                                                        node_config_.max_timestamp_diff,
                                                        get_image_timestamp,
                                                        current_rgb_msg);
@@ -583,7 +581,7 @@ void SupereightNode::matchAndFuse()
             }
             else {
                 const bool found = get_closest_element(class_buffer_,
-                                                       depth_timestamp_s,
+                                                       depth_timestamp,
                                                        node_config_.max_timestamp_diff,
                                                        get_image_timestamp,
                                                        current_class_msg);
@@ -603,7 +601,7 @@ void SupereightNode::matchAndFuse()
             }
             else {
                 const bool found = get_closest_element(instance_buffer_,
-                                                       depth_timestamp_s,
+                                                       depth_timestamp,
                                                        node_config_.max_timestamp_diff,
                                                        get_image_timestamp,
                                                        current_instance_msg);
@@ -632,7 +630,7 @@ void SupereightNode::matchAndFuse()
                 geometry_msgs::TransformStamped prev_pose;
                 geometry_msgs::TransformStamped next_pose;
                 const InterpResult result =
-                    get_surrounding_poses(pose_buffer_, depth_timestamp_s, prev_pose, next_pose);
+                    get_surrounding_poses(pose_buffer_, depth_timestamp, prev_pose, next_pose);
                 if (result == InterpResult::query_smaller) {
                     // Remove the depth image, it will never be matched to poses.
                     const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
@@ -646,7 +644,7 @@ void SupereightNode::matchAndFuse()
                 }
 
                 // Interpolate to associate a pose to the depth image.
-                external_T_WC = interpolate_pose(prev_pose, next_pose, depth_timestamp_s);
+                external_T_WC = interpolate_pose(prev_pose, next_pose, depth_timestamp);
             }
         }
 
