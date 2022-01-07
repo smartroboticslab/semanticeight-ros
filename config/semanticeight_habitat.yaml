@@ -63,9 +63,10 @@ supereight:
   general:
     sequence_name:              ""
     sequence_type:              "ros"
-    output_render_path:         ""
+    log_path:                   "$ROS_LOG_DIR/latest/logs"
+    output_render_path:         "" #"$ROS_LOG_DIR/latest/renders"
     enable_meshing:             true
-    output_mesh_path:           "~/meshes_ros"
+    output_mesh_path:           "$ROS_LOG_DIR/latest/meshes"
     # Rates
     tracking_rate:              1
     integration_rate:           1
