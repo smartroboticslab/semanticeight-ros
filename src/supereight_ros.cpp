@@ -44,7 +44,7 @@ std::ostream& operator<<(std::ostream& out, const se::Configuration& config)
     out << str_utils::str_to_pretty_str(config.sequence_type, "Sequence type") << "\n";
     out << str_utils::str_to_pretty_str(config.sequence_path, "Sequence path") << "\n";
     out << str_utils::str_to_pretty_str(config.ground_truth_file, "Ground truth file") << "\n";
-    out << str_utils::str_to_pretty_str((config.log_file == "" ? "std::cout" : config.log_file),
+    out << str_utils::str_to_pretty_str((config.log_path == "" ? "std::cout" : config.log_path),
                                         "Log file")
         << "\n";
     out << str_utils::bool_to_pretty_str(config.enable_benchmark, "Enable benchmark") << "\n";
