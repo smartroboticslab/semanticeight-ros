@@ -8,11 +8,13 @@ template<typename T>
 int append_tsv_line(const std::string& filename, const std::vector<T>& line_data)
 {
     std::ofstream f(filename, std::ios::app);
-    f << std::setprecision(6) << std::fixed;
-    for (size_t i = 0; i < line_data.size(); i++) {
-        f << line_data[i] << (i == line_data.size() - 1 ? "\n" : "\t");
+    if (f.good()) {
+        f << std::setprecision(6) << std::fixed;
+        for (size_t i = 0; i < line_data.size(); i++) {
+            f << line_data[i] << (i == line_data.size() - 1 ? "\n" : "\t");
+        }
+        f.close();
     }
-    f.close();
     return !f.good();
 }
 
