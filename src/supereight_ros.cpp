@@ -172,6 +172,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         body_frame_id_("body"),
         camera_frame_id_("camera")
 {
+    // Set the ROS_LOG_DIR environment variable to allow expanding it in YAML files.
+    setenv("ROS_LOG_DIR", ros_log_dir().c_str(), 0);
     readConfig(nh_private);
     if (node_config_.experiment_type == "gazebo") {
         body_frame_id_ = "firefly/base_link";
