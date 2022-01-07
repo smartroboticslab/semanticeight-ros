@@ -173,6 +173,8 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
     nh.getParam("supereight_ros/enable_tracking", enable_tracking);
     config.enable_ground_truth = !enable_tracking;
     nh.getParam("supereight_ros/enable_rendering", config.enable_render);
+    nh.getParam("supereight/general/log_path", config.log_path);
+    config.log_path = str_utils::expand_user(config.log_path);
     nh.getParam("supereight/general/output_render_path", config.output_render_file);
     config.output_render_file = str_utils::expand_user(config.output_render_file);
     nh.getParam("supereight/general/enable_meshing", config.enable_meshing);

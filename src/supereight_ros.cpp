@@ -1535,7 +1535,9 @@ void SupereightNode::initStats()
 {
     const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     start_time_ = ros::WallTime::now().toSec();
-    const std::string log_dir = ros_log_dir() + "/latest";
+    if (!supereight_config_.log_path.empty()) {
+        stdfs::create_directories(supereight_config_.log_path);
+    }
     for (const auto& p : stat_names_) {
         const std::string& section = p.first;
         // Initialize all stat sections.
@@ -1546,7 +1548,13 @@ void SupereightNode::initStats()
                        section_lower.end(),
                        section_lower.begin(),
                        [](auto c) { return std::tolower(c); });
-        stat_tsv_filenames_[section] = log_dir + "/stats_" + section_lower + ".tsv";
+        if (supereight_config_.log_path.empty()) {
+            stat_tsv_filenames_[section] = "";
+        }
+        else {
+            stat_tsv_filenames_[section] =
+                supereight_config_.log_path + "/stats_" + section_lower + ".tsv";
+        }
         // Write the TSV header.
         if (append_tsv_line(stat_tsv_filenames_.at(section), stat_names_.at(section))) {
             ROS_WARN_ONCE("Can't write %s", stat_tsv_filenames_.at(section).c_str());
