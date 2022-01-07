@@ -1,6 +1,10 @@
 #!/bin/sh
 set -eu
 
+script_dir() {
+	dirname "$0"
+}
+
 # Usage: store_run_data OUTDIR INDEX
 store_run_data() {
 	# Resolve the symlink to the latest log directory.
@@ -9,7 +13,28 @@ store_run_data() {
 	outdir=$(printf '%s/%03d_%s' "$1" "$2" "$(basename "$log_dir")")
 	mkdir -p "$1"
 	mv "$log_dir" "$outdir"
+	printf '%s\n' "$outdir"
 }
+
+generate_run_plot() {
+	"$(script_dir)"/semanticeight-plot -o "$1"/plots.png "$1"/logs
+}
+
+generate_combined_plot() {
+	image_file="$1"
+	shift
+	"$(script_dir)"/semanticeight-plot -o "$image_file" "$@"
+}
+
+generate_run_montage() {
+	render_dir="$1"/renders
+	if [ -d "$render_dir" ]
+	then
+		"$(script_dir)"/../semanticeight/se_tools/semanticeight_render_montage.sh "$render_dir"
+	fi
+}
+
+
 
 if [ "$#" -lt 2 ]; then
 	printf 'Usage: %s NUM COMMAND [ARG]...\n' "$(basename "$0")"
@@ -25,7 +50,11 @@ i=1
 while [ "$i" -le "$n" ]; do
 	printf 'Run %d/%d\n' "$i" "$n"
 	"$@"
-	store_run_data "$dir" "$i"
+	run_dir=$(store_run_data "$dir" "$i")
+	generate_run_plot "$run_dir"
+	generate_run_montage "$run_dir"
 	i=$((i+1))
 done
+
+generate_combined_plot "$dir"/plots.png "$dir"/*/logs
 
