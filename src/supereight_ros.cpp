@@ -1122,10 +1122,10 @@ void SupereightNode::saveMap()
         output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
                                 << std::setfill('0') << frame_ << ".ply";
         planner_->writePathPLY(output_path_ply_file_ss.str());
-        std::stringstream output_path_tsv_file_ss;
-        output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
-                                << std::setfill('0') << frame_ << ".tsv";
-        planner_->writePathTSV(output_path_tsv_file_ss.str());
+        //std::stringstream output_path_tsv_file_ss;
+        //output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
+        //                        << std::setfill('0') << frame_ << ".tsv";
+        //planner_->writePathTSV(output_path_tsv_file_ss.str());
         std::stringstream output_wedges_ply_file_ss;
         output_wedges_ply_file_ss << supereight_config_.output_mesh_file << "/pose_grid_history_"
                                   << std::setw(5) << std::setfill('0') << frame_ << ".ply";
