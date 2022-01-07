@@ -56,7 +56,7 @@ typedef std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> 
 
 
 
-std::string current_ros_log_dir();
+std::string ros_log_dir();
 
 
 

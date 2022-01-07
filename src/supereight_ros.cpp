@@ -1653,7 +1653,7 @@ void SupereightNode::initStats()
 {
     const std::lock_guard<std::mutex> stat_lock(stat_mutex_);
     start_time_ = ros::WallTime::now().toSec();
-    const std::string log_dir = current_ros_log_dir();
+    const std::string log_dir = ros_log_dir() + "/latest";
     for (const auto& p : stat_names_) {
         const std::string& section = p.first;
         // Initialize all stat sections.

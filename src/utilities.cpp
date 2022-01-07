@@ -22,22 +22,20 @@
 
 
 namespace se {
-std::string current_ros_log_dir()
+std::string ros_log_dir()
 {
-    std::string ros_log_dir;
-    const char* ros_log_dir_env = std::getenv("ROS_LOG_DIR");
-    if (ros_log_dir_env) {
-        ros_log_dir = ros_log_dir_env;
-        if (ros_log_dir.back() == '/') {
-            ros_log_dir.erase(ros_log_dir.size() - 1, 1);
+    std::string log_dir;
+    const char* log_dir_env = std::getenv("ROS_LOG_DIR");
+    if (log_dir_env) {
+        log_dir = log_dir_env;
+        if (log_dir.back() == '/') {
+            log_dir.erase(log_dir.size() - 1, 1);
         }
     }
     else {
-        const char* home_env = std::getenv("HOME");
-        ros_log_dir = home_env;
-        ros_log_dir += "/.ros/log";
+        log_dir = std::string(std::getenv("HOME")) + "/.ros/log";
     }
-    return ros_log_dir + "/latest";
+    return log_dir;
 }
 
 
