@@ -37,7 +37,7 @@ generate_run_montage() {
 
 
 if [ "$#" -lt 2 ]; then
-	printf 'Usage: %s NUM COMMAND [ARG]...\n' "$(basename "$0")"
+	printf 'Usage: %s NUM LAUNCH_FILE [ARG]...\n' "$(basename "$0")"
 	exit 2
 fi
 
@@ -49,7 +49,7 @@ shift
 i=1
 while [ "$i" -le "$n" ]; do
 	printf 'Run %d/%d\n' "$i" "$n"
-	"$@"
+	roslaunch supereight_ros "$@"
 	run_dir=$(store_run_data "$dir" "$i")
 	generate_run_plot "$run_dir"
 	generate_run_montage "$run_dir"
