@@ -1121,16 +1121,17 @@ void SupereightNode::saveMap()
         std::stringstream output_path_ply_file_ss;
         output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
                                 << std::setfill('0') << frame_ << ".ply";
-        planner_->writePathPLY(output_path_ply_file_ss.str());
+        planner_->writePathPLY(output_path_ply_file_ss.str(), T_HW);
         //std::stringstream output_path_tsv_file_ss;
         //output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
         //                        << std::setfill('0') << frame_ << ".tsv";
-        //planner_->writePathTSV(output_path_tsv_file_ss.str());
+        //planner_->writePathTSV(output_path_tsv_file_ss.str(), T_HW);
         std::stringstream output_wedges_ply_file_ss;
         output_wedges_ply_file_ss << supereight_config_.output_mesh_file << "/pose_grid_history_"
                                   << std::setw(5) << std::setfill('0') << frame_ << ".ply";
-        se::io::save_mesh_ply(
-            planner_->getPoseGridHistory().wedgeMesh(), output_wedges_ply_file_ss.str(), T_WM_);
+        se::io::save_mesh_ply(planner_->getPoseGridHistory().wedgeMesh(),
+                              output_wedges_ply_file_ss.str(),
+                              T_HW * T_WM_);
         ROS_INFO("Map saved in %s\n", supereight_config_.output_mesh_file.c_str());
     }
 }
