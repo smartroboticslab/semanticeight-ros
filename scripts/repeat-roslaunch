@@ -5,6 +5,12 @@ script_dir() {
 	dirname "$0"
 }
 
+launch_file_path() {
+	workspace_dir=$(catkin locate)
+	relative_path=$(find "$workspace_dir" -name '*'"$1" -type f)
+	realpath --canonicalize-existing "$relative_path"
+}
+
 # Usage: store_run_data OUTDIR INDEX
 store_run_data() {
 	# Resolve the symlink to the latest log directory.
@@ -13,6 +19,7 @@ store_run_data() {
 	outdir=$(printf '%s/%03d_%s' "$1" "$2" "$(basename "$log_dir")")
 	mkdir -p "$1"
 	mv "$log_dir" "$outdir"
+	cp "$(launch_file_path "$3")" "$outdir"
 	printf '%s\n' "$outdir"
 }
 
@@ -50,7 +57,7 @@ i=1
 while [ "$i" -le "$n" ]; do
 	printf 'Run %d/%d\n' "$i" "$n"
 	roslaunch supereight_ros "$@"
-	run_dir=$(store_run_data "$dir" "$i")
+	run_dir=$(store_run_data "$dir" "$i" "$1")
 	generate_run_plot "$run_dir"
 	generate_run_montage "$run_dir"
 	i=$((i+1))
