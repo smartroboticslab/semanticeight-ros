@@ -306,137 +306,117 @@ void SupereightNode::visualizeFrontiers()
 
 void SupereightNode::visualizeCandidates()
 {
-    // Initialize the message header
-    std_msgs::Header header;
-    header.stamp = ros::Time::now();
-    header.frame_id = map_frame_id_;
-    // Initialize the arrow Marker message
-    visualization_msgs::Marker arrow_marker;
-    arrow_marker = visualization_msgs::Marker();
-    arrow_marker.header = header;
-    arrow_marker.ns = "candidate_views";
-    arrow_marker.id = -1;
-    arrow_marker.type = visualization_msgs::Marker::ARROW;
-    arrow_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
-    arrow_marker.color = eigen_to_color(color_candidate_);
-    arrow_marker.lifetime = ros::Duration(0.0);
-    arrow_marker.frame_locked = true;
-    // Initialize the text Marker message
-    visualization_msgs::Marker text_marker;
-    text_marker = visualization_msgs::Marker();
-    text_marker.header = header;
-    text_marker.ns = "candidate_view_ids";
-    text_marker.id = -1;
-    text_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-    text_marker.scale.z = 0.5f;
-    text_marker.color = eigen_to_color(color_candidate_);
-    text_marker.lifetime = ros::Duration(0.0);
-    text_marker.frame_locked = true;
-    // Delete all the previous candidates
-    arrow_marker.action = visualization_msgs::Marker::DELETEALL;
-    text_marker.action = visualization_msgs::Marker::DELETEALL;
-    map_candidate_pub_.publish(arrow_marker);
-    map_candidate_pub_.publish(text_marker);
-    arrow_marker.action = visualization_msgs::Marker::ADD;
-    text_marker.action = visualization_msgs::Marker::ADD;
-    // Publish an arrow and an ID for each candidate
-    for (const auto& candidate : planner_->candidateViews()) {
-        if (candidate.isValid()) {
-            // Arrow marker
-            const Eigen::Matrix4f goal_T_MB = candidate.goalT_MB();
-            arrow_marker.header.stamp = ros::Time::now();
-            arrow_marker.id++;
-            arrow_marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3, 1>());
-            arrow_marker.pose.orientation =
-                eigen_to_quaternion(Eigen::Quaternionf(goal_T_MB.topLeftCorner<3, 3>()));
-            map_candidate_pub_.publish(arrow_marker);
-            // Text marker
-            text_marker.header.stamp = ros::Time::now();
-            text_marker.id++;
-            text_marker.pose.position = arrow_marker.pose.position;
-            // Place the ID above the candidate
-            text_marker.pose.position.z += text_marker.scale.z / 2.0f;
-            text_marker.text = std::to_string(text_marker.id);
-            map_candidate_pub_.publish(text_marker);
-        }
+    // Delete all the previous candidate markers.
+    {
+        visualization_msgs::Marker del_marker;
+        del_marker.action = visualization_msgs::Marker::DELETEALL;
+        map_candidate_pub_.publish(del_marker);
     }
-}
-
-
-
-void SupereightNode::visualizeCandidatePaths()
-{
-    // Initialize the message header
-    std_msgs::Header header;
-    header.stamp = ros::Time::now();
-    header.frame_id = map_frame_id_;
-    // Initialize the Line message
-    visualization_msgs::Marker marker;
-    marker = visualization_msgs::Marker();
-    marker.header = header;
-    marker.ns = "candidate_paths";
-    marker.id = 0;
-    marker.type = visualization_msgs::Marker::LINE_STRIP;
-    marker.action = visualization_msgs::Marker::DELETEALL;
-    marker.pose.orientation = make_quaternion();
-    marker.scale.x = 0.05f;
-    marker.color = eigen_to_color(color_candidate_path_);
-    marker.lifetime = ros::Duration(0.0);
-    marker.frame_locked = true;
-    // Delete all the previous paths
-    map_candidate_path_pub_.publish(marker);
-    marker.action = visualization_msgs::Marker::ADD;
-    // Combine all candidate paths into a single line strip
-    for (const auto& candidate : planner_->candidateViews()) {
-        if (candidate.isValid()) {
-            const se::Path path = candidate.path();
-            if (path.size() > 1) {
-                // Add the path from the current pose to the candidate
-                for (const auto& T_MB : path) {
-                    marker.points.push_back(eigen_to_point(T_MB.topRightCorner<3, 1>()));
-                }
-                // Add the path from the candidate to the current pose, just to make the visualization look nice
-                for (auto it = path.rbegin(); it != path.rend(); ++it) {
-                    marker.points.push_back(eigen_to_point(it->topRightCorner<3, 1>()));
-                }
-            }
-        }
-    }
-    map_candidate_path_pub_.publish(marker);
-}
-
-
-
-void SupereightNode::visualizeRejectedCandidates()
-{
     const float diameter =
         2.0f * (supereight_config_.robot_radius + supereight_config_.safety_radius);
-    // Initialize the message header
+    // Initialize the message header.
     std_msgs::Header header;
     header.stamp = ros::Time::now();
     header.frame_id = map_frame_id_;
-    // Initialize the candidate Marker message
-    visualization_msgs::Marker marker;
-    marker = visualization_msgs::Marker();
-    marker.header = header;
-    marker.ns = "rejected_candidate_views";
-    marker.id = -1;
-    marker.type = visualization_msgs::Marker::SPHERE;
-    marker.pose.orientation = make_quaternion();
-    marker.scale = make_vector3(diameter);
-    marker.color = eigen_to_color(color_rejected_candidate_);
-    marker.lifetime = ros::Duration(0.0);
-    marker.frame_locked = true;
-    // Delete all the previous candidates
-    marker.action = visualization_msgs::Marker::DELETEALL;
-    map_rejected_candidate_pub_.publish(marker);
-    marker.action = visualization_msgs::Marker::ADD;
-    // Publish the position of each rejected candidate
+    // Visualize the candidate poses as arrows.
+    visualization_msgs::Marker pose_marker;
+    pose_marker.header = header;
+    pose_marker.ns = "poses";
+    pose_marker.id = 0;
+    pose_marker.type = visualization_msgs::Marker::ARROW;
+    pose_marker.action = visualization_msgs::Marker::ADD;
+    pose_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
+    pose_marker.color = eigen_to_color(color_candidate_);
+    pose_marker.lifetime = ros::Duration(0.0);
+    pose_marker.frame_locked = true;
+    // Visualize the candidate IDs as text labels.
+    visualization_msgs::Marker id_marker;
+    id_marker.header = header;
+    id_marker.ns = "ids";
+    id_marker.id = 0;
+    id_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    id_marker.action = visualization_msgs::Marker::ADD;
+    id_marker.pose.orientation = make_quaternion();
+    id_marker.scale.z = 0.5f;
+    id_marker.color = eigen_to_color(color_candidate_);
+    id_marker.lifetime = ros::Duration(0.0);
+    id_marker.frame_locked = true;
+    // Visualize the candidate paths as line strips.
+    visualization_msgs::Marker path_marker;
+    path_marker.header = header;
+    path_marker.ns = "paths";
+    path_marker.id = 0;
+    path_marker.type = visualization_msgs::Marker::LINE_STRIP;
+    path_marker.action = visualization_msgs::Marker::ADD;
+    path_marker.pose.orientation = make_quaternion();
+    path_marker.scale.x = 0.05f;
+    path_marker.color = eigen_to_color(color_candidate_);
+    path_marker.lifetime = ros::Duration(0.0);
+    path_marker.frame_locked = true;
+    // Visualize the candidate desired positions as spheres.
+    visualization_msgs::Marker desired_marker;
+    desired_marker.header = header;
+    desired_marker.ns = "desired_positions";
+    desired_marker.id = 0;
+    desired_marker.type = visualization_msgs::Marker::SPHERE;
+    desired_marker.action = visualization_msgs::Marker::ADD;
+    desired_marker.pose.orientation = make_quaternion();
+    desired_marker.scale = make_vector3(diameter);
+    desired_marker.color = eigen_to_color(color_candidate_);
+    desired_marker.color.a = 0.25f;
+    desired_marker.lifetime = ros::Duration(0.0);
+    desired_marker.frame_locked = true;
+    // Publish the markers for each candidate.
+    for (const auto& candidate : planner_->candidateViews()) {
+        if (candidate.isValid()) {
+            // Pose.
+            const Eigen::Matrix4f& goal_T_MB = candidate.goalT_MB();
+            pose_marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3, 1>());
+            pose_marker.pose.orientation =
+                eigen_to_quaternion(Eigen::Quaternionf(goal_T_MB.topLeftCorner<3, 3>()));
+            map_candidate_pub_.publish(pose_marker);
+            pose_marker.id++;
+            // ID.
+            id_marker.pose.position = pose_marker.pose.position;
+            // Place the ID above the candidate
+            id_marker.pose.position.z += id_marker.scale.z / 2.0f;
+            id_marker.text = std::to_string(id_marker.id);
+            map_candidate_pub_.publish(id_marker);
+            id_marker.id++;
+            // Path.
+            path_marker.points.clear();
+            const se::Path& path = candidate.path();
+            if (path.size() > 1) {
+                for (const auto& T_MB : path) {
+                    path_marker.points.push_back(eigen_to_point(T_MB.topRightCorner<3, 1>()));
+                }
+            }
+            map_candidate_pub_.publish(path_marker);
+            path_marker.id++;
+            // Desired position.
+            desired_marker.pose.position = pose_marker.pose.position;
+            map_candidate_pub_.publish(desired_marker);
+            desired_marker.id++;
+        }
+    }
+    // Visualize the rejected candidate positions as spheres.
+    visualization_msgs::Marker rejected_marker;
+    rejected_marker.header = header;
+    rejected_marker.ns = "rejected";
+    rejected_marker.id = 0;
+    rejected_marker.type = visualization_msgs::Marker::SPHERE;
+    rejected_marker.action = visualization_msgs::Marker::ADD;
+    rejected_marker.pose.orientation = make_quaternion();
+    rejected_marker.scale = make_vector3(diameter);
+    rejected_marker.color = eigen_to_color(color_rejected_candidate_);
+    rejected_marker.lifetime = ros::Duration(0.0);
+    rejected_marker.frame_locked = true;
+    // Publish the marker for each rejected candidate.
     for (const auto& candidate : planner_->rejectedCandidateViews()) {
-        const Eigen::Matrix4f goal_T_MB = candidate.goalT_MB();
-        marker.id++;
-        marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3, 1>());
-        map_rejected_candidate_pub_.publish(marker);
+        const Eigen::Matrix4f& goal_T_MB = candidate.goalT_MB();
+        rejected_marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3, 1>());
+        map_candidate_pub_.publish(rejected_marker);
+        rejected_marker.id++;
     }
 }
 
@@ -444,68 +424,70 @@ void SupereightNode::visualizeRejectedCandidates()
 
 void SupereightNode::visualizeGoal()
 {
-    se::CandidateView goal_view = planner_->goalView();
+    // Delete all the previous goal markers.
+    {
+        visualization_msgs::Marker del_marker;
+        del_marker.action = visualization_msgs::Marker::DELETEALL;
+        map_goal_pub_.publish(del_marker);
+    }
+
+    const se::CandidateView& goal_view = planner_->goalView();
     if (!goal_view.isValid()) {
         return;
     }
-    // Initialize the message header
+    const se::Path& path = goal_view.path();
+    // Initialize the message header.
     std_msgs::Header header;
     header.stamp = ros::Time::now();
     header.frame_id = map_frame_id_;
-    // Initialize the arrow marker message
-    visualization_msgs::Marker goal_marker;
-    goal_marker = visualization_msgs::Marker();
-    goal_marker.header = header;
-    goal_marker.ns = "goal_yaw";
-    goal_marker.id = -1;
-    goal_marker.type = visualization_msgs::Marker::ARROW;
-    goal_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
-    goal_marker.color = eigen_to_color(color_goal_);
-    goal_marker.lifetime = ros::Duration(0.0);
-    goal_marker.frame_locked = true;
-    // Delete all previous goal arrows.
-    goal_marker.action = visualization_msgs::Marker::DELETEALL;
-    map_goal_pub_.publish(goal_marker);
+
+    // Visualize the goal path poses as arrows.
+    visualization_msgs::Marker pose_marker;
+    pose_marker.header = header;
+    pose_marker.ns = "poses";
+    pose_marker.id = 0;
+    pose_marker.type = visualization_msgs::Marker::ARROW;
+    pose_marker.action = visualization_msgs::Marker::ADD;
+    pose_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
+    pose_marker.color = eigen_to_color(color_goal_);
+    pose_marker.lifetime = ros::Duration(0.0);
+    pose_marker.frame_locked = true;
     // Publish an arrow for each path vertex.
-    goal_marker.action = visualization_msgs::Marker::ADD;
-    for (const Eigen::Matrix4f& T_MB : goal_view.path()) {
-        goal_marker.header.stamp = ros::Time::now();
-        goal_marker.id++;
-        goal_marker.pose.position = eigen_to_point(T_MB.topRightCorner<3, 1>());
-        goal_marker.pose.orientation =
+    for (const Eigen::Matrix4f& T_MB : path) {
+        pose_marker.pose.position = eigen_to_point(T_MB.topRightCorner<3, 1>());
+        pose_marker.pose.orientation =
             eigen_to_quaternion(Eigen::Quaternionf(T_MB.topLeftCorner<3, 3>()));
-        map_goal_pub_.publish(goal_marker);
+        map_goal_pub_.publish(pose_marker);
         // Only the final arrow marker appears without the sleep.
         std::this_thread::sleep_for(std::chrono::duration<double>(0.00001));
+        pose_marker.id++;
     }
-    // Initialize the Line message
-    visualization_msgs::Marker path_marker;
-    path_marker = visualization_msgs::Marker();
-    path_marker.header = header;
-    path_marker.ns = "goal_path";
-    path_marker.id = 1;
-    path_marker.type = visualization_msgs::Marker::LINE_STRIP;
-    path_marker.action = visualization_msgs::Marker::ADD;
-    path_marker.pose.orientation = make_quaternion();
-    path_marker.scale.x = 0.1f;
-    path_marker.color = eigen_to_color(color_goal_);
-    path_marker.lifetime = ros::Duration(0.0);
-    path_marker.frame_locked = true;
-    // Add the path vertices to the message
-    const se::Path path = goal_view.path();
+
+    // Visualize the goal path as line strips.
     if (path.size() > 1) {
-        for (const auto& T_MC : path) {
-            path_marker.points.push_back(eigen_to_point(T_MC.topRightCorner<3, 1>()));
+        visualization_msgs::Marker path_marker;
+        path_marker.header = header;
+        path_marker.ns = "path";
+        path_marker.id = 0;
+        path_marker.type = visualization_msgs::Marker::LINE_STRIP;
+        path_marker.action = visualization_msgs::Marker::ADD;
+        path_marker.pose.orientation = make_quaternion();
+        path_marker.scale.x = 0.05f;
+        path_marker.color = eigen_to_color(color_goal_);
+        path_marker.lifetime = ros::Duration(0.0);
+        path_marker.frame_locked = true;
+        for (const auto& T_MB : path) {
+            path_marker.points.push_back(eigen_to_point(T_MB.topRightCorner<3, 1>()));
         }
         map_goal_pub_.publish(path_marker);
     }
-    // Initialize the Line message
+
+    // Visualize the goal frustum as lines.
     visualization_msgs::Marker frustum_marker;
-    frustum_marker = visualization_msgs::Marker();
     frustum_marker.header = header;
     frustum_marker.header.frame_id = map_frame_id_;
-    frustum_marker.ns = "goal_frustum";
-    frustum_marker.id = 1;
+    frustum_marker.ns = "frustum";
+    frustum_marker.id = 0;
     frustum_marker.type = visualization_msgs::Marker::LINE_LIST;
     frustum_marker.action = visualization_msgs::Marker::ADD;
     frustum_marker.pose.orientation = make_quaternion();
@@ -514,10 +496,10 @@ void SupereightNode::visualizeGoal()
     frustum_marker.color.a = 0.5f;
     frustum_marker.lifetime = ros::Duration(0.0);
     frustum_marker.frame_locked = true;
-    // Add the frustum vertices to the message
+    // Add the frustum vertices to the message.
     const Eigen::Matrix4f goal_T_MC = goal_view.goalT_MB() * supereight_config_.T_BC;
     const auto& v = sensor_.frustum_vertices_;
-    // Near plane
+    // Near plane.
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(0)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(1)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(1)).head<3>()));
@@ -526,7 +508,7 @@ void SupereightNode::visualizeGoal()
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(3)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(3)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(0)).head<3>()));
-    // Far plane
+    // Far plane.
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(4)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(5)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(5)).head<3>()));
@@ -535,7 +517,7 @@ void SupereightNode::visualizeGoal()
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(7)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(7)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(4)).head<3>()));
-    // Sides
+    // Sides.
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(0)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(4)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(1)).head<3>()));
@@ -545,13 +527,13 @@ void SupereightNode::visualizeGoal()
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(3)).head<3>()));
     frustum_marker.points.push_back(eigen_to_point((goal_T_MC * v.col(7)).head<3>()));
     map_goal_pub_.publish(frustum_marker);
-    // Initialize the Line message
+
+    // Visualize the goal 360 degree raycasting rays as lines.
     visualization_msgs::Marker ray_marker;
-    ray_marker = visualization_msgs::Marker();
     ray_marker.header = header;
     ray_marker.header.frame_id = map_frame_id_;
-    ray_marker.ns = "goal_rays";
-    ray_marker.id = 1;
+    ray_marker.ns = "rays";
+    ray_marker.id = 0;
     ray_marker.type = visualization_msgs::Marker::LINE_LIST;
     ray_marker.action = visualization_msgs::Marker::ADD;
     ray_marker.pose.orientation = make_quaternion();
@@ -560,9 +542,9 @@ void SupereightNode::visualizeGoal()
     ray_marker.color.a = 0.25f;
     ray_marker.lifetime = ros::Duration(0.0);
     ray_marker.frame_locked = true;
-    auto rays_M = goal_view.rays();
-    const Eigen::Matrix4f goal_T_MB = goal_view.goalT_MB();
     // Add the rays to the message
+    const Image<Eigen::Vector3f> rays_M = goal_view.rays();
+    const Eigen::Matrix4f& goal_T_MB = goal_view.goalT_MB();
     for (size_t i = 0; i < rays_M.size(); i++) {
         ray_marker.points.push_back(eigen_to_point(goal_T_MB.topRightCorner<3, 1>()));
         ray_marker.points.push_back(eigen_to_point(rays_M[i]));

@@ -1001,8 +1001,6 @@ void SupereightNode::plan()
                     }
                     if (node_config_.visualization_rate > 0) {
                         visualizeCandidates();
-                        visualizeCandidatePaths();
-                        visualizeRejectedCandidates();
                         visualizeGoal();
                     }
                     if (supereight_config_.rendering_rate > 0
@@ -1290,11 +1288,7 @@ void SupereightNode::setupRos()
         nh_.advertise<visualization_msgs::Marker>("/supereight/map/object_aabbs", 10);
     map_frontier_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/frontiers", 10);
     map_candidate_pub_ =
-        nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidate_views", 100);
-    map_candidate_path_pub_ =
-        nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidate_paths", 2);
-    map_rejected_candidate_pub_ = nh_.advertise<visualization_msgs::Marker>(
-        "/supereight/planner/rejected_candidate_views", 2);
+        nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidates", 100);
     map_goal_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/goal", 2);
     mav_sphere_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav/sphere", 2);
     pose_history_pub_ =

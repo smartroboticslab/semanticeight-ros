@@ -10,7 +10,7 @@ Panels:
     Property Tree Widget:
       Expanded: ~
       Splitter Ratio: 0.5
-    Tree Height: 308
+    Tree Height: 199
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -39,38 +39,25 @@ Visualization Manager:
   Displays:
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /supereight/planner/candidate_views
+      Marker Topic: /supereight/planner/candidates
       Name: Candidates
       Namespaces:
-        candidate_view_ids: true
-        candidate_views: true
+        desired_positions: true
+        ids: true
+        paths: true
+        poses: true
+        rejected: true
       Queue Size: 100
       Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /supereight/planner/candidate_paths
-      Name: Candidate Paths
-      Namespaces:
-        candidate_paths: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /supereight/planner/rejected_candidate_views
-      Name: Rejected Candidates
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /supereight/planner/goal
       Name: Goal
       Namespaces:
-        goal_frustum: false
-        goal_path: true
-        goal_rays: false
-        goal_yaw: true
+        frustum: false
+        path: true
+        poses: true
+        rays: false
       Queue Size: 100
       Value: true
     - Class: rviz/Marker

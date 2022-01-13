@@ -193,10 +193,6 @@ class SupereightNode {
 
     void visualizeCandidates();
 
-    void visualizeCandidatePaths();
-
-    void visualizeRejectedCandidates();
-
     void visualizeGoal();
 
     void visualizeMAV();
@@ -314,8 +310,6 @@ class SupereightNode {
     ros::Publisher map_object_aabb_pub_;
     ros::Publisher map_frontier_pub_;
     ros::Publisher map_candidate_pub_;
-    ros::Publisher map_candidate_path_pub_;
-    ros::Publisher map_rejected_candidate_pub_;
     ros::Publisher map_goal_pub_;
     ros::Publisher mav_sphere_pub_;
     ros::Publisher pose_history_pub_;
@@ -330,8 +324,7 @@ class SupereightNode {
     const Eigen::Vector4f color_object_ = Eigen::Vector4f(1.0, 0.0, 0.0, 1.0);
     const Eigen::Vector4f color_frontier_ = Eigen::Vector4f(1.0, 0.5, 0.0, 0.5);
     const Eigen::Vector4f color_candidate_ = Eigen::Vector4f(1.0, 1.0, 0.0, 1.0);
-    const Eigen::Vector4f color_candidate_path_ = Eigen::Vector4f(1.0, 1.0, 0.0, 1.0);
-    const Eigen::Vector4f color_rejected_candidate_ = Eigen::Vector4f(1.0, 0.0, 0.0, 0.5);
+    const Eigen::Vector4f color_rejected_candidate_ = Eigen::Vector4f(1.0, 0.0, 0.0, 0.25);
     const Eigen::Vector4f color_goal_ = Eigen::Vector4f(1.0, 0.0, 1.0, 1.0);
     const Eigen::Vector4f color_mav_sphere_ = Eigen::Vector4f(0.0, 0.0, 1.0, 0.5);
     const Eigen::Vector4f color_pose_history_ = Eigen::Vector4f(0.5, 0.5, 0.5, 0.5);
