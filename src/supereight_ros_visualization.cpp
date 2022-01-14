@@ -394,7 +394,7 @@ void SupereightNode::visualizeCandidates()
             map_candidate_pub_.publish(path_marker);
             path_marker.id++;
             // Desired position.
-            desired_marker.pose.position = pose_marker.pose.position;
+            desired_marker.pose.position = eigen_to_point(candidate.desired_t_MB_);
             map_candidate_pub_.publish(desired_marker);
             desired_marker.id++;
         }
