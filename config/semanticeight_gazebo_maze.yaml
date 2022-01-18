@@ -22,6 +22,7 @@ supereight:
 
   exploration:
     delta_t:                    0.25
+    robot_radius:               0.3
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.
