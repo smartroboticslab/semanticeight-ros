@@ -78,7 +78,7 @@ supereight:
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
-    solving_time:              0.1
+    solving_time:              0.01
 
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
