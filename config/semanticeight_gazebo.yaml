@@ -48,7 +48,7 @@ supereight:
 
   map:
     size:                       512
-    dim:                        40.96
+    dim:                        51.2
     t_MW_factor:                [0.501, 0.501, 0.501]
 
   sensor:
@@ -74,7 +74,7 @@ supereight:
     raycast_height:            10
     linear_velocity:           1.5
     angular_velocity:          0.75
-    robot_radius:              0.5
+    robot_radius:              0.3
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
