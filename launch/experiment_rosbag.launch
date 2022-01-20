@@ -19,8 +19,8 @@
         required="true"
         launch-prefix="">
     <!-- Include rosparam yaml files -->
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_experiment.yaml"/>
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_experiment_rosbag.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/experiment_rosbag.yaml"/>
     <!-- Remap topic names -->
   </node>
 

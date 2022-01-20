@@ -23,7 +23,7 @@
         required="true"
         launch-prefix="">
     <!-- Include rosparam yaml files -->
-    <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_habitat.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
   </node>
 
   <!-- rviz with appropriate config -->

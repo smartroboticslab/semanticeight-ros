@@ -47,8 +47,8 @@
           output="screen"
           required="true"
           launch-prefix="">
-      <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_gazebo.yaml"/>
-      <rosparam command="load" file="$(find supereight_ros)/config/semanticeight_gazebo_$(arg world_name).yaml"/>
+      <rosparam command="load" file="$(find supereight_ros)/config/gazebo.yaml"/>
+      <rosparam command="load" file="$(find supereight_ros)/config/gazebo_$(arg world_name).yaml"/>
     </node>
   </group>
 
