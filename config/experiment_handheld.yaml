@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Supereight settings
+supereight:
+  sensor:
+    intrinsics: [382.166, 381.71, 316.145, 247.318]
+    T_BC:       [   0.999305, 0.00636598, -0.0367349, -0.0986362,
+                 -0.00478445,   0.999064,  0.0429809, -0.00697812,
+                   0.0369742, -0.0427753,     0.9984,   0.0290491,
+                           0,          0,          0,           1]
+
