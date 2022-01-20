@@ -7,6 +7,7 @@
 #define __SUPEREIGHT_ROS_HPP
 
 #include <Eigen/Dense>
+#include <atomic>
 #include <boost/circular_buffer.hpp>
 #include <chrono>
 #include <cstdint>
@@ -350,7 +351,7 @@ class SupereightNode {
     // Threads
     std::thread matching_thread_;
     std::thread planning_thread_;
-    atomic_bool keep_running_;
+    std::atomic_bool keep_running_;
 
     /*!
      * Global/map coordinate frame. Will always look up TF transforms to this
