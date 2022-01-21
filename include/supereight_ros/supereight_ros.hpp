@@ -202,6 +202,8 @@ class SupereightNode {
 
     void visualizePoseGridHistory();
 
+    void visualizeSamplingAABB();
+
     template<typename VoxelImplT>
     bool is_free(const se::Volume<typename VoxelImplT::VoxelType>& volume) const
     {
@@ -314,6 +316,7 @@ class SupereightNode {
     ros::Publisher map_goal_pub_;
     ros::Publisher mav_sphere_pub_;
     ros::Publisher pose_history_pub_;
+    ros::Publisher limit_pub_;
 
     // ROS service Client
     ros::ServiceClient mav_status_service_;
@@ -329,6 +332,7 @@ class SupereightNode {
     const Eigen::Vector4f color_goal_ = Eigen::Vector4f(1.0, 0.0, 1.0, 1.0);
     const Eigen::Vector4f color_mav_sphere_ = Eigen::Vector4f(0.0, 0.0, 1.0, 0.5);
     const Eigen::Vector4f color_pose_history_ = Eigen::Vector4f(0.5, 0.5, 0.5, 0.5);
+    const Eigen::Vector4f color_sampling_aabb_ = Eigen::Vector4f(1.0, 0.0, 0.0, 0.5);
 
     // Circular buffers for incoming messages
     boost::circular_buffer<geometry_msgs::TransformStamped> pose_buffer_;

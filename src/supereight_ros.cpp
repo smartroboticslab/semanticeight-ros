@@ -1005,6 +1005,7 @@ void SupereightNode::plan()
                     if (node_config_.visualization_rate > 0) {
                         visualizeCandidates();
                         visualizeGoal();
+                        visualizeSamplingAABB();
                     }
                     if (supereight_config_.rendering_rate > 0
                         && supereight_config_.output_render_file != "") {
@@ -1296,6 +1297,7 @@ void SupereightNode::setupRos()
     mav_sphere_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav/sphere", 2);
     pose_history_pub_ =
         nh_.advertise<visualization_msgs::Marker>("/supereight/planner/pose_history", 2);
+    limit_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/limits", 2);
 
     // ROS services. // ToDo -> use default namespace and bind everything in the launch file
     mav_status_service_ =

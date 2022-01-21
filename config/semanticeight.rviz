@@ -10,7 +10,7 @@ Panels:
     Property Tree Widget:
       Expanded: ~
       Splitter Ratio: 0.5
-    Tree Height: 199
+    Tree Height: 188
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -327,6 +327,14 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /supereight/limits
+      Name: Limits
+      Namespaces:
+        sampling_aabb: true
+      Queue Size: 100
+      Value: true
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
