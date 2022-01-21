@@ -1005,6 +1005,7 @@ void SupereightNode::plan()
                     if (node_config_.visualization_rate > 0) {
                         visualizeCandidates();
                         visualizeGoal();
+                        visualizeEnvironmentAABB();
                         visualizeSamplingAABB();
                     }
                     if (supereight_config_.rendering_rate > 0

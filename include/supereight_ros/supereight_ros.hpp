@@ -202,6 +202,8 @@ class SupereightNode {
 
     void visualizePoseGridHistory();
 
+    void visualizeEnvironmentAABB();
+
     void visualizeSamplingAABB();
 
     template<typename VoxelImplT>

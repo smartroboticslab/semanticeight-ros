@@ -649,6 +649,31 @@ void SupereightNode::visualizePoseGridHistory()
 
 
 
+void SupereightNode::visualizeEnvironmentAABB()
+{
+    const auto& edges = pipeline_->environmentAABBEdgesM();
+    visualization_msgs::Marker aabb_marker;
+    aabb_marker.header.stamp = ros::Time::now();
+    aabb_marker.header.frame_id = map_frame_id_;
+    aabb_marker.ns = "environment_aabb";
+    aabb_marker.id = 0;
+    aabb_marker.type = visualization_msgs::Marker::LINE_LIST;
+    aabb_marker.action = visualization_msgs::Marker::ADD;
+    aabb_marker.pose.position = make_point();
+    aabb_marker.pose.orientation = make_quaternion();
+    aabb_marker.scale.x = 0.05;
+    aabb_marker.color = eigen_to_color(color_pose_history_);
+    aabb_marker.lifetime = ros::Duration(0.0);
+    aabb_marker.frame_locked = true;
+    aabb_marker.points.reserve(edges.size());
+    for (const auto& vertex : edges) {
+        aabb_marker.points.emplace_back(eigen_to_point(vertex));
+    }
+    limit_pub_.publish(aabb_marker);
+}
+
+
+
 void SupereightNode::visualizeSamplingAABB()
 {
     const auto& edges = planner_->samplingAABBEdgesM();
