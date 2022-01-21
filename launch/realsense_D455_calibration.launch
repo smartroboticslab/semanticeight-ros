@@ -10,9 +10,9 @@
 
     <!-- RGBD -->
     <param name="enable_rgb" type="bool" value="true" />
-    <param name="enable_ir" type="bool" value="false" />
-    <param name="enable_depth" type="bool" value="true" />
-    <param name="enable_emitter" type="bool" value="true" />
+    <param name="enable_ir" type="bool" value="true" />
+    <param name="enable_depth" type="bool" value="false" />
+    <param name="enable_emitter" type="bool" value="false" />
     <param name="rgb_width" value="640"/>
     <param name="rgb_height" value="480"/>
     <param name="rgb_frame_rate" value="30"/>
@@ -29,7 +29,7 @@
     <param name="depth_frame_rate" type="int" value="30" />
 
     <!-- MOTION -->
-    <param name="enable_motion" type="bool" value="false" />
+    <param name="enable_motion" type="bool" value="true" />
     <param name="gyro_hz" type="double" value="400" />
     <param name="accel_hz" type="double" value="250" />
   </node>
