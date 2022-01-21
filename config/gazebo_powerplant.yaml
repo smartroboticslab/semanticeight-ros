@@ -15,8 +15,8 @@ supereight:
     dim:                        51.2
     aabb_min_W:                 [-16.5, -15.5,  0.0]
     aabb_max_W:                 [ 16.5,  15.5, 26.0]
-    sampling_min_W:             [-10000, -10000,  0.7]
-    sampling_max_W:             [ 10000,  10000, 25.0]
+    sampling_min_W:             [-16.5, -15.5,  0.7]
+    sampling_max_W:             [ 16.5,  15.5, 25.0]
     frontier_cluster_min_ratio: 0.015625
 
   sensor:
