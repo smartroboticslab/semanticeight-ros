@@ -903,7 +903,10 @@ void SupereightNode::plan()
     {
         const std::lock_guard<std::mutex> map_lock(map_mutex_);
         pipeline_->freeInitialPosition(
-            sensor_, (node_config_.experiment_type == "gazebo" ? "sphere" : "cylinder"));
+            sensor_,
+            ((node_config_.experiment_type == "gazebo" || node_config_.experiment_type == "real")
+                 ? "sphere"
+                 : "cylinder"));
     }
     // Exploration planning
     while ((num_failed_planning_iterations_ < max_failed_planning_iterations_
