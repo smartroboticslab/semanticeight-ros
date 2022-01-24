@@ -6,7 +6,9 @@
       required="true"
       output="screen">
     <param name="global_time" type="bool" value="true" />
-    <param name="correct_ts" type="bool" value="false" />
+    <!-- Set to false if running on the NVIDIA Jetson Xavier NX which doesn't
+         have the appropriate kernel modules. -->
+    <param name="correct_ts" type="bool" value="true" />
 
     <!-- RGBD -->
     <param name="enable_rgb" type="bool" value="true" />
@@ -15,18 +17,18 @@
     <param name="enable_emitter" type="bool" value="false" />
     <param name="rgb_width" value="640"/>
     <param name="rgb_height" value="480"/>
-    <param name="rgb_frame_rate" value="15"/>
+    <param name="rgb_frame_rate" value="5"/>
     <param name="rgb_format" type="str" value="RGB8" />
     <param name="rgb_exposure" type="double" value="100" />
     <param name="ir_width" type="int" value="640" />
     <param name="ir_height" type="int" value="480" />
     <param name="ir_format" type="str" value="Y8" />
-    <param name="ir_frame_rate" type="int" value="15" />
+    <param name="ir_frame_rate" type="int" value="5" />
     <param name="ir_exposure" type="double" value="12000" />
     <param name="depth_width" type="int" value="640" />
     <param name="depth_height" type="int" value="480" />
     <param name="depth_format" type="str" value="Z16" />
-    <param name="depth_frame_rate" type="int" value="15" />
+    <param name="depth_frame_rate" type="int" value="5" />
 
     <!-- MOTION -->
     <param name="enable_motion" type="bool" value="true" />
