@@ -248,7 +248,7 @@ class SupereightNode {
     Eigen::Matrix4f T_CB_;
     Eigen::Vector3f init_t_WB_;
     Eigen::Vector2i image_res_;
-    int frame_;
+    std::atomic_int frame_;
     int num_planning_iterations_;
     int num_failed_planning_iterations_;
     int max_failed_planning_iterations_;

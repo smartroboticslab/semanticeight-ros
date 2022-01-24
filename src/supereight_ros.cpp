@@ -608,9 +608,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     std::chrono::time_point<std::chrono::steady_clock> start_time;
     std::chrono::time_point<std::chrono::steady_clock> fusion_start_time =
         std::chrono::steady_clock::now();
+    const int frame = frame_;
 
     ROS_INFO("-----------------------------------------");
-    ROS_INFO("Frame %d", frame_);
+    ROS_INFO("Frame %d", frame);
 
     // Convert the depth and RGB images into a format that supereight likes.
     to_supereight_depth(depth_image, sensor_.far_plane, input_depth_.get());
@@ -637,7 +638,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     start_time = std::chrono::steady_clock::now();
     bool tracked = false;
     if (node_config_.enable_tracking) {
-        if (frame_ % supereight_config_.tracking_rate == 0) {
+        if (frame % supereight_config_.tracking_rate == 0) {
             tracked = pipeline_->track(sensor_, supereight_config_.icp_threshold);
         }
         else {
@@ -650,7 +651,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     }
     // Call object tracking.
     if (node_config_.enable_objects) {
-        pipeline_->trackObjects(sensor_, frame_);
+        pipeline_->trackObjects(sensor_, frame);
     }
     // Publish the pose estimated/received by supereight.
     const Eigen::Matrix4f se_T_WB = pipeline_->T_WC() * T_CB_;
@@ -672,12 +673,12 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     // Integrate only if tracking was successful or it is one of the first 4
     // frames.
     bool integrated = false;
-    if ((tracked && (frame_ % supereight_config_.integration_rate == 0)) || frame_ <= 3) {
+    if ((tracked && (frame % supereight_config_.integration_rate == 0)) || frame <= 3) {
         {
             const std::lock_guard<std::mutex> map_lock(map_mutex_);
 
             start_time = std::chrono::steady_clock::now();
-            integrated = pipeline_->integrate(sensor_, frame_);
+            integrated = pipeline_->integrate(sensor_, frame);
             sampleStat("Fusion",
                        "Integration",
                        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time)
@@ -685,7 +686,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 
             start_time = std::chrono::steady_clock::now();
             if (node_config_.enable_objects) {
-                integrated = pipeline_->integrateObjects(sensor_, frame_);
+                integrated = pipeline_->integrateObjects(sensor_, frame);
             }
             sampleStat("Fusion",
                        "Object integration",
@@ -730,8 +731,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         }
 
         // Volume
-        if (frame_ % supereight_config_.rendering_rate == 0) {
-            (void) pipeline_->raycastObjectsAndBg(sensor_, frame_);
+        if (frame % supereight_config_.rendering_rate == 0) {
+            (void) pipeline_->raycastObjectsAndBg(sensor_, frame);
 
             pipeline_->renderObjects(
                 volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID, false);
@@ -793,7 +794,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     // Visualization
     start_time = std::chrono::steady_clock::now();
     map_dim_pub_.publish(map_dim_msg_);
-    if (node_config_.visualization_rate > 0 && (frame_ % node_config_.visualization_rate == 0)) {
+    if (node_config_.visualization_rate > 0 && (frame % node_config_.visualization_rate == 0)) {
         visualizeWholeMap();
         visualizeMapMesh();
         visualizeEnvironmentAABB();
@@ -813,7 +814,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
     sampleTime("Fusion", "Timestamp");
-    sampleStat("Fusion", "Frame", frame_);
+    sampleStat("Fusion", "Frame", frame);
     sampleStat("Fusion", "Free volume", pipeline_->free_volume);
     sampleStat("Fusion", "Occupied volume", pipeline_->occupied_volume);
     sampleStat("Fusion", "Explored volume", pipeline_->explored_volume);
@@ -826,7 +827,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     sampleStat("Fusion", "q_WB w", se_q_WB.w());
 
     if (supereight_config_.rendering_rate > 0
-        && (frame_ + 1) % supereight_config_.rendering_rate == 0
+        && (frame + 1) % supereight_config_.rendering_rate == 0
         && supereight_config_.output_render_file != "") {
         stdfs::create_directories(supereight_config_.output_render_file);
 
@@ -834,7 +835,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         const int h = (pipeline_->getImageResolution()).y();
         const std::string prefix = supereight_config_.output_render_file + "/";
         std::stringstream path_suffix_ss;
-        path_suffix_ss << std::setw(5) << std::setfill('0') << frame_ << ".png";
+        path_suffix_ss << std::setw(5) << std::setfill('0') << frame << ".png";
         const std::string suffix = path_suffix_ss.str();
 
         std::unique_ptr<uint32_t[]> segmentation_render(new uint32_t[w * h]);
@@ -882,8 +883,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         }
     }
 
-    if (supereight_config_.meshing_rate > 0
-        && (frame_ + 1) % supereight_config_.meshing_rate == 0) {
+    if (supereight_config_.meshing_rate > 0 && (frame + 1) % supereight_config_.meshing_rate == 0) {
         SupereightNode::saveMap();
     }
 
@@ -923,6 +923,10 @@ void SupereightNode::plan()
             ((node_config_.experiment_type == "gazebo" || node_config_.experiment_type == "real")
                  ? "sphere"
                  : "cylinder"));
+    }
+    // Wait for a few frame to be integrated.
+    while (frame_ < 3) {
+        ros::Duration(0.5).sleep();
     }
     // Exploration planning
     while ((num_failed_planning_iterations_ < max_failed_planning_iterations_
