@@ -30,7 +30,7 @@
   </node>
 
   <!-- rviz with appropriate config -->
-  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight.rviz" launch-prefix="bash -c 'sleep 2; $0 $@'"/>
+  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/simulation.rviz" launch-prefix="bash -c 'sleep 2; $0 $@'"/>
 
   <!--
   <node pkg="rosbag" type="record" name="record" args="/habitat/pose /habitat/depth/image_raw /habitat/rgb/image_raw /habitat/semantic_class/image_raw /habitat/semantic_instance/image_raw"/>

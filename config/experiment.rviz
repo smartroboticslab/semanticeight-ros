@@ -1,0 +1,432 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 104
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Background mesh1
+        - /MAV1
+        - /TF1
+        - /TF1/Frames1
+      Splitter Ratio: 0.5543766617774963
+    Tree Height: 188
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.5886790156364441
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: Input Depth
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /supereight/planner/candidates
+      Name: Candidates
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /supereight/planner/goal
+      Name: Goal
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/free
+      Name: Free Volume
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/frontiers
+      Name: Frontiers
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/planner/pose_history
+      Name: Position history
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /supereight/map/object_meshes
+      Name: Object meshes
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/objects
+      Name: Objects
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /supereight/map/mesh
+      Name: Background mesh
+      Namespaces:
+        map_mesh: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/occupied
+      Name: Occupied Volume
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/unknown
+      Name: Unknown Volume
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/object_aabbs
+      Name: Object AABBs
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/mav/sphere
+      Name: MAV
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /camera/depth_image
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Input Depth
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /supereight/depth_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: SE Depth
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /supereight/rgba_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: SE RGBA
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /supereight/volume_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Render
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /supereight/entropy_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Entropy
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /supereight/entropy_depth_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Entropy Depth
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /supereight/class_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Class
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /supereight/instance_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Instance
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /supereight/raycast_render
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Raycast
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /supereight/volume_render_color
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Color
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /supereight/volume_render_min_scale
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Min Scale
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        camera:
+          Value: false
+        map:
+          Value: true
+        vicon/s550_jetson/s550_jetson:
+          Value: true
+        vicon/world:
+          Value: true
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        vicon/world:
+          map:
+            {}
+          vicon/s550_jetson/s550_jetson:
+            camera:
+              {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/map/dim
+      Name: Map Dimensions
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /supereight/limits
+      Name: Limits
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: false
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: false
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.20000000298023224
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.20000000298023224
+      Name: Integration pose
+      Queue Size: 10
+      Shaft Length: 1
+      Shaft Radius: 0.10000000149011612
+      Shape: Arrow
+      Topic: /supereight/pose
+      Unreliable: false
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Default Light: true
+    Fixed Frame: vicon/world
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
+      Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 5.625650882720947
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Field of View: 0.7853981852531433
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: false
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 0.32039839029312134
+      Target Frame: <Fixed Frame>
+      Yaw: 4.200401306152344
+    Saved: ~
+Window Geometry:
+  Class:
+    collapsed: false
+  Color:
+    collapsed: false
+  Displays:
+    collapsed: true
+  Entropy:
+    collapsed: false
+  Entropy Depth:
+    collapsed: false
+  Height: 1010
+  Hide Left Dock: false
+  Hide Right Dock: true
+  Input Depth:
+    collapsed: false
+  Instance:
+    collapsed: false
+  Min Scale:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd00000004000000000000016e00000263fc0200000013fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000008200fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006500000001a6000000c80000000000000000fb0000000a0049006d0061006700650000000207000000790000000000000000fb0000000a0049006d006100670065000000032e000000cc0000000000000000fb0000000a0049006d006100670065000000024d000000b60000000000000000fb0000000a0049006d00610067006500000002cd0000012d0000000000000000fb0000000a0049006d00610067006500000002190000007a0000000000000000fb0000000a0049006d006100670065000000032e000000cc0000000000000000fb0000000a0049006d0061006700650000000263000000ac0000000000000000fb000000100054007200610063006b0069006e006701000001e5000000c60000000000000000fb0000000a0049006d006100670065000000029e000000940000000000000000fc0000011f000001160000004201000027fa000000000100000003fb0000000c00520065006e00640065007201000000000000016e0000007c00fffffffb0000000a0043006f006c006f00720100000000ffffffff0000006a00fffffffb00000012004d0069006e0020005300630061006c00650100000000ffffffff0000009100fffffffc0000023e000001440000004201000027fa000000020100000003fb0000000e00520061007900630061007300740100000000ffffffff0000008200fffffffb000000100049006e007300740061006e006300650100000000ffffffff0000008700fffffffb0000000a0043006c0061007300730100000000000001b50000006a00ffffff000000010000017b00000263fc0200000004fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb000000100044006900730070006c006100790073000000011f000001720000011e00fffffffb0000000a00560069006500770073000000029a000000e8000000e000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000780000000c4fc0100000005fb000000160049006e007000750074002000440065007000740068010000000000000119000000a600fffffffb00000010005300450020004400650070007400680100000122000000f80000008e00fffffffb0000000e00530045002000520047004200410100000223000000fa0000008b00fffffffc000003260000045a000000bd00fffffffa000000000200000003fb0000000e0045006e00740072006f007000790100000000ffffffff0000001a00fffffffb0000000e0045006e00740072006f00700079010000004d000000a90000000000000000fb0000001a0045006e00740072006f007000790020004400650070007400680100000000ffffffff0000001a00fffffffb0000000a00560069006500770073030000004e00000080000002e100000197000000030000078000000045fc0100000002fb0000000800540069006d00650100000000000007800000034f00fffffffb0000000800540069006d00650100000000000004500000000000000000000006090000026300000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Raycast:
+    collapsed: false
+  Render:
+    collapsed: false
+  SE Depth:
+    collapsed: false
+  SE RGBA:
+    collapsed: false
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: true
+  Width: 1920
+  X: 0
+  Y: 70

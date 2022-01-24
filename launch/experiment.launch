@@ -32,6 +32,6 @@
   </node>
 
   <!-- rviz with appropriate config -->
-  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/semanticeight.rviz" launch-prefix="bash -c 'sleep 2; $0 $@'"/>
+  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/experiment.rviz" launch-prefix="bash -c 'sleep 2; $0 $@'"/>
 </launch>
 
