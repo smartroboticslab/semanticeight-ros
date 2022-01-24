@@ -605,12 +605,12 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 {
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     newStatFrame("Fusion");
+    std::chrono::time_point<std::chrono::steady_clock> start_time;
+    std::chrono::time_point<std::chrono::steady_clock> fusion_start_time =
+        std::chrono::steady_clock::now();
 
     ROS_INFO("-----------------------------------------");
     ROS_INFO("Frame %d", frame_);
-
-    std::chrono::time_point<std::chrono::steady_clock> start_time;
-    std::chrono::time_point<std::chrono::steady_clock> end_time;
 
     // Convert the depth and RGB images into a format that supereight likes.
     to_supereight_depth(depth_image, sensor_.far_plane, input_depth_.get());
@@ -628,9 +628,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     if (node_config_.enable_objects) {
         pipeline_->preprocessSegmentation(segmentation);
     }
-    end_time = std::chrono::steady_clock::now();
     sampleStat(
-        "Fusion", "Preprocessing", std::chrono::duration<double>(end_time - start_time).count());
+        "Fusion",
+        "Preprocessing",
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
     // Tracking
     start_time = std::chrono::steady_clock::now();
@@ -662,8 +663,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     tf::pointEigenToMsg(se_t_WB, se_T_WB_msg.pose.position);
     tf::quaternionEigenToMsg(se_q_WB, se_T_WB_msg.pose.orientation);
     supereight_pose_pub_.publish(se_T_WB_msg);
-    end_time = std::chrono::steady_clock::now();
-    sampleStat("Fusion", "Tracking", std::chrono::duration<double>(end_time - start_time).count());
+    sampleStat(
+        "Fusion",
+        "Tracking",
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
     // Integration
     // Integrate only if tracking was successful or it is one of the first 4
@@ -675,19 +678,19 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 
             start_time = std::chrono::steady_clock::now();
             integrated = pipeline_->integrate(sensor_, frame_);
-            end_time = std::chrono::steady_clock::now();
             sampleStat("Fusion",
                        "Integration",
-                       std::chrono::duration<double>(end_time - start_time).count());
+                       std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time)
+                           .count());
 
             start_time = std::chrono::steady_clock::now();
             if (node_config_.enable_objects) {
                 integrated = pipeline_->integrateObjects(sensor_, frame_);
             }
-            end_time = std::chrono::steady_clock::now();
             sampleStat("Fusion",
                        "Object integration",
-                       std::chrono::duration<double>(end_time - start_time).count());
+                       std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time)
+                           .count());
         }
 
         {
@@ -782,8 +785,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             entropy_depth_render_pub_.publish(entropy_depth_render_msg);
         }
     }
-    end_time = std::chrono::steady_clock::now();
-    sampleStat("Fusion", "Rendering", std::chrono::duration<double>(end_time - start_time).count());
+    sampleStat(
+        "Fusion",
+        "Rendering",
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
     // Visualization
     start_time = std::chrono::steady_clock::now();
@@ -800,9 +805,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         visualizePoseHistory();
         visualizePoseGridHistory();
     }
-    end_time = std::chrono::steady_clock::now();
     sampleStat(
-        "Fusion", "Visualization", std::chrono::duration<double>(end_time - start_time).count());
+        "Fusion",
+        "Visualization",
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
     sampleTime("Fusion", "Timestamp");
     sampleStat("Fusion", "Frame", frame_);
@@ -816,9 +822,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     sampleStat("Fusion", "q_WB y", se_q_WB.y());
     sampleStat("Fusion", "q_WB z", se_q_WB.z());
     sampleStat("Fusion", "q_WB w", se_q_WB.w());
-    writeFrameStats("Fusion");
-
-    printStats();
 
     if (supereight_config_.rendering_rate > 0
         && (frame_ + 1) % supereight_config_.rendering_rate == 0
@@ -881,6 +884,13 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         && (frame_ + 1) % supereight_config_.meshing_rate == 0) {
         SupereightNode::saveMap();
     }
+
+    sampleStat("Fusion",
+               "Total",
+               std::chrono::duration<double>(std::chrono::steady_clock::now() - fusion_start_time)
+                   .count());
+    writeFrameStats("Fusion");
+    printStats();
 
     if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_)
             .count()
@@ -1627,20 +1637,13 @@ std::vector<double> SupereightNode::getLastStats(const std::string& section) con
 
 void SupereightNode::printStats() const
 {
-    double total_time = 0.0;
-    total_time += getStat("Fusion", "Preprocessing");
-    total_time += getStat("Fusion", "Tracking");
-    total_time += getStat("Fusion", "Integration");
-    total_time += getStat("Fusion", "Object integration");
-    total_time += getStat("Fusion", "Rendering");
-    total_time += getStat("Fusion", "Visualization");
     ROS_INFO("%-25s %.5f s", "Preprocessing", getStat("Fusion", "Preprocessing"));
     ROS_INFO("%-25s %.5f s", "Tracking", getStat("Fusion", "Tracking"));
     ROS_INFO("%-25s %.5f s", "Integration", getStat("Fusion", "Integration"));
     ROS_INFO("%-25s %.5f s", "Object integration", getStat("Fusion", "Object integration"));
     ROS_INFO("%-25s %.5f s", "Rendering", getStat("Fusion", "Rendering"));
     ROS_INFO("%-25s %.5f s", "Visualization", getStat("Fusion", "Visualization"));
-    ROS_INFO("Frame total               %.5f s", total_time);
+    ROS_INFO("%-25s %.5f s", "Total", getStat("Fusion", "Total"));
 }
 
 

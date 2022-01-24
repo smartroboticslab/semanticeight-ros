@@ -390,6 +390,7 @@ class SupereightNode {
                                      "Object integration",
                                      "Rendering",
                                      "Visualization",
+                                     "Total",
                                      "Free volume",
                                      "Occupied volume",
                                      "Explored volume",
