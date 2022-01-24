@@ -67,8 +67,10 @@ supereight:
     far_plane:                  3.0
 
   exploration:
-    enable_exploration:        false
+    enable_exploration:        true
     num_candidates:            20
+    exploration_weight:        0.5
+    use_pose_history:          false
     raycast_width:             36
     raycast_height:            10
     linear_velocity:           0.5
@@ -77,7 +79,7 @@ supereight:
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
-    solving_time:              0.1
+    solving_time:              0.01
 
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
