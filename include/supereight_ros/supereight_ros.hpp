@@ -363,8 +363,8 @@ class SupereightNode {
      * Global/map coordinate frame. Will always look up TF transforms to this
      * frame.
      */
-    const std::string world_frame_id_;
-    const std::string map_frame_id_;
+    std::string world_frame_id_;
+    std::string map_frame_id_;
     std::string body_frame_id_;
     std::string camera_frame_id_;
 
