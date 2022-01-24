@@ -59,6 +59,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         body_frame_id_ = "firefly/base_link";
         camera_frame_id_ = "firefly/vi_sensor/camera_depth_optical_center_link";
     }
+    else if (node_config_.experiment_type == "real") {
+        world_frame_id_ = "vicon/world";
+        body_frame_id_ = "vicon/s550_jetson/s550_jetson";
+    }
 
     t_MW_ = supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
     T_WM_ = Eigen::Matrix4f::Identity();
