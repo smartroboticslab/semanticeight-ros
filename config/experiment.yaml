@@ -13,9 +13,9 @@ supereight_ros:
   depth_buffer_size: 10
   rgb_buffer_size: 10
   max_timestamp_diff: 0.02
-  center_at_first_position: true
-  visualization_rate: 4
-  visualization_max_z: 3.5
+  center_at_first_position: false
+  visualization_rate: 5
+  visualization_max_z: 4.0
   experiment_type: "real"
   visualize_360_raycasting: true
   run_segmentation: false
@@ -33,7 +33,7 @@ supereight:
     # Rates
     tracking_rate:              1
     integration_rate:           1
-    rendering_rate:             4
+    rendering_rate:             5
     meshing_rate:               0
     fps:                        0.0
     # Other
@@ -44,21 +44,21 @@ supereight:
     pyramid:                    [10, 5, 4]
 
   map:
-    size:                       256
+    size:                       512
     dim:                        10.24
     t_MW_factor:                [0.501, 0.501, 0.501]
     aabb_min_W:                 [-5.0, -5.0, 0.0]
-    aabb_max_W:                 [ 5.0,  5.0, 5.0]
-    sampling_min_W:             [-2, -2, 1.0]
-    sampling_max_W:             [ 2,  2, 2.0]
+    aabb_max_W:                 [ 5.0,  5.0, 6.0]
+    sampling_min_W:             [-2.0, -2.0, 1.0]
+    sampling_max_W:             [ 2.0,  2.0, 2.0]
 
   sensor:
-    intrinsics:                 [381.232, 380.777, 316.145, 247.318]
+    intrinsics:                 [383.680587, 383.673870, 316.566185, 248.036409]
     downsampling_factor:        2
-    T_BC:                       [-0.128775, -0.521742,   0.852497,   0.105121,
-                                 -0.996569,  0.122076, -0.0635599, -0.0169158,
-                                -0.0762536, -0.851455,  -0.538894, -0.0551072,
-                                         0,         0,          0,          1]
+    T_BC:                       [ -0.0401994, -0.508919,   0.859875,   0.108581,
+                                   -0.999152, 0.0281597, -0.0300442, -0.0181251,
+                                 -0.00892378, -0.860354,  -0.509619, -0.0476882,
+                                           0,         0,          0,          1]
     init_T_WB:                  [1, 0, 0, 0,
                                  0, 1, 0, 0,
                                  0, 0, 1, 0,

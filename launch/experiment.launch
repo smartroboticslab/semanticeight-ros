@@ -9,12 +9,10 @@
   <remap to="/D455/depth0/image"             from="/camera/depth_image"/>
   <remap to="/D455/rgb0/image"               from="/camera/rgb_image"/>
   <remap to="/vicon/s550_jetson/s550_jetson" from="/pose"/>
+  <!-- For handheld tests with the standalone camera -->
   <!--<remap to="/vicon/d455/d455"               from="/pose"/>-->
 
-  <!-- Vicon node -->
   <include file="$(find vicon_bridge)/launch/vicon.launch"></include>
-
-  <!-- RealSense node -->
   <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
 
   <!-- supereight-ros node -->
@@ -25,10 +23,9 @@
         output="screen"
         required="true"
         launch-prefix="">
-    <!-- Include rosparam yaml files -->
     <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
+    <!-- For handheld tests with the standalone camera -->
     <!--<rosparam command="load" file="$(find supereight_ros)/config/experiment_handheld.yaml"/>-->
-    <!-- Remap topic names -->
   </node>
 
   <!-- rviz with appropriate config -->
