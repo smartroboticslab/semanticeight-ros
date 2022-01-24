@@ -97,6 +97,7 @@ plot_data() {
 	stamp_idx=$(get_column_index "$average_data_file" 'Timestamp')
 	pre_idx=$(get_column_index "$average_data_file" 'Preprocessing')
 	obj_int_idx=$(get_column_index "$average_data_file" 'Object integration')
+	fusion_idx=$(get_column_index "$average_data_file" 'Total')
 	free_idx=$(get_column_index "$average_data_file" 'Free volume')
 	occ_idx=$(get_column_index "$average_data_file" 'Occupied volume')
 	expl_idx=$(get_column_index "$average_data_file" 'Explored volume')
@@ -151,7 +152,8 @@ plot_data() {
 	set xrange [0:$(get_axis_limit "$axis_limits" 4 x)];
 	set yrange [0:$(get_axis_limit "$axis_limits" 4 y)];
 	plot for [i=$pre_idx:$obj_int_idx:1] \
-		'$average_data_file' using (\$$frame_idx+1):(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1;
+		'$average_data_file' using (\$$frame_idx+1):(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1,\
+		'$average_data_file' using (\$$frame_idx+1):(\$$fusion_idx) title 'Total';
 
 	unset multiplot;"
 
