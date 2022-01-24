@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 6 ]
+then
+	printf 'Usage: %s XMIN YMIN ZMIN XMAX YMAX ZMAX\n' "${0##*/}"
+	exit 2
+fi
+
+xmin=$(printf '%s\n' "$1" | tr -d ',[]')
+ymin=$(printf '%s\n' "$2" | tr -d ',[]')
+zmin=$(printf '%s\n' "$3" | tr -d ',[]')
+xmax=$(printf '%s\n' "$4" | tr -d ',[]')
+ymax=$(printf '%s\n' "$5" | tr -d ',[]')
+zmax=$(printf '%s\n' "$6" | tr -d ',[]')
+
+cat << EOF
+ply
+format ascii 1.0
+element vertex 8
+property float x
+property float y
+property float z
+element face 6
+property list uchar int vertex_index
+end_header
+$xmin $ymin $zmin
+$xmin $ymin $zmax
+$xmin $ymax $zmax
+$xmin $ymax $zmin
+$xmax $ymin $zmin
+$xmax $ymin $zmax
+$xmax $ymax $zmax
+$xmax $ymax $zmin
+4 0 1 2 3
+4 7 6 5 4
+4 0 4 5 1
+4 1 5 6 2
+4 2 6 7 3
+4 3 7 4 0
+EOF
