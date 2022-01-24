@@ -1097,7 +1097,7 @@ void SupereightNode::saveMap()
         if (node_config_.experiment_type == "habitat") {
             geometry_msgs::TransformStamped tf;
             try {
-                tf = tf_buffer_.lookupTransform("habitat", "world", ros::Time(0));
+                tf = tf_buffer_.lookupTransform("habitat", world_frame_id_, ros::Time(0));
                 T_HW(0, 3) = tf.transform.translation.x;
                 T_HW(1, 3) = tf.transform.translation.y;
                 T_HW(2, 3) = tf.transform.translation.z;
