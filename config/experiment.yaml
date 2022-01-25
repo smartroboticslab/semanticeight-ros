@@ -53,8 +53,10 @@ supereight:
     sampling_max_W:             [ 1.8,  1.6, 1.5]
 
   sensor:
+    # Intel RealSense D455, serial number 032522250144
     intrinsics:                 [383.680587, 383.673870, 316.566185, 248.036409]
     downsampling_factor:        2
+    # Using the s550_jetson vicon object which is x-forward, z-up
     T_BC:                       [ -0.0401994, -0.508919,   0.859875,   0.108581,
                                    -0.999152, 0.0281597, -0.0300442, -0.0181251,
                                  -0.00892378, -0.860354,  -0.509619, -0.0476882,

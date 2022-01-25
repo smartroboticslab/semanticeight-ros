@@ -2,13 +2,20 @@
 # SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
 # SPDX-License-Identifier: CC0-1.0
 
-# Supereight settings
+supereight_ros:
+  control_interface: "habitat"
+
 supereight:
-  # Intel RealSense D455, serial number 032522250421
+  map:
+    sampling_min_W: [-10000, -10000, -10000]
+    sampling_max_W: [ 10000,  10000,  10000]
+
   sensor:
+    # Intel RealSense D455, serial number 032522250421
     intrinsics: [383.432, 383.089, 314.521, 254.927]
-    T_BC:       [   0.99939,   0.00364,  -0.03465,  -0.15772,
-                   -0.00205,   0.99895,   0.04570,  -0.00677,
-                    0.03478,  -0.04560,   0.99835,   0.02736,
-                    0.00000,   0.00000,   0.00000,   1.00000]
+    # Using the d455_ros vicon object which is x-forward, z-up
+    T_BC:       [-0.00364,  0.03465,  0.99939, -0.15772,
+                 -0.99895, -0.04570, -0.00205, -0.00677,
+                  0.04560, -0.99835,  0.03478,  0.02736,
+                  0.00000,  0.00000,  0.00000,  1.00000]
 
