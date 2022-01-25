@@ -300,6 +300,9 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     if (node_config_.run_segmentation) {
         se::use_coco_classes();
     }
+    else if (node_config_.experiment_type == "replica") {
+        se::use_replica_classes();
+    }
     else {
         se::use_matterport3d_classes();
     }
@@ -1112,7 +1115,8 @@ void SupereightNode::saveMap()
 {
     if (supereight_config_.enable_meshing && !supereight_config_.output_mesh_file.empty()) {
         Eigen::Matrix4f T_HW = Eigen::Matrix4f::Identity();
-        if (node_config_.experiment_type == "habitat") {
+        if (node_config_.experiment_type == "habitat"
+            || node_config_.experiment_type == "replica") {
             geometry_msgs::TransformStamped tf;
             try {
                 tf = tf_buffer_.lookupTransform("habitat", world_frame_id_, ros::Time(0));

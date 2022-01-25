@@ -120,10 +120,11 @@ SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh)
     }
 
     // Ensure a valid experiment type was provided.
-    if (config.experiment_type != "habitat" && config.experiment_type != "gazebo"
-        && config.experiment_type != "real") {
-        ROS_FATAL("Invalid experiment_type \"%s\", expected \"habitat\", \"gazebo\" or \"real\"",
-                  config.experiment_type.c_str());
+    if (config.experiment_type != "habitat" && config.experiment_type != "replica"
+        && config.experiment_type != "gazebo" && config.experiment_type != "real") {
+        ROS_FATAL(
+            "Invalid experiment_type \"%s\", expected \"habitat\", \"replica\", \"gazebo\" or \"real\"",
+            config.experiment_type.c_str());
         abort();
     }
 
