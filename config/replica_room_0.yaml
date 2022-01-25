@@ -1,0 +1,116 @@
+# SPDX-FileCopyrightText: 2019-2020 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2019 Anna Dai
+# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Supereight ROS node settings
+supereight_ros:
+  enable_tracking: false
+  enable_rendering: true
+  enable_rgb: true
+  enable_objects: true
+  pose_topic_type: "geometry_msgs::PoseStamped"
+  pose_buffer_size: 100
+  depth_buffer_size: 10
+  rgb_buffer_size: 10
+  max_timestamp_diff: 0.02
+  center_at_first_position: true
+  visualization_rate: 4
+  visualization_max_z: 1.1
+  experiment_type: "replica"
+  visualize_360_raycasting: true
+  max_exploration_time: 180
+  run_segmentation: false
+  control_interface: "srl"
+
+# Habitat-ROS node settings
+habitat:
+  # Sensor settings
+  width: 640
+  height: 480
+  near_plane: 0.1
+  far_plane: 20.0
+  f: 525.0
+  fps: 30
+  enable_semantics: true
+  allowed_classes: []
+
+  # Scene settings
+  scene_file: "~/Documents/Datasets/Replica/room_0/habitat/mesh_semantic.ply"
+  initial_T_HB: [0.0, 0.0, 0.0]
+  pose_frame_id: "world"
+  pose_frame_at_initial_T_HB: true
+
+  # Visualization settings
+  visualize_semantics: true
+
+# Simple MAV simulator settings
+habitat_mav_sim:
+  sim_freq: 60
+  a_max: [1.0, 1.0, 0.5]
+  w_max: [0.1, 0.1, 0.05]
+  world_frame_id: "world"
+
+# Supereight settings
+supereight:
+  general:
+    sequence_name:              ""
+    sequence_type:              "ros"
+    log_path:                   "$ROS_LOG_DIR/latest/logs"
+    output_render_path:         "" #"$ROS_LOG_DIR/latest/renders"
+    enable_meshing:             true
+    output_mesh_path:           "$ROS_LOG_DIR/latest/meshes"
+    # Rates
+    tracking_rate:              1
+    integration_rate:           1
+    rendering_rate:             4
+    meshing_rate:               0
+    fps:                        0.0
+    # Other
+    drop_frames:                false
+    max_frame:                  -1
+    icp_threshold:              1e-5
+    bilateral_filter:           false
+    pyramid:                    [10, 5, 4]
+
+  map:
+    size:                       512
+    dim:                        20.48
+    t_MW_factor:                [0.501, 0.501, 0.501]
+    sampling_min_W:             [-10000, -10000, -10000]
+    sampling_max_W:             [ 10000,  10000,  10000]
+    frontier_cluster_min_volume: 0.015625
+
+  sensor:
+    intrinsics:                 [525, 525, 319.5, 239.5]
+    downsampling_factor:        2
+    T_BC:                       [ 0.0,  0.0, 1.0, 0.0,
+                                 -1.0,  0.0, 0.0, 0.0,
+                                  0.0, -1.0, 0.0, 0.0,
+                                  0.0,  0.0, 0.0, 1.0]
+    init_T_WB:                  [1, 0, 0, 0,
+                                 0, 1, 0, 0,
+                                 0, 0, 1, 0,
+                                 0, 0, 0, 1]
+    near_plane:                 0.1
+    far_plane:                  5.0
+
+  exploration:
+    enable_exploration:        true
+    num_candidates:            20
+    exploration_weight:        0.5
+    use_pose_history:          false
+    raycast_width:             36
+    raycast_height:            10
+    linear_velocity:           1.5
+    angular_velocity:          0.75
+    robot_radius:              0.05
+    safety_radius:             0.0
+    min_control_point_radius:  0.1
+    skeleton_sample_precision: 0.05
+    solving_time:              0.01
+
+
+# WARNING: Any voxel parameters added in this file will be ignored. Change the
+# defaults if you need different values.
+
