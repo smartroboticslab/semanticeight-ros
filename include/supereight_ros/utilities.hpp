@@ -24,6 +24,7 @@
 
 #include "se/exploration_planner.hpp"
 #include "se/segmentation_result.hpp"
+#include "supereight_ros/dataset.hpp"
 #include "supereight_ros/eigen_ros_conversions.hpp"
 
 
@@ -224,12 +225,12 @@ Eigen::Matrix4f pose_msg_to_eigen(const geometry_msgs::PoseStamped& pose_msg);
 void publish_path_vertex(const se::ExplorationPlanner& planner,
                          const ros::Publisher& path_pub,
                          const std::string& world_frame_id,
-                         const std::string& experiment_type);
+                         Dataset dataset);
 
 void publish_path_open_loop(se::ExplorationPlanner& planner,
                             const ros::Publisher& path_pub,
                             const std::string& world_frame_id,
-                            const std::string& experiment_type,
+                            Dataset dataset,
                             float delta_t);
 
 void publish_full_state_trajectory(se::ExplorationPlanner& planner,

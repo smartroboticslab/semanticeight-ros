@@ -17,10 +17,10 @@ supereight_ros:
   center_at_first_position: true
   visualization_rate: 4
   visualization_max_z: 3.5
-  experiment_type: "habitat"
   visualize_360_raycasting: true
   max_exploration_time: .NaN
   run_segmentation: false
+  dataset: "Habitat"
   control_interface: "SRL"
 
 # Habitat-ROS node settings

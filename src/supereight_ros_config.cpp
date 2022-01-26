@@ -28,7 +28,7 @@ constexpr double default_max_timestamp_diff = 0.001;
 constexpr bool default_center_at_first_position = true;
 constexpr int default_visualization_rate = 4;
 constexpr float default_visualization_max_z = INFINITY;
-const std::string default_experiment_type = "habitat";
+const std::string default_dataset = "Matterport3D";
 constexpr bool default_visualize_360_raycasting = false;
 constexpr double default_max_exploration_time = std::nan("");
 constexpr bool default_run_segmentation = false;
@@ -92,8 +92,9 @@ SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh)
                     config.visualization_max_z,
                     default_visualization_max_z);
 
-    nh.param<std::string>(
-        "supereight_ros/experiment_type", config.experiment_type, default_experiment_type);
+    std::string dataset_str;
+    nh.param<std::string>("supereight_ros/dataset", dataset_str, default_dataset);
+    config.dataset = str_to_dataset(dataset_str);
 
     nh.param<bool>("supereight_ros/visualize_360_raycasting",
                    config.visualize_360_raycasting,
@@ -121,15 +122,6 @@ SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh)
         ROS_WARN("Disabling object reconstruction since RGB is disabled");
     }
 
-    // Ensure a valid experiment type was provided.
-    if (config.experiment_type != "habitat" && config.experiment_type != "replica"
-        && config.experiment_type != "gazebo" && config.experiment_type != "real") {
-        ROS_FATAL(
-            "Invalid experiment_type \"%s\", expected \"habitat\", \"replica\", \"gazebo\" or \"real\"",
-            config.experiment_type.c_str());
-        abort();
-    }
-
     return config;
 }
 
@@ -151,7 +143,7 @@ void print_supereight_node_config(const SupereightNodeConfig& config)
     ROS_INFO("  center_at_first_position: %d", config.center_at_first_position);
     ROS_INFO("  visualization_rate:       %d", config.visualization_rate);
     ROS_INFO("  visualization_max_z:      %f", config.visualization_max_z);
-    ROS_INFO("  experiment_type:          %s", config.experiment_type.c_str());
+    ROS_INFO("  dataset:                  %s", dataset_to_str(config.dataset).c_str());
     ROS_INFO("  control_interface:        %s",
              control_interface_to_str(config.control_interface).c_str());
 }

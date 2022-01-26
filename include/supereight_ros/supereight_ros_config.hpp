@@ -12,6 +12,7 @@
 
 #include "se/config.h"
 #include "supereight_ros/control_interface.hpp"
+#include "supereight_ros/dataset.hpp"
 
 
 
@@ -105,9 +106,9 @@ struct SupereightNodeConfig {
     float visualization_max_z;
 
     /*!
-     * The type of the experiment being run. Valid values are "habitat", "gazebo" and "real".
+     * The type of the dataset being run.
      */
-    std::string experiment_type;
+    Dataset dataset;
 
     /*!
      * Whether to visualize the results of 360-degree entropy and depth raycasting. This is helpful

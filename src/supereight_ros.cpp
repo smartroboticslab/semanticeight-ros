@@ -55,11 +55,11 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     // Set the ROS_LOG_DIR environment variable to allow expanding it in YAML files.
     setenv("ROS_LOG_DIR", ros_log_dir().c_str(), 0);
     readConfig(nh_private);
-    if (node_config_.experiment_type == "gazebo") {
+    if (node_config_.dataset == Dataset::Gazebo) {
         body_frame_id_ = "firefly/base_link";
         camera_frame_id_ = "firefly/vi_sensor/camera_depth_optical_center_link";
     }
-    else if (node_config_.experiment_type == "real") {
+    else if (node_config_.dataset == Dataset::Real) {
         world_frame_id_ = "vicon/world";
         body_frame_id_ = "vicon/s550_jetson/s550_jetson";
     }
@@ -304,10 +304,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     if (node_config_.run_segmentation) {
         se::use_coco_classes();
     }
-    else if (node_config_.experiment_type == "replica") {
+    else if (node_config_.dataset == Dataset::Replica) {
         se::use_replica_classes();
     }
-    else {
+    else if (node_config_.dataset == Dataset::Matterport3D) {
         se::use_matterport3d_classes();
     }
     se::set_thing("chair");
@@ -331,7 +331,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     ROS_INFO("Initialization finished");
 
     // Rotors Control interface
-    if (node_config_.experiment_type == "gazebo"
+    if (node_config_.dataset == Dataset::Gazebo
         && node_config_.control_interface == ControlInterface::RotorS) {
         for (double i = 0.0; i <= 0.2; i += 0.05) {
             mav_msgs::EigenTrajectoryPoint point;
@@ -355,7 +355,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
             path_pub_.publish(path_msg);
         }
     }
-    else if (node_config_.experiment_type == "gazebo"
+    else if (node_config_.dataset == Dataset::Gazebo
              && node_config_.control_interface == ControlInterface::SRL) {
         // Desired position for the beginning of the experiment
         Eigen::Vector3d desiredPosition;
@@ -929,7 +929,7 @@ void SupereightNode::plan()
         const std::lock_guard<std::mutex> map_lock(map_mutex_);
         pipeline_->freeInitialPosition(
             sensor_,
-            ((node_config_.experiment_type == "gazebo" || node_config_.experiment_type == "real")
+            ((node_config_.dataset == Dataset::Gazebo || node_config_.dataset == Dataset::Real)
                  ? "sphere"
                  : "cylinder"));
     }
@@ -1099,15 +1099,14 @@ void SupereightNode::plan()
                 publish_path_open_loop(*planner_,
                                        path_pub_,
                                        world_frame_id_,
-                                       node_config_.experiment_type,
+                                       node_config_.dataset,
                                        supereight_config_.delta_t);
             }
             else if (node_config_.control_interface == ControlInterface::SRL) {
                 publish_full_state_trajectory(*planner_, path_pub_, supereight_config_);
             }
             else {
-                publish_path_vertex(
-                    *planner_, path_pub_, world_frame_id_, node_config_.experiment_type);
+                publish_path_vertex(*planner_, path_pub_, world_frame_id_, node_config_.dataset);
             }
         }
     }
@@ -1121,8 +1120,7 @@ void SupereightNode::saveMap()
 {
     if (supereight_config_.enable_meshing && !supereight_config_.output_mesh_file.empty()) {
         Eigen::Matrix4f T_HW = Eigen::Matrix4f::Identity();
-        if (node_config_.experiment_type == "habitat"
-            || node_config_.experiment_type == "replica") {
+        if (base_dataset(node_config_.dataset) == Dataset::Habitat) {
             geometry_msgs::TransformStamped tf;
             try {
                 tf = tf_buffer_.lookupTransform("habitat", world_frame_id_, ros::Time(0));
@@ -1429,7 +1427,7 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d& T_WB, const std_msgs::H
 
     // Update the Body-World transform. In the case of Gazebo a frame with the same name is already
     // being published.
-    if (node_config_.experiment_type != "gazebo") {
+    if (node_config_.dataset != Dataset::Gazebo) {
         geometry_msgs::TransformStamped T_WB_msg;
         T_WB_msg.header = header;
         T_WB_msg.header.frame_id = world_frame_id_;

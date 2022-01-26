@@ -366,14 +366,14 @@ Eigen::Matrix4f pose_msg_to_eigen(const geometry_msgs::PoseStamped& pose_msg)
 void publish_path_vertex(const se::ExplorationPlanner& planner,
                          const ros::Publisher& path_pub,
                          const std::string& world_frame_id,
-                         const std::string& experiment_type)
+                         Dataset dataset)
 {
     Eigen::Matrix4f T_WB;
     if (planner.goalT_WB(T_WB)) {
         std_msgs::Header header;
         header.stamp = ros::Time::now();
         header.frame_id = world_frame_id;
-        if (experiment_type == "gazebo") {
+        if (dataset == Dataset::Gazebo) {
             path_pub.publish(pose_to_traj_msg(T_WB, header));
         }
         else {
@@ -385,7 +385,7 @@ void publish_path_vertex(const se::ExplorationPlanner& planner,
 void publish_path_open_loop(se::ExplorationPlanner& planner,
                             const ros::Publisher& path_pub,
                             const std::string& world_frame_id,
-                            const std::string& experiment_type,
+                            Dataset dataset,
                             float delta_t)
 {
     Eigen::Matrix4f T_WB;
@@ -395,7 +395,7 @@ void publish_path_open_loop(se::ExplorationPlanner& planner,
         std_msgs::Header header;
         header.stamp = ros::Time::now();
         header.frame_id = world_frame_id;
-        if (experiment_type == "gazebo") {
+        if (dataset == Dataset::Gazebo) {
             path_pub.publish(pose_to_traj_msg(T_WB, header));
         }
         else {

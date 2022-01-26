@@ -18,10 +18,10 @@ supereight_ros:
   center_at_first_position: false
   visualization_rate: 4
   visualization_max_z: 3.5
-  experiment_type: "gazebo"
   visualize_360_raycasting: true
   max_exploration_time: .NaN
   run_segmentation: false
+  dataset: "Gazebo"
   control_interface: "SRL"
 
 # Supereight settings
