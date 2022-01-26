@@ -293,6 +293,11 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
     nh.getParam("supereight/exploration/skeleton_sample_precision",
                 config.skeleton_sample_precision);
     nh.getParam("supereight/exploration/solving_time", config.solving_time);
+    nh.getParam("supereight/exploration/goal_xy_threshold", config.goal_xy_threshold);
+    nh.getParam("supereight/exploration/goal_z_threshold", config.goal_z_threshold);
+    nh.getParam("supereight/exploration/goal_roll_pitch_threshold",
+                config.goal_roll_pitch_threshold);
+    nh.getParam("supereight/exploration/goal_yaw_threshold", config.goal_yaw_threshold);
 
     return config;
 }

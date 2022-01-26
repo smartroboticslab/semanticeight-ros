@@ -82,7 +82,10 @@ supereight:
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
     solving_time:              0.01
-
+    goal_xy_threshold:         0.4
+    goal_z_threshold:          0.4
+    goal_roll_pitch_threshold: 0.26 # ~15 degrees
+    goal_yaw_threshold:        0.26 # ~15 degrees
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.
