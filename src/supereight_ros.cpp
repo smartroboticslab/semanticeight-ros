@@ -331,7 +331,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     ROS_INFO("Initialization finished");
 
     // Rotors Control interface
-    if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "rotors") {
+    if (node_config_.experiment_type == "gazebo"
+        && node_config_.control_interface == ControlInterface::RotorS) {
         for (double i = 0.0; i <= 0.2; i += 0.05) {
             mav_msgs::EigenTrajectoryPoint point;
             nh.param<double>("wp_x", point.position_W.x(), 0.0);
@@ -354,7 +355,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
             path_pub_.publish(path_msg);
         }
     }
-    else if (node_config_.experiment_type == "gazebo" && node_config_.control_interface == "srl") {
+    else if (node_config_.experiment_type == "gazebo"
+             && node_config_.control_interface == ControlInterface::SRL) {
         // Desired position for the beginning of the experiment
         Eigen::Vector3d desiredPosition;
         nh.param<double>("wp_x", desiredPosition.x(), 0.0);
@@ -942,7 +944,7 @@ void SupereightNode::plan()
         bool goal_reached = false;
 
         // When using the srl controller, check the autopilot status to determine if the goal has been reached
-        if (node_config_.control_interface == "srl") {
+        if (node_config_.control_interface == ControlInterface::SRL) {
             mav_interface_msgs::AutopilotStatusService srv;
 
             // Check that the autopilot is Initialised and in Idle mode, meaning that there are no remaining tasks in the
@@ -1093,14 +1095,14 @@ void SupereightNode::plan()
                 writeFrameStats("Planning");
             }
             // Change the path publishing method depending on the dataset type.
-            if (node_config_.control_interface == "rotors") {
+            if (node_config_.control_interface == ControlInterface::RotorS) {
                 publish_path_open_loop(*planner_,
                                        path_pub_,
                                        world_frame_id_,
                                        node_config_.experiment_type,
                                        supereight_config_.delta_t);
             }
-            else if (node_config_.control_interface == "srl") {
+            else if (node_config_.control_interface == ControlInterface::SRL) {
                 publish_full_state_trajectory(*planner_, path_pub_, supereight_config_);
             }
             else {
@@ -1269,10 +1271,10 @@ void SupereightNode::setupRos()
                                                                      node_config_.pose_buffer_size);
 
     // Initialise the reference publisher depending on the simulator and controller used
-    if (node_config_.control_interface == "rotors") {
+    if (node_config_.control_interface == ControlInterface::RotorS) {
         path_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/supereight/path", 5);
     }
-    else if (node_config_.control_interface == "srl") {
+    else if (node_config_.control_interface == ControlInterface::SRL) {
         path_pub_ = nh_.advertise<mav_interface_msgs::FullStateTrajectory>("/supereight/path", 5);
     }
     else {

@@ -11,6 +11,7 @@
 #include <string>
 
 #include "se/config.h"
+#include "supereight_ros/control_interface.hpp"
 
 
 
@@ -122,9 +123,9 @@ struct SupereightNodeConfig {
      */
     bool run_segmentation;
 
-    /** What Control interface to use: rotors or srl ?
+    /** The control interface to use.
      */
-    std::string control_interface;
+    se::ControlInterface control_interface;
 };
 
 

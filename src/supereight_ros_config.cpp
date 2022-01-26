@@ -32,7 +32,7 @@ const std::string default_experiment_type = "habitat";
 constexpr bool default_visualize_360_raycasting = false;
 constexpr double default_max_exploration_time = std::nan("");
 constexpr bool default_run_segmentation = false;
-const std::string default_control_interface = "srl";
+const std::string default_control_interface = "SRL";
 
 
 namespace se {
@@ -106,8 +106,10 @@ SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh)
     nh.param<bool>(
         "supereight_ros/run_segmentation", config.run_segmentation, default_run_segmentation);
 
+    std::string control_interface_str;
     nh.param<std::string>(
-        "supereight_ros/control_interface", config.control_interface, default_control_interface);
+        "supereight_ros/control_interface", control_interface_str, default_control_interface);
+    config.control_interface = str_to_control_interface(control_interface_str);
 
     // Can't have objects or semantics with RGB disabled.
     if (!config.enable_rgb && config.run_segmentation) {
@@ -125,14 +127,6 @@ SupereightNodeConfig read_supereight_node_config(const ros::NodeHandle& nh)
         ROS_FATAL(
             "Invalid experiment_type \"%s\", expected \"habitat\", \"replica\", \"gazebo\" or \"real\"",
             config.experiment_type.c_str());
-        abort();
-    }
-
-    // Check for valid Control interface
-    if (config.control_interface != "rotors" && config.control_interface != "srl"
-        && config.control_interface != "habitat") {
-        ROS_FATAL("Invalid control_interface \"%s\", expected \"rotors\", \"srl\" or \"habitat\"",
-                  config.control_interface.c_str());
         abort();
     }
 
@@ -158,7 +152,8 @@ void print_supereight_node_config(const SupereightNodeConfig& config)
     ROS_INFO("  visualization_rate:       %d", config.visualization_rate);
     ROS_INFO("  visualization_max_z:      %f", config.visualization_max_z);
     ROS_INFO("  experiment_type:          %s", config.experiment_type.c_str());
-    ROS_INFO("  control_interface:        %s", config.control_interface.c_str());
+    ROS_INFO("  control_interface:        %s",
+             control_interface_to_str(config.control_interface).c_str());
 }
 
 
