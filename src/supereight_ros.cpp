@@ -310,8 +310,17 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     else if (node_config_.dataset == Dataset::Matterport3D) {
         se::use_matterport3d_classes();
     }
-    se::set_thing("chair");
-    se::set_stuff("book");
+    if (node_config_.dataset == Dataset::Real) {
+        se::set_stuff("chair");
+        se::set_thing("backpack");
+        se::set_thing("book");
+        se::set_thing("bottle");
+        se::set_thing("cup");
+    }
+    else {
+        se::set_thing("chair");
+        se::set_stuff("book");
+    }
 
     if (node_config_.run_segmentation) {
 #ifdef SE_WITH_MASKRCNN
