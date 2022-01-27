@@ -4,6 +4,7 @@
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
 
+  <arg name="config" default="$(find supereight_ros)/config/habitat.yaml"/>
   <arg name="waypoint_x" default="0"/>
   <arg name="waypoint_y" default="0"/>
   <arg name="waypoint_z" default="0"/>
@@ -25,7 +26,7 @@
 
   <!-- habitat-ros node -->
   <include file="$(find habitat_ros)/launch/habitat.launch">
-    <arg name="habitat_config"         value="$(find supereight_ros)/config/habitat.yaml"/>
+    <arg name="habitat_config"         value="$(arg config)"/>
   </include>
 
   <!-- supereight-ros node -->
@@ -36,8 +37,7 @@
         output="screen"
         required="true"
         launch-prefix="">
-    <!-- Include rosparam yaml files -->
-    <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
+    <rosparam command="load" file="$(arg config)"/>
   </node>
 
   <!-- Start the controller -->
