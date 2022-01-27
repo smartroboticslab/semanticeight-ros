@@ -7,6 +7,7 @@ supereight_ros:
   enable_tracking: false
   enable_rendering: true
   enable_rgb: true
+  enable_objects: true
   input_res: [640, 480]
   pose_topic_type: "geometry_msgs::TransformStamped"
   pose_buffer_size: 100
@@ -17,6 +18,7 @@ supereight_ros:
   visualization_rate: 5
   visualization_max_z: 4.0
   visualize_360_raycasting: true
+  max_exploration_time: .NaN
   run_segmentation: false
   dataset: "Real"
   control_interface: "SRL"
