@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+ros_bash_file=$(printf '%s\n' /opt/ros/*/setup.bash | cut -f 1 -d ' ')
+source "$ros_bash_file"
+own_ipv4=$(ip -4 -oneline -brief address show | awk '/^(wlp|wlan).*UP/ { print $3 }' | sed -E 's|/[0-9]+$||')
+export ROS_MASTER_URI='http://192.168.1.120:11311/' # WiFi
+#export ROS_MASTER_URI='http://192.168.1.204:11311/' # Ethernet
+export ROS_IP="$own_ipv4"
+
+ws_dir=$(catkin locate)
+ws_bash_file="${ws_dir}"/devel/setup.bash
+source "${ws_bash_file}"
+
+roslaunch supereight_ros rviz.launch config:='$(find supereight_ros)/config/experiment.rviz'
+
