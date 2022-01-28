@@ -29,8 +29,7 @@
     <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
   </node>
 
-  <!-- rviz with appropriate config -->
-  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/simulation.rviz" launch-prefix="bash -c 'sleep 2; $0 $@'"/>
+  <include file="$(find supereight_ros)/launch/rviz.launch"></include>
 
   <!--
   <node pkg="rosbag" type="record" name="record" args="/habitat/pose /habitat/depth/image_raw /habitat/rgb/image_raw /habitat/semantic_class/image_raw /habitat/semantic_instance/image_raw"/>

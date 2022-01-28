@@ -3,7 +3,6 @@
 <!-- SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
-  <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
   <remap to="/D455/depth0/image"             from="/camera/depth_image"/>
@@ -13,7 +12,6 @@
   <include file="$(find vicon_bridge)/launch/vicon.launch"></include>
   <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
 
-  <!-- supereight-ros node -->
   <node pkg="supereight_ros"
         name="semanticeight"
         type="supereight_ros"
@@ -23,8 +21,5 @@
         launch-prefix="">
     <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
   </node>
-
-  <!-- rviz with appropriate config -->
-  <node pkg="rviz" name="rviz" type="rviz" args="-d $(find supereight_ros)/config/experiment.rviz" launch-prefix="bash -c 'sleep 2; $0 $@'"/>
 </launch>
 

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<launch>
+  <arg name="config" default="$(find supereight_ros)/config/simulation.rviz"/>
+
+  <node pkg="rviz"
+        name="rviz"
+        type="rviz"
+        args="-d $(arg config)"
+        launch-prefix="bash -c 'sleep 2; $0 $@'"/>
+</launch>
+
