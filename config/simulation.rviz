@@ -62,14 +62,6 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: false
-      Marker Topic: /supereight/map/free
-      Name: Free Volume
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
-    - Class: rviz/Marker
-      Enabled: false
       Marker Topic: /supereight/map/frontiers
       Name: Frontiers
       Namespaces:
@@ -87,58 +79,32 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /supereight/map/object_meshes
-      Name: Object meshes
-      Namespaces:
-        object_mesh: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /supereight/map/objects
+      Marker Topic: /supereight/objects
       Name: Objects
       Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /supereight/map/mesh
-      Name: Background mesh
-      Namespaces:
-        map_mesh: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /supereight/map/occupied
-      Name: Occupied Volume
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /supereight/map/unknown
-      Name: Unknown Volume
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /supereight/map/object_aabbs
-      Name: Object AABBs
-      Namespaces:
-        object_aabb: true
+        aabbs: false
+        meshes: true
+        voxels: false
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /supereight/mav/sphere
+      Marker Topic: /supereight/map
+      Name: Map
+      Namespaces:
+        dim: true
+        free_voxels: false
+        mesh: true
+        occupied_voxels: false
+        unknown_voxels: false
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /supereight/mav
       Name: MAV
       Namespaces:
-        safety_sphere: true
+        sphere: true
       Queue Size: 100
       Value: true
     - Class: rviz/Image

@@ -306,18 +306,12 @@ class SupereightNode {
     ros::Publisher entropy_depth_render_pub_;
 
     // Visualization publishers
-    ros::Publisher map_dim_pub_;
-    ros::Publisher map_free_pub_;
-    ros::Publisher map_occupied_pub_;
-    ros::Publisher map_unknown_pub_;
-    ros::Publisher map_mesh_pub_;
-    ros::Publisher map_object_pub_;
-    ros::Publisher map_object_mesh_pub_;
-    ros::Publisher map_object_aabb_pub_;
+    ros::Publisher map_pub_;
+    ros::Publisher object_pub_;
     ros::Publisher map_frontier_pub_;
     ros::Publisher map_candidate_pub_;
     ros::Publisher map_goal_pub_;
-    ros::Publisher mav_sphere_pub_;
+    ros::Publisher mav_vis_pub_;
     ros::Publisher pose_history_pub_;
     ros::Publisher limit_pub_;
 
@@ -333,7 +327,7 @@ class SupereightNode {
     const Eigen::Vector4f color_candidate_ = Eigen::Vector4f(1.0, 1.0, 0.0, 1.0);
     const Eigen::Vector4f color_rejected_candidate_ = Eigen::Vector4f(1.0, 0.0, 0.0, 0.25);
     const Eigen::Vector4f color_goal_ = Eigen::Vector4f(1.0, 0.0, 1.0, 1.0);
-    const Eigen::Vector4f color_mav_sphere_ = Eigen::Vector4f(0.0, 0.0, 1.0, 0.5);
+    const Eigen::Vector4f color_mav_sphere_ = Eigen::Vector4f(0.0, 0.0, 1.0, 0.25);
     const Eigen::Vector4f color_pose_history_ = Eigen::Vector4f(0.5, 0.5, 0.5, 0.5);
     const Eigen::Vector4f color_sampling_aabb_ = Eigen::Vector4f(1.0, 0.0, 0.0, 0.5);
 

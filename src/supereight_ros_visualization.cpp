@@ -41,17 +41,17 @@ void SupereightNode::visualizeWholeMap()
         std_msgs::ColorRGBA volume_color;
         if (is_free<VoxelImpl>(volume)) {
             markers = &markers_free;
-            ns = "map_free";
+            ns = "free_voxels";
             volume_color = eigen_to_color(color_free_);
         }
         else if (is_occupied<VoxelImpl>(volume)) {
             markers = &markers_occupied;
-            ns = "map_occupied";
+            ns = "occupied_voxels";
             volume_color = eigen_to_color(color_occupied_);
         }
         else {
             markers = &markers_unknown;
-            ns = "map_unknown";
+            ns = "unknown_voxels";
             volume_color = eigen_to_color(color_unknown_);
         }
         const int size = volume.size;
@@ -77,13 +77,13 @@ void SupereightNode::visualizeWholeMap()
     }
     // Publish all markers.
     for (const auto& marker : markers_free) {
-        map_free_pub_.publish(marker.second);
+        map_pub_.publish(marker.second);
     }
     for (const auto& marker : markers_occupied) {
-        map_occupied_pub_.publish(marker.second);
+        map_pub_.publish(marker.second);
     }
     for (const auto& marker : markers_unknown) {
-        map_unknown_pub_.publish(marker.second);
+        map_pub_.publish(marker.second);
     }
 }
 
@@ -101,7 +101,7 @@ void SupereightNode::visualizeMapMesh()
     visualization_msgs::Marker mesh_marker;
     mesh_marker = visualization_msgs::Marker();
     mesh_marker.header = header;
-    mesh_marker.ns = "map_mesh";
+    mesh_marker.ns = "mesh";
     mesh_marker.id = 0;
     mesh_marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
     mesh_marker.action = visualization_msgs::Marker::ADD;
@@ -130,7 +130,7 @@ void SupereightNode::visualizeMapMesh()
             mesh_marker.points[3 * i + 2] = eigen_to_point(v2_W);
         }
     }
-    map_mesh_pub_.publish(mesh_marker);
+    map_pub_.publish(mesh_marker);
 }
 
 
@@ -152,7 +152,7 @@ void SupereightNode::visualizeObjects()
                     // Initialize the Marker message for this cube size.
                     markers_objects[size] = visualization_msgs::Marker();
                     markers_objects[size].header = header;
-                    markers_objects[size].ns = "map objects";
+                    markers_objects[size].ns = "voxels";
                     markers_objects[size].id = size;
                     markers_objects[size].type = visualization_msgs::Marker::CUBE_LIST;
                     markers_objects[size].action = visualization_msgs::Marker::ADD;
@@ -179,7 +179,7 @@ void SupereightNode::visualizeObjects()
         }
     }
     for (const auto& marker : markers_objects) {
-        map_object_pub_.publish(marker.second);
+        object_pub_.publish(marker.second);
     }
 }
 
@@ -205,7 +205,7 @@ void SupereightNode::visualizeObjectMeshes()
         visualization_msgs::Marker mesh_marker;
         mesh_marker.header.stamp = ros::Time::now();
         mesh_marker.header.frame_id = world_frame_id_;
-        mesh_marker.ns = "object_mesh";
+        mesh_marker.ns = "meshes";
         mesh_marker.id = objects[i]->instance_id;
         mesh_marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
         mesh_marker.action = visualization_msgs::Marker::ADD;
@@ -229,7 +229,7 @@ void SupereightNode::visualizeObjectMeshes()
             mesh_marker.points[3 * j + 1] = eigen_to_point(v1_W);
             mesh_marker.points[3 * j + 2] = eigen_to_point(v2_W);
         }
-        map_object_mesh_pub_.publish(mesh_marker);
+        object_pub_.publish(mesh_marker);
     }
 }
 
@@ -244,7 +244,7 @@ void SupereightNode::visualizeObjectAABBs()
         visualization_msgs::Marker aabb_marker;
         aabb_marker.header.stamp = ros::Time::now();
         aabb_marker.header.frame_id = map_frame_id_;
-        aabb_marker.ns = "object_aabb";
+        aabb_marker.ns = "aabbs";
         aabb_marker.id = o->instance_id;
         aabb_marker.type = visualization_msgs::Marker::LINE_LIST;
         aabb_marker.action = visualization_msgs::Marker::ADD;
@@ -259,7 +259,7 @@ void SupereightNode::visualizeObjectAABBs()
             aabb_marker.points[i] = eigen_to_point(edges[i]);
         }
 
-        map_object_aabb_pub_.publish(aabb_marker);
+        object_pub_.publish(aabb_marker);
     }
 }
 
@@ -566,7 +566,7 @@ void SupereightNode::visualizeMAV()
     visualization_msgs::Marker mav_marker;
     mav_marker = visualization_msgs::Marker();
     mav_marker.header = header;
-    mav_marker.ns = "safety_sphere";
+    mav_marker.ns = "sphere";
     mav_marker.id = 1;
     mav_marker.type = visualization_msgs::Marker::SPHERE;
     mav_marker.action = visualization_msgs::Marker::ADD;
@@ -576,7 +576,7 @@ void SupereightNode::visualizeMAV()
     mav_marker.color = eigen_to_color(color_mav_sphere_);
     mav_marker.lifetime = ros::Duration(0.0);
     mav_marker.frame_locked = true;
-    mav_sphere_pub_.publish(mav_marker);
+    mav_vis_pub_.publish(mav_marker);
 }
 
 

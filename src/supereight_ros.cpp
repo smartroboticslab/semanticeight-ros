@@ -815,7 +815,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 
     // Visualization
     start_time = std::chrono::steady_clock::now();
-    map_dim_pub_.publish(map_dim_msg_);
+    map_pub_.publish(map_dim_msg_);
     if (node_config_.visualization_rate > 0 && (frame % node_config_.visualization_rate == 0)) {
         visualizeWholeMap();
         visualizeMapMesh();
@@ -1319,25 +1319,16 @@ void SupereightNode::setupRos()
     }
 
     // Visualization publishers
-    map_dim_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/dim", 1, true);
-    map_dim_pub_.publish(map_dim_msg_);
-    map_free_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/free", 10);
-    map_occupied_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/occupied", 10);
-    map_unknown_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/unknown", 10);
-    map_mesh_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/mesh", 10);
-    map_object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/objects", 10);
-    map_object_mesh_pub_ =
-        nh_.advertise<visualization_msgs::Marker>("/supereight/map/object_meshes", 10);
-    map_object_aabb_pub_ =
-        nh_.advertise<visualization_msgs::Marker>("/supereight/map/object_aabbs", 10);
+    map_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map", 10);
+    object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/objects", 10);
     map_frontier_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/frontiers", 10);
     map_candidate_pub_ =
         nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidates", 100);
-    map_goal_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/goal", 2);
-    mav_sphere_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav/sphere", 2);
+    map_goal_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/goal", 10);
+    mav_vis_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav", 10);
     pose_history_pub_ =
-        nh_.advertise<visualization_msgs::Marker>("/supereight/planner/pose_history", 2);
-    limit_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/limits", 2);
+        nh_.advertise<visualization_msgs::Marker>("/supereight/planner/pose_history", 10);
+    limit_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/limits", 10);
 
     // ROS services. // ToDo -> use default namespace and bind everything in the launch file
     mav_status_service_ =
@@ -1515,7 +1506,7 @@ visualization_msgs::Marker SupereightNode::mapDimMsg() const
     static visualization_msgs::Marker m;
     m.header.stamp = ros::Time::now();
     m.header.frame_id = map_frame_id_;
-    m.ns = "map_dim";
+    m.ns = "dim";
     m.id = 0;
     m.type = visualization_msgs::Marker::CUBE;
     m.action = visualization_msgs::Marker::ADD;
