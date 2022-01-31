@@ -9,7 +9,7 @@
   <remap to="/D455/rgb0/image"         from="/camera/rgb_image"/>
   <remap to="/vicon/d455_ros/d455_ros" from="/pose"/>
 
-  <include file="$(find vicon_bridge)/launch/vicon.launch"></include>
+  <include file="$(find supereight_ros)/launch/vicon.launch"></include>
   <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
 
   <node pkg="supereight_ros"
