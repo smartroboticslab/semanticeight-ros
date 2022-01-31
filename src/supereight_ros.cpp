@@ -23,6 +23,7 @@
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
 #include "se/io/meshing_io.hpp"
+#include "se/system_info.hpp"
 #include "se/voxel_implementations.hpp"
 #include "supereight_ros/filesystem.hpp"
 #include "supereight_ros/utilities.hpp"
@@ -863,6 +864,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     sampleStat("Fusion", "Free volume", pipeline_->free_volume);
     sampleStat("Fusion", "Occupied volume", pipeline_->occupied_volume);
     sampleStat("Fusion", "Explored volume", pipeline_->explored_volume);
+    sampleStat("Fusion", "RAM usage", ram_usage_self() / 1024.0 / 1024.0);
     sampleStat("Fusion", "t_WB x", se_t_WB.x());
     sampleStat("Fusion", "t_WB y", se_t_WB.y());
     sampleStat("Fusion", "t_WB z", se_t_WB.z());
