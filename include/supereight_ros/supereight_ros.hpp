@@ -73,7 +73,8 @@ class SupereightNode {
               const sensor_msgs::ImageConstPtr& depth_image,
               const sensor_msgs::ImageConstPtr& color_image,
               const se::SegmentationResult& segmentation,
-              const ros::Time& depth_timestamp);
+              const ros::Time& depth_timestamp,
+              const bool out_of_order_fusion = false);
 
     void plan();
 

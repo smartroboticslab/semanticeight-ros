@@ -622,7 +622,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                           const sensor_msgs::ImageConstPtr& depth_image,
                           const sensor_msgs::ImageConstPtr& color_image,
                           const se::SegmentationResult& segmentation,
-                          const ros::Time& depth_timestamp)
+                          const ros::Time& depth_timestamp,
+                          const bool out_of_order_fusion)
 {
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     newStatFrame("Fusion");
@@ -715,7 +716,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                            .count());
         }
 
-        {
+        if (!out_of_order_fusion) {
             const std::lock_guard<std::mutex> map_lock(pose_mutex_);
             planner_->setT_WB(se_T_WB);
         }
@@ -1565,7 +1566,7 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f& T_WC,
         "Network", "Network time", std::chrono::duration<double>(end_time - start_time).count());
     ROS_INFO("%-25s %.5f s", "Network", getStat("Network", "Network time"));
 
-    fuse(T_WC, depth_image, color_image, segmentation, depth_timestamp);
+    fuse(T_WC, depth_image, color_image, segmentation, depth_timestamp, true);
 }
 
 
