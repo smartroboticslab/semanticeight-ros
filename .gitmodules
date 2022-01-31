@@ -6,4 +6,4 @@
 	url = ../semanticeight.git
 [submodule "libmaskrcnn-trt"]
 	path = libmaskrcnn-trt
-	url = git@bitbucket.org:smartroboticslab/libmaskrcnn-trt.git
+	url = ../libmaskrcnn-trt.git
