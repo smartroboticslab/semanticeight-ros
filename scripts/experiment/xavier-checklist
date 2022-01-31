@@ -1,0 +1,100 @@
+#!/bin/sh
+set -u
+
+num_errors=0
+check() {
+	if ! "$@"; then
+		num_errors=$((num_errors += 1))
+	fi
+}
+
+
+
+is_root() {
+	if [ "$(id -u)" != "0" ]; then
+		printf 'Error: this script must be run as root\n'
+		exit 1
+	fi
+}
+
+wifi_power_save() {
+	wlan_dev='wlan0'
+	if iw dev "$wlan_dev" get power_save | grep -Fq 'Power save: on'; then
+		iw dev "$wlan_dev" set power_save off
+		printf '[OK]   WiFi power saving set to off\n'
+	else
+		printf '[OK]   WiFi power saving is off\n'
+	fi
+	# Create a udev rule to disable power saving on boot.
+	udev_file='/etc/udev/rules.d/70-wifi-powersave.rules'
+	udev_rule='ACTION=="add", SUBSYSTEM=="net", KERNEL=="wlan*" RUN+="/usr/bin/iw dev %k set power_save off"'
+	if ! grep -Fq "$udev_rule" "$udev_file" 2>/dev/null ; then
+		printf '%s\n' "$udev_rule" >> "$udev_file"
+		printf '[OK]   Added udev rule to disable WiFi power saving on boot\n'
+	fi
+}
+
+cpu_max_freq() {
+	sudo jetson_clocks
+	printf '[OK]   CPU locked to maximum frequency\n'
+}
+
+data_disk_mounted() {
+	if mount | grep -q '/dev/nvme.*'; then
+		printf '[OK]   NVMe SSD mounted\n'
+	else
+		printf '[FAIL] NVMe SSD NOT mounted\n'
+		return 1
+	fi
+}
+
+realsense_found() {
+	if lsusb -vd 8086:0b5c | grep -Fq 'Depth Camera 455'; then
+		printf '[OK]   RealSense D455 found\n'
+	else
+		printf '[FAIL] RealSense D455 NOT found\n'
+		return 1
+	fi
+}
+
+wifi_latency() {
+	ping_target='192.168.1.1'
+	ping_threshold=5
+	if ping -i 0.01 -c 50 -W 1 "$ping_target" \
+		| awk '/time=/ { sub("time=", "", $7); if ($7 + 0 > '"$ping_threshold"') exit 1 }'; then
+		printf '[OK]   WiFi latency below %s ms\n' "$ping_threshold"
+	else
+		printf '[FAIL] WiFi latency exceeded %s ms\n' "$ping_threshold"
+		return 1
+	fi
+}
+
+show_free_space() {
+	if data_disk_mounted > /dev/null; then
+		printf '\n%siB free on /data\n' \
+			"$(df -h | grep -F '/data' | awk '{ print $4 }')"
+	fi
+}
+
+pixhawk_connected() {
+	if [ -c /dev/ttyUSB0 ]; then
+		printf '[OK]   Pixhawk connected\n'
+	else
+		printf '[FAIL] Pixhawk NOT connected\n'
+		return 1
+	fi
+}
+
+
+
+check is_root
+check wifi_power_save
+check cpu_max_freq
+check data_disk_mounted
+check realsense_found
+check wifi_latency
+check pixhawk_connected
+show_free_space
+
+exit "$num_errors"
+

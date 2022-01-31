@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+
+source_devel() {
+	ros_bash_file=$(printf '%s\n' /opt/ros/*/setup.bash | cut -f 1 -d ' ')
+	source "$ros_bash_file"
+	ws_bash_file="$(catkin locate)"/devel/setup.bash
+	source "$ws_bash_file"
+}
+
+clean_up_dir() {
+	ros_log_dir=$(readlink --canonicalize "$dir"/log/latest)
+	mv "$ros_log_dir"/* "$dir"/
+	rm -rf "$dir"/log
+	rm -f "$dir"/rospack_cache_*
+}
+
+
+
+source_devel
+launch_file='experiment.launch'
+dir="$HOME/experiment_$(date '+%Y%m%d_%H%M%S')"
+env ROS_HOME="$dir" roslaunch supereight_ros "$launch_file" "$@"
+clean_up_dir "$dir"
+

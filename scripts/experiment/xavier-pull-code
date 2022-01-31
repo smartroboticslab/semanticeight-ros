@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+
+remote="srl@192.168.1.183:/home/srl/Documents/ros/semanticeight_ws/src/semantic-exploration/supereight_ros"
+local="$HOME/Documents/ros/semanticeight_ws/src/supereight_ros"
+
+clone() {
+	cd "$(dirname "$local")"
+	git clone "$remote"
+
+	# Update the submodule URLs to point to the laptop.
+	cd "$local"
+	cat <<- EOF > .gitmodules
+	# SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
+	# SPDX-License-Identifier: CC0-1.0
+
+	[submodule "semanticeight"]
+	       path = semanticeight
+		url = ../semanticeight.git
+		url = $remote/semanticeight
+	[submodule "libmaskrcnn-trt"]
+	       path = libmaskrcnn-trt
+		url = ../libmaskrcnn-trt.git
+		url = $remote/libmaskrcnn-trt
+	EOF
+
+	git checkout semanticeight
+	git submodule update --init --recursive
+}
+
+pull() {
+	cd "$local"
+	git fetch origin
+	git reset --hard origin/semanticeight
+	git submodule update --init --recursive
+}
+
+if [ -d "$HOME/Documents/ros/semanticeight_ws/src/supereight_ros/.git" ]
+then
+	pull
+else
+	clone
+fi
+
