@@ -824,11 +824,11 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     // Visualization
     start_time = std::chrono::steady_clock::now();
     map_pub_.publish(map_dim_msg_);
+    visualizeEnvironmentAABB();
+    visualizeSamplingAABB();
     if (node_config_.visualization_rate > 0 && (frame % node_config_.visualization_rate == 0)) {
         visualizeWholeMap();
         visualizeMapMesh();
-        visualizeEnvironmentAABB();
-        visualizeSamplingAABB();
         if (node_config_.enable_objects) {
             //visualizeObjects();
             visualizeObjectMeshes();
@@ -1052,10 +1052,8 @@ void SupereightNode::plan()
                                  goal_t_WB.y(),
                                  goal_t_WB.z());
                     }
-                    if (node_config_.visualization_rate > 0) {
-                        visualizeCandidates();
-                        visualizeGoal();
-                    }
+                    visualizeCandidates();
+                    visualizeGoal();
                     if (supereight_config_.rendering_rate > 0
                         && supereight_config_.output_render_file != "") {
                         stdfs::create_directories(supereight_config_.output_render_file);
@@ -1451,9 +1449,7 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d& T_WB, const std_msgs::H
         pose_tf_broadcaster_.sendTransform(T_WB_msg);
     }
 
-    if (node_config_.visualization_rate > 0) {
-        visualizeMAV();
-    }
+    visualizeMAV();
 }
 
 
