@@ -42,11 +42,11 @@ Visualization Manager:
       Marker Topic: /supereight/planner/candidates
       Name: Candidates
       Namespaces:
-        desired_positions: true
+        desired_positions: false
         ids: true
         paths: true
         poses: true
-        rejected: true
+        rejected: false
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -82,7 +82,7 @@ Visualization Manager:
       Marker Topic: /supereight/objects
       Name: Objects
       Namespaces:
-        aabbs: false
+        aabbs: true
         meshes: true
         voxels: false
       Queue Size: 100
@@ -144,7 +144,7 @@ Visualization Manager:
       Unreliable: false
       Value: true
     - Class: rviz/Image
-      Enabled: true
+      Enabled: false
       Image Topic: /supereight/volume_render
       Max Value: 1
       Median window: 5
@@ -154,7 +154,7 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/Image
       Enabled: true
       Image Topic: /supereight/entropy_render
@@ -228,7 +228,7 @@ Visualization Manager:
       Unreliable: false
       Value: false
     - Class: rviz/Image
-      Enabled: false
+      Enabled: true
       Image Topic: /supereight/volume_render_min_scale
       Max Value: 1
       Median window: 5
@@ -238,7 +238,7 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
-      Value: false
+      Value: true
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
