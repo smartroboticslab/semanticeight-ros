@@ -20,5 +20,7 @@
         launch-prefix="">
     <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
   </node>
+
+   <node pkg="rosbag" type="record" name="record" args="--all --exclude '/(.*)(theora|compressed|compressedDepth)'"/>
 </launch>
 
