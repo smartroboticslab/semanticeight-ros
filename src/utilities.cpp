@@ -33,7 +33,17 @@ std::string ros_log_dir()
         }
     }
     else {
-        log_dir = std::string(std::getenv("HOME")) + "/.ros/log";
+        const char* home_dir_env = std::getenv("ROS_HOME");
+        if (home_dir_env) {
+            log_dir = home_dir_env;
+            if (log_dir.back() == '/') {
+                log_dir.erase(log_dir.size() - 1, 1);
+            }
+            log_dir += "/log";
+        }
+        else {
+            log_dir = std::string(std::getenv("HOME")) + "/.ros/log";
+        }
     }
     return log_dir;
 }
