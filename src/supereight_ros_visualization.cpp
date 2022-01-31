@@ -70,7 +70,7 @@ void SupereightNode::visualizeWholeMap()
             (*markers)[size].frame_locked = true;
         }
         // Append the current volume.
-        const float voxel_top_height_W = volume.centre_M.z() + volume.dim / 2.0f - t_MW_.z();
+        const float voxel_top_height_W = volume.centre_M.z() + volume.dim / 2.0f - T_MW_(2, 3);
         if (voxel_top_height_W <= node_config_.visualization_max_z) {
             (*markers)[size].points.push_back(eigen_to_point(volume.centre_M));
         }
@@ -165,7 +165,7 @@ void SupereightNode::visualizeObjects()
                 // centre_M is actually centre_O
                 const Eigen::Vector3f centre_M =
                     (objects[i]->T_MO_ * volume.centre_M.homogeneous()).head<3>();
-                const float voxel_top_height_W = centre_M.z() + volume.dim / 2.0f - t_MW_.z();
+                const float voxel_top_height_W = centre_M.z() + volume.dim / 2.0f - T_MW_(2, 3);
                 if (voxel_top_height_W <= node_config_.visualization_max_z) {
                     markers_objects[size].points.push_back(eigen_to_point(centre_M));
                     // Set the cube color based on the instance ID
@@ -292,7 +292,7 @@ void SupereightNode::visualizeFrontiers()
             markers_frontiers[size].frame_locked = true;
         }
         // Append the current volume.
-        const float voxel_top_height_W = volume.centre_M.z() + volume.dim / 2.0f - t_MW_.z();
+        const float voxel_top_height_W = volume.centre_M.z() + volume.dim / 2.0f - T_MW_(2, 3);
         if (voxel_top_height_W <= node_config_.visualization_max_z) {
             markers_frontiers[size].points.push_back(eigen_to_point(volume.centre_M));
         }

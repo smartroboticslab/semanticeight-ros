@@ -244,7 +244,7 @@ class SupereightNode {
     SensorImpl sensor_;
     std::shared_ptr<DenseSLAMSystem> pipeline_ = nullptr;
     std::unique_ptr<se::ExplorationPlanner> planner_;
-    Eigen::Vector3f t_MW_;
+    Eigen::Matrix4f T_MW_;
     Eigen::Matrix4f T_WM_;
     Eigen::Matrix4f T_CB_;
     Eigen::Vector3f init_t_WB_;

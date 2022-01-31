@@ -64,9 +64,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         body_frame_id_ = "vicon/s550_jetson/s550_jetson";
     }
 
-    t_MW_ = supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
-    T_WM_ = Eigen::Matrix4f::Identity();
-    T_WM_.topRightCorner<3, 1>() = -t_MW_;
+    T_MW_ = Eigen::Matrix4f::Identity();
+    T_MW_.topRightCorner<3, 1>() =
+        supereight_config_.t_MW_factor.cwiseProduct(supereight_config_.map_dim);
+    T_WM_ = se::math::to_inverse_transformation(T_MW_);
     T_CB_ = supereight_config_.T_BC.inverse();
     init_t_WB_ = Eigen::Vector3f::Constant(NAN);
     image_res_ = node_config_.input_res / supereight_config_.sensor_downsampling_factor;
@@ -250,7 +251,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         new DenseSLAMSystem(image_res_,
                             Eigen::Vector3i::Constant(supereight_config_.map_size.x()),
                             Eigen::Vector3f::Constant(supereight_config_.map_dim.x()),
-                            t_MW_,
+                            T_MW_,
                             supereight_config_.pyramid,
                             supereight_config_));
     se::ExplorationConfig exploration_config = {
@@ -803,7 +804,21 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             // Entropy
             se::Image<uint32_t> entropy_render(1, 1);
             se::Image<uint32_t> depth_render(1, 1);
-            planner_->renderCurrentEntropyDepth(entropy_render, depth_render, sensor_);
+            if (supereight_config_.enable_exploration) {
+                planner_->renderCurrentEntropyDepth(entropy_render, depth_render, sensor_);
+            }
+            else {
+                entropy_render = se::Image<uint32_t>(supereight_config_.raycast_width,
+                                                     supereight_config_.raycast_height);
+                depth_render = se::Image<uint32_t>(supereight_config_.raycast_width,
+                                                   supereight_config_.raycast_height);
+                render_pose_entropy_depth(entropy_render,
+                                          depth_render,
+                                          *(pipeline_->getMap()),
+                                          sensor_,
+                                          T_MW_ * pipeline_->T_WC() * T_CB_,
+                                          supereight_config_.T_BC);
+            }
             const sensor_msgs::Image entropy_render_msg =
                 RGBA_to_msg(entropy_render.data(),
                             Eigen::Vector2i(entropy_render.width(), entropy_render.height()),
