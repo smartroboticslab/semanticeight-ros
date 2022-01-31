@@ -301,14 +301,22 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     }
 
     // Use the correct classes.
-    if (node_config_.run_segmentation) {
+    switch (node_config_.dataset) {
+    case Dataset::Replica:
+        se::use_replica_classes();
+        break;
+    case Dataset::Habitat:
+    case Dataset::Matterport3D:
+        se::use_matterport3d_classes();
+        break;
+    case Dataset::Real:
+    case Dataset::Gazebo:
+    default:
         se::use_coco_classes();
     }
-    else if (node_config_.dataset == Dataset::Replica) {
-        se::use_replica_classes();
-    }
-    else if (node_config_.dataset == Dataset::Matterport3D) {
-        se::use_matterport3d_classes();
+    // Override classes when running Mask R-CNN.
+    if (node_config_.run_segmentation) {
+        se::use_coco_classes();
     }
     if (node_config_.dataset == Dataset::Real) {
         se::set_stuff("chair");

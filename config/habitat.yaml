@@ -20,7 +20,7 @@ supereight_ros:
   visualize_360_raycasting: true
   max_exploration_time: .NaN
   run_segmentation: false
-  dataset: "Habitat"
+  dataset: "Matterport3D"
   control_interface: "SRL"
 
 # Habitat-ROS node settings
