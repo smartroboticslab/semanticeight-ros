@@ -1447,9 +1447,9 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d& T_WB, const std_msgs::H
         ROS_DEBUG("Pose buffer:        %lu/%lu", pose_buffer_.size(), pose_buffer_.capacity());
     }
 
-    // Update the Body-World transform. In the case of Gazebo a frame with the same name is already
-    // being published.
-    if (node_config_.dataset != Dataset::Gazebo) {
+    // Update the Body-World transform. In the case of Gazebo/Real a frame with the same name is
+    // already being published.
+    if (node_config_.dataset != Dataset::Gazebo && node_config_.dataset != Dataset::Real) {
         geometry_msgs::TransformStamped T_WB_msg;
         T_WB_msg.header = header;
         T_WB_msg.header.frame_id = world_frame_id_;
