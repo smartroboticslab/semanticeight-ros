@@ -1095,9 +1095,6 @@ void SupereightNode::plan()
                                                   (unsigned char*) entropy_render.data(),
                                                   entropy_render.width(),
                                                   entropy_render.height());
-                            suffix.replace(suffix.size() - 3, 3, "txt");
-                            se::write_entropy(
-                                prefix + suffix, candidates[i].entropy_image_, sensor_);
                         }
                     }
                     //if (supereight_config_.output_mesh_file != "") {
