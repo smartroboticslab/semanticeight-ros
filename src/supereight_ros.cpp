@@ -329,8 +329,11 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         network_ = mr::MaskRCNNConfig(network_config_);
         if (!network_.build()) {
             ROS_FATAL("Couldn't initialize the network.");
-            abort();
+            raise(SIGINT);
         }
+#else
+        ROS_FATAL("Not compiled with Mask R-CNN support, run_segmentation must be set to false.");
+        raise(SIGINT);
 #endif // SE_WITH_MASKRCNN
     }
 
