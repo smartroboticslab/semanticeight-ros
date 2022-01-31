@@ -287,14 +287,6 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: false
-      Marker Topic: /supereight/map/dim
-      Name: Map Dimensions
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
-    - Class: rviz/Marker
-      Enabled: false
       Marker Topic: /supereight/limits
       Name: Limits
       Namespaces:
