@@ -1069,6 +1069,9 @@ void SupereightNode::plan()
                                  goal_t_WB.y(),
                                  goal_t_WB.z());
                     }
+                    ROS_WARN("Planning %d rejected %zu candidates",
+                             num_planning_iterations_,
+                             planner_->rejectedCandidateViews().size());
                     visualizeCandidates();
                     visualizeGoal();
                     if (supereight_config_.rendering_rate > 0
