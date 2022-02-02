@@ -74,20 +74,22 @@ supereight:
     enable_exploration:        true
     num_candidates:            20
     exploration_weight:        0.5
-    use_pose_history:          false
+    use_pose_history:          true
     raycast_width:             36
     raycast_height:            10
     linear_velocity:           0.5
-    angular_velocity:          0.1
-    robot_radius:              0.5
+    angular_velocity:          0.2
+    robot_radius:              0.4
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
     solving_time:              0.01
-    goal_xy_threshold:         0.4
-    goal_z_threshold:          0.4
+    # The thresholds used for the controller are hardcoded in the
+    # initialWaypointMsg in publish_full_state_trajectory()
+    goal_xy_threshold:         0.20
+    goal_z_threshold:          0.20
     goal_roll_pitch_threshold: 0.26 # ~15 degrees
-    goal_yaw_threshold:        0.26 # ~15 degrees
+    goal_yaw_threshold:        0.15 # ~8.5 degrees
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.

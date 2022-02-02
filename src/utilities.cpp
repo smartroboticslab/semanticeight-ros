@@ -474,7 +474,7 @@ void publish_full_state_trajectory(se::ExplorationPlanner& planner,
     // Initial Waypoint same as the current MAV pose T_WB
     mav_interface_msgs::Waypoint initialWaypointMsg;
     mav_interface_msgs::WaypointEigen2Msg(
-        mav_interface_msgs::WaypointEigen(initialPosition, initialOrientation, 0.50, 0.15),
+        mav_interface_msgs::WaypointEigen(initialPosition, initialOrientation, 0.20, 0.15),
         initialWaypointMsg);
 
     // Initial Trajectory state same as the current MAV pose T_WB
