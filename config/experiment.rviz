@@ -38,7 +38,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /supereight/planner/candidates
       Name: Candidates
       Namespaces:
@@ -48,7 +48,7 @@ Visualization Manager:
         poses: true
         rejected: false
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /supereight/planner/goal
