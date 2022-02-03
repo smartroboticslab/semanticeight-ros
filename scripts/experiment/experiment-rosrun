@@ -6,16 +6,15 @@ export ROS_MASTER_URI='http://192.168.1.120:11311/' # WiFi
 #export ROS_MASTER_URI='http://192.168.1.204:11311/' # Ethernet
 export ROS_IP="$own_ipv4"
 case "$#" in
-	1)
-		rosrun "$1" "$1"
-		;;
-	2)
-		rosrun "$1" "$2"
+	0)
+		printf 'Usage: %s EXECUTABLE [ARGUMENT...]\n' "${0##*/}"
+		exit 2
 		;;
 	*)
-		printf 'Usage: %s [PACKAGE] EXECUTABLE\n' "${0##*/}"
-		printf 'PACKAGE defaults to EXECUTABLE if not supplied.\n'
-		exit 2
+		package="$1"
+		executable="$1"
+		shift
+		rosrun "$package" "$executable" "$@"
 		;;
 esac
 
