@@ -1209,10 +1209,22 @@ void SupereightNode::saveMap()
         }
 
         stdfs::create_directories(supereight_config_.output_mesh_file);
+
+        {
+            std::stringstream output_octomap_file_ss;
+            output_octomap_file_ss << supereight_config_.output_mesh_file << "/mesh_"
+                                   << std::setw(5) << std::setfill('0') << frame_ << ".bt";
+            std::unique_ptr<octomap::OcTree> octomap(se::to_octomap(*(pipeline_->getMap())));
+            if (octomap) {
+                octomap->writeBinary(output_octomap_file_ss.str());
+            }
+        }
+
         std::stringstream output_mesh_meter_file_ss;
         output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh_" << std::setw(5)
                                   << std::setfill('0') << frame_ << ".ply";
         pipeline_->saveMesh(output_mesh_meter_file_ss.str(), T_HW);
+
         std::stringstream output_mesh_object_file_ss;
         output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_"
                                    << std::setw(5) << std::setfill('0') << frame_ << "_object";
