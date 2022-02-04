@@ -991,9 +991,29 @@ void SupereightNode::plan()
                 const bool autopilotInitialised = srv.response.status.initialised;
                 const bool autopilotIdle = srv.response.status.taskType == srv.response.status.Idle;
                 goal_reached = autopilotInitialised && autopilotIdle;
+
+                std::string task_type;
+                switch (srv.response.status.taskType) {
+                case 0:
+                    task_type = "Idle";
+                    break;
+                case 1:
+                    task_type = "Waypoint";
+                    break;
+                case 2:
+                    task_type = "Trajectory";
+                    break;
+                default:
+                    task_type = "Invalid";
+                }
+                ROS_DEBUG_NAMED("autopilot",
+                                "Autopilot status: %s %s",
+                                autopilotInitialised ? "Initialized  " : "Uninitialized",
+                                task_type.c_str());
             }
             else {
                 goal_reached = false;
+                ROS_DEBUG_NAMED("autopilot", "Autopilot status: Unknown");
             }
         }
         else {
@@ -1001,6 +1021,7 @@ void SupereightNode::plan()
             const std::lock_guard<std::mutex> pose_lock(pose_mutex_);
             goal_reached = planner_->goalReached();
         }
+        ROS_DEBUG_NAMED("goal", "Goal reached: %s", goal_reached ? "YES" : "NO");
 
 
         if (goal_reached || num_planning_iterations_ == 0) {
@@ -1048,30 +1069,45 @@ void SupereightNode::plan()
                     sampleStat("Planning", "Goal q_WB z", goal_q_WB.z());
                     sampleStat("Planning", "Goal q_WB w", goal_q_WB.w());
 
-                    ROS_WARN("Planning %d, next goal is candidate %zu",
-                             num_planning_iterations_,
-                             planner_->goalViewIndex());
+                    ROS_DEBUG_NAMED("planning",
+                                    "Planning %d, next goal is candidate %zu",
+                                    num_planning_iterations_,
+                                    planner_->goalViewIndex());
                     for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
-                        ROS_WARN("Planning %d candidate %2zu utility: %s",
-                                 num_planning_iterations_,
-                                 i,
-                                 planner_->candidateViews()[i].utilityStr().c_str());
+                        ROS_DEBUG_NAMED("planning",
+                                        "Planning %d candidate %2zu utility: %s",
+                                        num_planning_iterations_,
+                                        i,
+                                        planner_->candidateViews()[i].utilityStr().c_str());
                     }
                     for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
                         const Eigen::Vector3f goal_t_WB =
                             (T_WM_
                              * planner_->candidateViews()[i].goalT_MB().topRightCorner<4, 1>())
                                 .head<3>();
-                        ROS_WARN("Planning %d candidate %2zu t_WB: % .3f % .3f % .3f",
-                                 num_planning_iterations_,
-                                 i,
-                                 goal_t_WB.x(),
-                                 goal_t_WB.y(),
-                                 goal_t_WB.z());
+                        ROS_DEBUG_NAMED("planning",
+                                        "Planning %d candidate %2zu t_WB: % .3f % .3f % .3f",
+                                        num_planning_iterations_,
+                                        i,
+                                        goal_t_WB.x(),
+                                        goal_t_WB.y(),
+                                        goal_t_WB.z());
                     }
-                    ROS_WARN("Planning %d rejected %zu candidates",
-                             num_planning_iterations_,
-                             planner_->rejectedCandidateViews().size());
+                    for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
+                        const Eigen::Vector3f goal_t_WB = (T_WM_
+                                                           * planner_->rejectedCandidateViews()[i]
+                                                                 .goalT_MB()
+                                                                 .topRightCorner<4, 1>())
+                                                              .head<3>();
+                        ROS_DEBUG_NAMED(
+                            "planning",
+                            "Planning %d rejected candidate %2zu t_WB: % .3f % .3f % .3f",
+                            num_planning_iterations_,
+                            i,
+                            goal_t_WB.x(),
+                            goal_t_WB.y(),
+                            goal_t_WB.z());
+                    }
                     visualizeCandidates();
                     visualizeGoal();
                     if (supereight_config_.rendering_rate > 0
@@ -1364,7 +1400,8 @@ void SupereightNode::depthCallback(const sensor_msgs::ImageConstPtr& depth_msg)
 {
     const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
     depth_buffer_.push_back(depth_msg);
-    ROS_DEBUG("Depth image buffer: %lu/%lu", depth_buffer_.size(), depth_buffer_.capacity());
+    ROS_DEBUG_NAMED(
+        "buffers", "Depth image buffer: %lu/%lu", depth_buffer_.size(), depth_buffer_.capacity());
 }
 
 
@@ -1373,7 +1410,8 @@ void SupereightNode::RGBCallback(const sensor_msgs::ImageConstPtr& rgb_msg)
 {
     const std::lock_guard<std::mutex> rgb_lock(rgb_buffer_mutex_);
     rgb_buffer_.push_back(rgb_msg);
-    ROS_DEBUG("RGB image buffer:   %lu/%lu", rgb_buffer_.size(), rgb_buffer_.capacity());
+    ROS_DEBUG_NAMED(
+        "buffers", "RGB image buffer:   %lu/%lu", rgb_buffer_.size(), rgb_buffer_.capacity());
 }
 
 
@@ -1449,7 +1487,8 @@ void SupereightNode::poseCallback(const Eigen::Matrix4d& T_WB, const std_msgs::H
         // Put it into the buffer.
         const std::lock_guard<std::mutex> pose_lock(pose_buffer_mutex_);
         pose_buffer_.push_back(T_WC_msg);
-        ROS_DEBUG("Pose buffer:        %lu/%lu", pose_buffer_.size(), pose_buffer_.capacity());
+        ROS_DEBUG_NAMED(
+            "buffers", "Pose buffer:        %lu/%lu", pose_buffer_.size(), pose_buffer_.capacity());
     }
 
     // Update the Body-World transform. In the case of Gazebo/Real a frame with the same name is
@@ -1475,7 +1514,8 @@ void SupereightNode::SemClassCallback(const sensor_msgs::ImageConstPtr& class_ms
 {
     const std::lock_guard<std::mutex> class_lock(class_buffer_mutex_);
     class_buffer_.push_back(class_msg);
-    ROS_DEBUG("Class image buffer: %lu/%lu", class_buffer_.size(), class_buffer_.capacity());
+    ROS_DEBUG_NAMED(
+        "buffers", "Class image buffer: %lu/%lu", class_buffer_.size(), class_buffer_.capacity());
 }
 
 
@@ -1484,7 +1524,10 @@ void SupereightNode::SemInstanceCallback(const sensor_msgs::ImageConstPtr& insta
 {
     const std::lock_guard<std::mutex> instance_lock(instance_buffer_mutex_);
     instance_buffer_.push_back(instance_msg);
-    ROS_DEBUG("Inst. image buffer: %lu/%lu", instance_buffer_.size(), instance_buffer_.capacity());
+    ROS_DEBUG_NAMED("buffers",
+                    "Inst. image buffer: %lu/%lu",
+                    instance_buffer_.size(),
+                    instance_buffer_.capacity());
 }
 
 
