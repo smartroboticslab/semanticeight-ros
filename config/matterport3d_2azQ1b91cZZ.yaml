@@ -4,20 +4,20 @@
 
 # Supereight ROS node settings
 supereight_ros:
-  visualization_max_z: 1.1
-  max_exploration_time: 300
-  dataset: "Replica"
+  visualization_max_z: 3.5
+  max_exploration_time: 600
+  dataset: "Matterport3D"
 
 # Habitat-ROS node settings
 habitat:
-  scene_file: "~/Documents/Datasets/Replica/room_0/habitat/mesh_semantic.ply"
-  initial_T_HB: [0.0, 0.0, 0.0]
+  scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/2azQ1b91cZZ/2azQ1b91cZZ.glb"
+  initial_T_HB: [15.00, -5.30, 1.00]
 
 # Supereight settings
 supereight:
   map:
-    size:                       512
-    dim:                        20.48
+    size:                       1024
+    dim:                        40.96
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.

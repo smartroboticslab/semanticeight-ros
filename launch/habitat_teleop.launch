@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
-<!-- SPDX-FileCopyrightText: 2020 Smart Robotics Lab, Imperial College London -->
-<!-- SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou -->
+<!-- SPDX-FileCopyrightText: 2020-2022 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2020-2022 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
+  <!-- Sequence-specific config file -->
+  <arg name="config" default="$(find supereight_ros)/config/habitat.yaml"/>
+
   <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
@@ -12,27 +15,30 @@
   <remap from="/habitat/semantic_class/image_raw"    to="/camera/class"/>
   <remap from="/habitat/semantic_instance/image_raw" to="/camera/instance"/>
 
-  <!-- habitat-ros node -->
-  <include file="$(find habitat_ros)/launch/habitat.launch">
-    <arg name="habitat_config"         value="$(find supereight_ros)/config/habitat.yaml"/>
-  </include>
+  <node pkg="habitat_ros"
+        type="habitat_node.py"
+        name="habitat"
+        clear_params="true"
+        output="screen"
+        required="true">
+    <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
+    <rosparam command="load" file="$(arg config)"/>
+    <!-- Hide Habitat-Sim logs -->
+    <env name="GLOG_minloglevel" value="1"/>
+    <env name="MAGNUM_LOG" value="quiet"/>
+  </node>
 
-  <!-- supereight-ros node -->
   <node pkg="supereight_ros"
-        name="semanticeight"
         type="supereight_ros"
+        name="semanticeight"
         clear_params="true"
         output="screen"
         required="true"
         launch-prefix="">
-    <!-- Include rosparam yaml files -->
     <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
+    <rosparam command="load" file="$(arg config)"/>
   </node>
 
-  <include file="$(find supereight_ros)/launch/rviz.launch"></include>
-
-  <!--
-  <node pkg="rosbag" type="record" name="record" args="/habitat/pose /habitat/depth/image_raw /habitat/rgb/image_raw /habitat/semantic_class/image_raw /habitat/semantic_instance/image_raw"/>
-  -->
+  <include file="$(find supereight_ros)/launch/rviz.launch"/>
 </launch>
 
