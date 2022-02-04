@@ -1093,21 +1093,6 @@ void SupereightNode::plan()
                                         goal_t_WB.y(),
                                         goal_t_WB.z());
                     }
-                    for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
-                        const Eigen::Vector3f goal_t_WB = (T_WM_
-                                                           * planner_->rejectedCandidateViews()[i]
-                                                                 .goalT_MB()
-                                                                 .topRightCorner<4, 1>())
-                                                              .head<3>();
-                        ROS_DEBUG_NAMED(
-                            "planning",
-                            "Planning %d rejected candidate %2zu t_WB: % .3f % .3f % .3f",
-                            num_planning_iterations_,
-                            i,
-                            goal_t_WB.x(),
-                            goal_t_WB.y(),
-                            goal_t_WB.z());
-                    }
                     visualizeCandidates();
                     visualizeGoal();
                     if (supereight_config_.rendering_rate > 0
@@ -1162,6 +1147,19 @@ void SupereightNode::plan()
                     //    se::write_path_tsv(filename_ss.str(), path_WB);
                     //    saveCandidates();
                     //}
+                }
+                for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
+                    const Eigen::Vector3f goal_t_WB =
+                        (T_WM_
+                         * planner_->rejectedCandidateViews()[i].goalT_MB().topRightCorner<4, 1>())
+                            .head<3>();
+                    ROS_DEBUG_NAMED("planning",
+                                    "Planning %d rejected candidate %2zu t_WB: % .3f % .3f % .3f",
+                                    num_planning_iterations_,
+                                    i,
+                                    goal_t_WB.x(),
+                                    goal_t_WB.y(),
+                                    goal_t_WB.z());
                 }
                 num_planning_iterations_++;
                 writeFrameStats("Planning");
