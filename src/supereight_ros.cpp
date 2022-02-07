@@ -1630,6 +1630,7 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f& T_WC,
     sampleTime("Network", "Timestamp");
     sampleStat(
         "Network", "Network time", std::chrono::duration<double>(end_time - start_time).count());
+    writeFrameStats("Network");
     ROS_INFO("%-25s %.5f s", "Network", getStat("Network", "Network time"));
 
     fuse(T_WC, depth_image, color_image, segmentation, depth_timestamp, true);
