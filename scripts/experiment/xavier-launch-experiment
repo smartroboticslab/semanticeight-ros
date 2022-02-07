@@ -20,6 +20,6 @@ clean_up_dir() {
 source_devel
 launch_file='experiment.launch'
 dir="$HOME/experiment_$(date '+%Y%m%d_%H%M%S')"
-env ROS_HOME="$dir" roslaunch supereight_ros "$launch_file" "$@"
+env ROS_HOME="$dir" roslaunch supereight_ros "$launch_file" "$@" 2>&1 | tee "$dir"/log
 clean_up_dir "$dir"
 
