@@ -304,14 +304,9 @@ void SupereightNode::visualizeFrontiers()
 
 
 
-void SupereightNode::visualizeCandidates()
+void SupereightNode::visualizeCandidates(float opacity)
 {
-    // Delete all the previous candidate markers.
-    {
-        visualization_msgs::Marker del_marker;
-        del_marker.action = visualization_msgs::Marker::DELETEALL;
-        map_candidate_pub_.publish(del_marker);
-    }
+    hideCandidates();
     const float diameter =
         2.0f * (supereight_config_.robot_radius + supereight_config_.safety_radius);
     // Initialize the message header.
@@ -327,6 +322,9 @@ void SupereightNode::visualizeCandidates()
     pose_marker.action = visualization_msgs::Marker::ADD;
     pose_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
     pose_marker.color = eigen_to_color(color_candidate_);
+    if (opacity >= 0.0f) {
+        pose_marker.color.a = opacity;
+    }
     pose_marker.lifetime = ros::Duration(0.0);
     pose_marker.frame_locked = true;
     // Visualize the candidate IDs as text labels.
@@ -339,6 +337,9 @@ void SupereightNode::visualizeCandidates()
     id_marker.pose.orientation = make_quaternion();
     id_marker.scale.z = 0.5f;
     id_marker.color = eigen_to_color(color_candidate_);
+    if (opacity >= 0.0f) {
+        id_marker.color.a = opacity;
+    }
     id_marker.lifetime = ros::Duration(0.0);
     id_marker.frame_locked = true;
     // Visualize the candidate paths as line strips.
@@ -351,6 +352,9 @@ void SupereightNode::visualizeCandidates()
     path_marker.pose.orientation = make_quaternion();
     path_marker.scale.x = 0.05f;
     path_marker.color = eigen_to_color(color_candidate_);
+    if (opacity >= 0.0f) {
+        path_marker.color.a = opacity;
+    }
     path_marker.lifetime = ros::Duration(0.0);
     path_marker.frame_locked = true;
     // Visualize the candidate desired positions as spheres.
@@ -422,15 +426,18 @@ void SupereightNode::visualizeCandidates()
 
 
 
-void SupereightNode::visualizeGoal()
+void SupereightNode::hideCandidates()
 {
-    // Delete all the previous goal markers.
-    {
-        visualization_msgs::Marker del_marker;
-        del_marker.action = visualization_msgs::Marker::DELETEALL;
-        map_goal_pub_.publish(del_marker);
-    }
+    visualization_msgs::Marker del_marker;
+    del_marker.action = visualization_msgs::Marker::DELETEALL;
+    map_candidate_pub_.publish(del_marker);
+}
 
+
+
+void SupereightNode::visualizeGoal(float opacity)
+{
+    hideGoal();
     const se::CandidateView& goal_view = planner_->goalView();
     if (!goal_view.isValid()) {
         return;
@@ -450,6 +457,9 @@ void SupereightNode::visualizeGoal()
     pose_marker.action = visualization_msgs::Marker::ADD;
     pose_marker.scale = make_vector3(0.5f, 0.05f, 0.05f);
     pose_marker.color = eigen_to_color(color_goal_);
+    if (opacity >= 0.0f) {
+        pose_marker.color.a = opacity;
+    }
     pose_marker.lifetime = ros::Duration(0.0);
     pose_marker.frame_locked = true;
     // Publish an arrow for each path vertex.
@@ -474,6 +484,9 @@ void SupereightNode::visualizeGoal()
         path_marker.pose.orientation = make_quaternion();
         path_marker.scale.x = 0.05f;
         path_marker.color = eigen_to_color(color_goal_);
+        if (opacity >= 0.0f) {
+            path_marker.color.a = opacity;
+        }
         path_marker.lifetime = ros::Duration(0.0);
         path_marker.frame_locked = true;
         for (const auto& T_MB : path) {
@@ -550,6 +563,15 @@ void SupereightNode::visualizeGoal()
         ray_marker.points.push_back(eigen_to_point(rays_M[i]));
     }
     map_goal_pub_.publish(ray_marker);
+}
+
+
+
+void SupereightNode::hideGoal()
+{
+    visualization_msgs::Marker del_marker;
+    del_marker.action = visualization_msgs::Marker::DELETEALL;
+    map_goal_pub_.publish(del_marker);
 }
 
 

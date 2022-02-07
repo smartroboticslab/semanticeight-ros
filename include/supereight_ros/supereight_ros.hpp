@@ -193,9 +193,13 @@ class SupereightNode {
 
     void visualizeFrontiers();
 
-    void visualizeCandidates();
+    void visualizeCandidates(float opacity = -1.0f);
 
-    void visualizeGoal();
+    void hideCandidates();
+
+    void visualizeGoal(float opacity = -1.0f);
+
+    void hideGoal();
 
     void visualizeMAV();
 

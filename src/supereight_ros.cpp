@@ -1025,6 +1025,8 @@ void SupereightNode::plan()
 
 
         if (goal_reached || num_planning_iterations_ == 0) {
+            visualizeCandidates(0.25f);
+            visualizeGoal(0.25f);
             if (planner_->needsNewGoal()) {
                 newStatFrame("Planning");
                 se::Path path_WB;
