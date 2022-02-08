@@ -305,31 +305,29 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     // Use the correct classes.
     switch (node_config_.dataset) {
     case Dataset::Replica:
-        se::use_replica_classes();
+        se::semantic_classes = se::SemanticClasses::replica_classes();
         break;
     case Dataset::Habitat:
     case Dataset::Matterport3D:
-        se::use_matterport3d_classes();
+        se::semantic_classes = se::SemanticClasses::matterport3d_classes();
         break;
     case Dataset::Real:
     case Dataset::Gazebo:
     default:
-        se::use_coco_classes();
+        se::semantic_classes = se::SemanticClasses::coco_classes();
     }
     // Override classes when running Mask R-CNN.
     if (node_config_.run_segmentation) {
-        se::use_coco_classes();
+        se::semantic_classes = se::SemanticClasses::coco_classes();
     }
     if (node_config_.dataset == Dataset::Real) {
-        se::set_stuff("chair");
-        se::set_thing("backpack");
-        se::set_thing("book");
-        se::set_thing("bottle");
-        se::set_thing("cup");
+        se::semantic_classes.setEnabled("backpack");
+        se::semantic_classes.setEnabled("book");
+        se::semantic_classes.setEnabled("bottle");
+        se::semantic_classes.setEnabled("cup");
     }
     else {
-        se::set_thing("chair");
-        se::set_stuff("book");
+        se::semantic_classes.setEnabled("chair");
     }
 
     if (node_config_.run_segmentation) {
