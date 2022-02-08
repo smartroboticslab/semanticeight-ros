@@ -49,8 +49,10 @@ shift
 i=1
 while [ "$i" -le "$n" ]; do
 	printf 'Run %d/%d\n' "$i" "$n"
-	roslaunch supereight_ros "$@"
+	tmp_log=$(mktemp)
+	roslaunch supereight_ros "$@" 2>&1 | tee "$tmp_log"
 	run_dir=$(store_run_data "$dir" "$i" "$1")
+	mv "$tmp_log" "$run_dir"/log
 	generate_run_plot "$run_dir"
 	generate_run_montage "$run_dir"
 	i=$((i+1))
