@@ -1622,7 +1622,7 @@ void SupereightNode::runNetwork(const Eigen::Matrix4f& T_WC,
     // Convert the object detections to a SegmentationResult.
     for (const auto& d : detections) {
         segmentation.object_instances.emplace_back(
-            se::instance_new, d.mask, se::DetectionConfidence(d.class_id, d.confidence));
+            se::instance_new, se::DetectionConfidence(d.class_id, d.confidence), d.mask);
     }
 #endif // SE_WITH_MASKRCNN
 
