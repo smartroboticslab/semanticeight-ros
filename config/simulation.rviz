@@ -69,20 +69,20 @@ Visualization Manager:
       Queue Size: 100
       Value: false
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /supereight/planner/pose_history
       Name: Position history
       Namespaces:
         pose_grid_history: true
         pose_history: true
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /supereight/objects
       Name: Objects
       Namespaces:
-        aabbs: true
+        aabbs: false
         meshes: true
         voxels: false
       Queue Size: 100
