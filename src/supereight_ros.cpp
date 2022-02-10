@@ -1128,11 +1128,12 @@ void SupereightNode::plan()
                             std::stringstream suffix_ss;
                             suffix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i
                                       << "_entropy_" << candidates[i].entropy_ << "_yaw_"
-                                      << candidates[i].yaw_M_ << ".png";
-                            std::string suffix = suffix_ss.str();
+                                      << candidates[i].yaw_M_;
+                            const std::string suffix = suffix_ss.str();
+                            candidates[i].writeEntropyData(prefix + suffix + ".txt");
                             const se::Image<uint32_t> entropy_render =
                                 candidates[i].renderEntropy(sensor_);
-                            lodepng_encode32_file((prefix + suffix).c_str(),
+                            lodepng_encode32_file((prefix + suffix + ".png").c_str(),
                                                   (unsigned char*) entropy_render.data(),
                                                   entropy_render.width(),
                                                   entropy_render.height());
