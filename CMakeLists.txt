@@ -80,7 +80,6 @@ add_subdirectory(semanticeight)
 if (WITH_MASKRCNN)
   add_compile_options(-Wno-deprecated-declarations)
   add_subdirectory(libmaskrcnn-trt)
-  add_compile_options(-Wdeprecated-declarations)
 endif ()
 
 # ------------------------------------------------------------------------------
