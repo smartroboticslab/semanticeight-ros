@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2020-2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2020-2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+# Supereight ROS node settings
+supereight_ros:
+  visualization_max_z: 1.1
+  max_exploration_time: 900
+  dataset: "Replica"
+
+# Habitat-ROS node settings
+habitat:
+  scene_file: "~/Documents/Datasets/Replica/apartment_0/habitat/mesh_semantic.ply"
+  initial_T_HB: [0.0, 0.0, 0.0]
+
+# Supereight settings
+supereight:
+  map:
+    size:                       512
+    dim:                        10.24
+
+# WARNING: Any voxel parameters added in this file will be ignored. Change the
+# defaults if you need different values.
+

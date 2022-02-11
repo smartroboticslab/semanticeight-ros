@@ -255,31 +255,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
                             T_MW_,
                             supereight_config_.pyramid,
                             supereight_config_));
-    se::ExplorationConfig exploration_config = {
-        supereight_config_.num_candidates,
-        (pipeline_->T_MW() * supereight_config_.sampling_min_W.homogeneous()).head<3>(),
-        (pipeline_->T_MW() * supereight_config_.sampling_max_W.homogeneous()).head<3>(),
-        supereight_config_.goal_xy_threshold,
-        supereight_config_.goal_z_threshold,
-        supereight_config_.goal_roll_pitch_threshold,
-        supereight_config_.goal_yaw_threshold,
-        {supereight_config_.exploration_weight,
-         supereight_config_.use_pose_history,
-         supereight_config_.raycast_width,
-         supereight_config_.raycast_height,
-         supereight_config_.delta_t,
-         supereight_config_.linear_velocity,
-         supereight_config_.angular_velocity,
-         {"",
-          Eigen::Vector3f::Zero(),
-          Eigen::Vector3f::Zero(),
-          supereight_config_.robot_radius,
-          supereight_config_.safety_radius,
-          supereight_config_.min_control_point_radius,
-          supereight_config_.skeleton_sample_precision,
-          supereight_config_.solving_time}}};
-    planner_ = std::unique_ptr<se::ExplorationPlanner>(new se::ExplorationPlanner(
-        pipeline_->getMap(), pipeline_->T_MW(), supereight_config_.T_BC, exploration_config));
+    planner_ = std::unique_ptr<se::ExplorationPlanner>(
+        new se::ExplorationPlanner(*pipeline_, sensor_, supereight_config_));
 
     // Allocate message circular buffers.
     if (node_config_.enable_tracking) {
@@ -804,7 +781,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             se::Image<uint32_t> entropy_render(1, 1);
             se::Image<uint32_t> depth_render(1, 1);
             if (supereight_config_.enable_exploration) {
-                planner_->renderCurrentEntropyDepth(entropy_render, depth_render, sensor_);
+                planner_->renderCurrentEntropyDepth(entropy_render, depth_render);
             }
             else {
                 entropy_render = se::Image<uint32_t>(supereight_config_.raycast_width,
@@ -1034,8 +1011,8 @@ void SupereightNode::plan()
                     const auto start_time = std::chrono::steady_clock::now();
                     planner_->setPlanningT_WB(transform_to_eigen(pose_buffer_.back().transform)
                                               * T_CB_);
-                    path_WB = planner_->computeNextPath_WB(
-                        pipeline_->getFrontiers(), pipeline_->getObjectMaps(), sensor_);
+                    path_WB = planner_->computeNextPath_WB(pipeline_->getFrontiers(),
+                                                           pipeline_->getObjectMaps());
                     const auto end_time = std::chrono::steady_clock::now();
                     sampleStat("Planning",
                                "Planning time",
@@ -1106,10 +1083,8 @@ void SupereightNode::plan()
 
                         se::Image<uint32_t> entropy_render(1, 1);
                         se::Image<uint32_t> entropy_depth_render(1, 1);
-                        planner_->renderCurrentEntropyDepth(
-                            entropy_render, entropy_depth_render, sensor_);
-                        const se::Image<uint32_t> min_scale_render =
-                            planner_->renderMinScale(sensor_);
+                        planner_->renderCurrentEntropyDepth(entropy_render, entropy_depth_render);
+                        const se::Image<uint32_t> min_scale_render = planner_->renderMinScale();
                         lodepng_encode32_file((prefix + "goal_entropy.png").c_str(),
                                               (unsigned char*) entropy_render.data(),
                                               entropy_render.width(),
@@ -1132,7 +1107,7 @@ void SupereightNode::plan()
                             const std::string suffix = suffix_ss.str();
                             candidates[i].writeEntropyData(prefix + suffix + ".txt");
                             const se::Image<uint32_t> entropy_render =
-                                candidates[i].renderEntropy(sensor_);
+                                candidates[i].renderEntropy();
                             lodepng_encode32_file((prefix + suffix + ".png").c_str(),
                                                   (unsigned char*) entropy_render.data(),
                                                   entropy_render.width(),
