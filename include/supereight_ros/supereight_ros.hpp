@@ -308,6 +308,7 @@ class SupereightNode {
     ros::Publisher raycast_render_pub_;
     ros::Publisher entropy_render_pub_;
     ros::Publisher entropy_depth_render_pub_;
+    ros::Publisher min_scale_render_pub_;
 
     // Visualization publishers
     ros::Publisher map_pub_;

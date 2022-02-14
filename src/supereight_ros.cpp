@@ -780,8 +780,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             // Entropy
             se::Image<uint32_t> entropy_render(1, 1);
             se::Image<uint32_t> depth_render(1, 1);
+            se::Image<uint32_t> min_scale_render(1, 1);
             if (supereight_config_.enable_exploration) {
                 planner_->renderCurrentEntropyDepth(entropy_render, depth_render);
+                min_scale_render = planner_->renderMinScale();
             }
             else {
                 entropy_render = se::Image<uint32_t>(supereight_config_.raycast_width,
@@ -805,6 +807,11 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                             Eigen::Vector2i(depth_render.width(), depth_render.height()),
                             depth_image->header);
             entropy_depth_render_pub_.publish(entropy_depth_render_msg);
+            const sensor_msgs::Image min_scale_render_msg =
+                RGBA_to_msg(min_scale_render.data(),
+                            Eigen::Vector2i(min_scale_render.width(), min_scale_render.height()),
+                            depth_image->header);
+            min_scale_render_pub_.publish(min_scale_render_msg);
         }
     }
     sampleStat(
@@ -1362,6 +1369,8 @@ void SupereightNode::setupRos()
         entropy_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_render", 1);
         entropy_depth_render_pub_ =
             nh_.advertise<sensor_msgs::Image>("/supereight/entropy_depth_render", 1);
+        min_scale_render_pub_ =
+            nh_.advertise<sensor_msgs::Image>("/supereight/min_scale_render", 1);
     }
 
     // Visualization publishers
