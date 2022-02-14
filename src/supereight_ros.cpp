@@ -1329,52 +1329,52 @@ void SupereightNode::setupRos()
 
     // Initialise the reference publisher depending on the simulator and controller used
     if (node_config_.control_interface == ControlInterface::RotorS) {
-        path_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/supereight/path", 5);
+        path_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>("/supereight/path", 2);
     }
     else if (node_config_.control_interface == ControlInterface::SRL) {
-        path_pub_ = nh_.advertise<mav_interface_msgs::FullStateTrajectory>("/supereight/path", 5);
+        path_pub_ = nh_.advertise<mav_interface_msgs::FullStateTrajectory>("/supereight/path", 2);
     }
     else {
-        path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", 5);
+        path_pub_ = nh_.advertise<nav_msgs::Path>("/supereight/path", 2);
     }
 
     static_tf_broadcaster_.sendTransform(T_WM_Msg());
     static_tf_broadcaster_.sendTransform(T_BC_Msg());
     // Render publishers
     if (node_config_.enable_rendering) {
-        depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 30);
+        depth_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/depth_render", 1);
         if (node_config_.enable_rgb) {
-            rgba_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/rgba_render", 30);
+            rgba_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/rgba_render", 1);
         }
         if (node_config_.enable_tracking) {
-            track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render", 30);
+            track_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/track_render", 1);
         }
-        volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render", 30);
+        volume_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/volume_render", 1);
         volume_render_color_pub_ =
-            nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_color", 30);
+            nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_color", 1);
         volume_render_scale_pub_ =
-            nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_scale", 30);
+            nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_scale", 1);
         volume_render_min_scale_pub_ =
-            nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_min_scale", 30);
-        class_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/class_render", 30);
-        instance_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/instance_render", 30);
-        raycast_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/raycast_render", 30);
-        entropy_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_render", 30);
+            nh_.advertise<sensor_msgs::Image>("/supereight/volume_render_min_scale", 1);
+        class_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/class_render", 1);
+        instance_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/instance_render", 1);
+        raycast_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/raycast_render", 1);
+        entropy_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_render", 1);
         entropy_depth_render_pub_ =
-            nh_.advertise<sensor_msgs::Image>("/supereight/entropy_depth_render", 30);
+            nh_.advertise<sensor_msgs::Image>("/supereight/entropy_depth_render", 1);
     }
 
     // Visualization publishers
-    map_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map", 10);
+    map_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map", 4);
     object_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/objects", 10);
     map_frontier_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/map/frontiers", 10);
     map_candidate_pub_ =
         nh_.advertise<visualization_msgs::Marker>("/supereight/planner/candidates", 100);
     map_goal_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/planner/goal", 10);
-    mav_vis_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav", 10);
+    mav_vis_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/mav", 1);
     pose_history_pub_ =
-        nh_.advertise<visualization_msgs::Marker>("/supereight/planner/pose_history", 10);
-    limit_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/limits", 10);
+        nh_.advertise<visualization_msgs::Marker>("/supereight/planner/pose_history", 2);
+    limit_pub_ = nh_.advertise<visualization_msgs::Marker>("/supereight/limits", 2);
 
     // ROS services. // ToDo -> use default namespace and bind everything in the launch file
     mav_status_service_ =
