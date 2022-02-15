@@ -957,6 +957,7 @@ void SupereightNode::plan()
     while (frame_ < 3) {
         ros::Duration(0.5).sleep();
     }
+    const std::string planning_log_dir = ros_log_dir() + "/latest/planning";
     // Exploration planning
     while ((num_failed_planning_iterations_ < max_failed_planning_iterations_
             || max_failed_planning_iterations_ == 0)
@@ -1080,7 +1081,6 @@ void SupereightNode::plan()
                                         goal_t_WB.z());
                     }
                     // Save candidate information.
-                    const std::string planning_log_dir = ros_log_dir() + "/latest/planning";
                     stdfs::create_directories(planning_log_dir);
                     std::stringstream base_ss;
                     base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
@@ -1112,7 +1112,25 @@ void SupereightNode::plan()
                     //    saveCandidates();
                     //}
                 }
+
+                // Save and print rejected candidate information.
+                stdfs::create_directories(planning_log_dir);
+                std::stringstream base_ss;
+                base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
+                        << num_planning_iterations_ << "_";
+                const std::string base = base_ss.str();
                 for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
+                    std::stringstream prefix_ss;
+                    prefix_ss << "rejected_" << std::setw(2) << std::setfill('0') << i;
+                    const std::string prefix = prefix_ss.str();
+                    write_view_data(planner_->rejectedCandidateViews()[i],
+                                    base + prefix + "_view.txt",
+                                    base + prefix + "_entropy.txt",
+                                    base + prefix + "_entropy.png",
+                                    base + prefix + "_depth.png",
+                                    base + prefix + "_min_scale.png",
+                                    base + prefix + "_path_M.tsv");
+
                     const Eigen::Vector3f goal_t_WB =
                         (T_WM_
                          * planner_->rejectedCandidateViews()[i].goalT_MB().topRightCorner<4, 1>())
