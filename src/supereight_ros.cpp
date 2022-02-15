@@ -1031,6 +1031,8 @@ void SupereightNode::plan()
                 sampleStat("Planning", "Planning iteration", num_planning_iterations_);
                 ROS_WARN("Planning iteration %d", num_planning_iterations_);
                 ROS_WARN("%-25s %.5f s", "Planning", getStat("Planning", "Planning time"));
+                ROS_WARN("Candidates: %zu", planner_->candidateViews().size());
+                ROS_WARN("Rejected candidates: %zu", planner_->rejectedCandidateViews().size());
 
                 if (path_WB.empty()) {
                     num_failed_planning_iterations_++;
@@ -1094,31 +1096,29 @@ void SupereightNode::plan()
                                     base + "goal_depth.png",
                                     base + "goal_min_scale.png",
                                     base + "goal_path_M.tsv");
-                    // Visualize the individual candidates
-                    const auto& candidates = planner_->candidateViews();
-                    for (size_t i = 0; i < candidates.size(); ++i) {
-                        std::stringstream prefix_ss;
-                        prefix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i;
-                        const std::string prefix = prefix_ss.str();
-                        write_view_data(candidates[i],
-                                        base + prefix + "_view.txt",
-                                        base + prefix + "_entropy.txt",
-                                        base + prefix + "_entropy.png",
-                                        base + prefix + "_depth.png",
-                                        base + prefix + "_min_scale.png",
-                                        base + prefix + "_path_M.tsv");
-                    }
                     //if (supereight_config_.output_mesh_file != "") {
                     //    saveCandidates();
                     //}
                 }
 
-                // Save and print rejected candidate information.
+                // Save (rejected) candidate information.
                 stdfs::create_directories(planning_log_dir);
                 std::stringstream base_ss;
                 base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
                         << num_planning_iterations_ << "_";
                 const std::string base = base_ss.str();
+                for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
+                    std::stringstream prefix_ss;
+                    prefix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i;
+                    const std::string prefix = prefix_ss.str();
+                    write_view_data(planner_->candidateViews()[i],
+                                    base + prefix + "_view.txt",
+                                    base + prefix + "_entropy.txt",
+                                    base + prefix + "_entropy.png",
+                                    base + prefix + "_depth.png",
+                                    base + prefix + "_min_scale.png",
+                                    base + prefix + "_path_M.tsv");
+                }
                 for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
                     std::stringstream prefix_ss;
                     prefix_ss << "rejected_" << std::setw(2) << std::setfill('0') << i;
@@ -1130,18 +1130,6 @@ void SupereightNode::plan()
                                     base + prefix + "_depth.png",
                                     base + prefix + "_min_scale.png",
                                     base + prefix + "_path_M.tsv");
-
-                    const Eigen::Vector3f goal_t_WB =
-                        (T_WM_
-                         * planner_->rejectedCandidateViews()[i].goalT_MB().topRightCorner<4, 1>())
-                            .head<3>();
-                    ROS_DEBUG_NAMED("planning",
-                                    "Planning %d rejected candidate %2zu t_WB: % .3f % .3f % .3f",
-                                    num_planning_iterations_,
-                                    i,
-                                    goal_t_WB.x(),
-                                    goal_t_WB.y(),
-                                    goal_t_WB.z());
                 }
                 num_planning_iterations_++;
                 writeFrameStats("Planning");
