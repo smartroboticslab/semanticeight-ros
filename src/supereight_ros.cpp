@@ -1035,6 +1035,8 @@ void SupereightNode::plan()
                     num_failed_planning_iterations_++;
                 }
                 else {
+                    visualizeCandidates();
+                    visualizeGoal();
                     // Save more statistics.
                     const auto& goal_candidate =
                         planner_->candidateViews()[planner_->goalViewIndex()];
@@ -1077,57 +1079,36 @@ void SupereightNode::plan()
                                         goal_t_WB.y(),
                                         goal_t_WB.z());
                     }
-                    visualizeCandidates();
-                    visualizeGoal();
-                    if (supereight_config_.rendering_rate > 0
-                        && supereight_config_.output_render_file != "") {
-                        stdfs::create_directories(supereight_config_.output_render_file);
-                        std::stringstream prefix_ss;
-                        prefix_ss << supereight_config_.output_render_file << "/planning_"
-                                  << std::setw(5) << std::setfill('0') << num_planning_iterations_
-                                  << "_";
-                        const std::string prefix = prefix_ss.str();
+                    // Save candidate information.
+                    const std::string planning_log_dir = ros_log_dir() + "/latest/planning";
+                    stdfs::create_directories(planning_log_dir);
+                    std::stringstream base_ss;
+                    base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
+                            << num_planning_iterations_ << "_";
+                    const std::string base = base_ss.str();
 
-                        se::Image<uint32_t> entropy_render(1, 1);
-                        se::Image<uint32_t> entropy_depth_render(1, 1);
-                        planner_->renderCurrentEntropyDepth(entropy_render, entropy_depth_render);
-                        const se::Image<uint32_t> min_scale_render = planner_->renderMinScale();
-                        lodepng_encode32_file((prefix + "goal_entropy.png").c_str(),
-                                              (unsigned char*) entropy_render.data(),
-                                              entropy_render.width(),
-                                              entropy_render.height());
-                        lodepng_encode32_file((prefix + "goal_depth.png").c_str(),
-                                              (unsigned char*) entropy_depth_render.data(),
-                                              entropy_depth_render.width(),
-                                              entropy_depth_render.height());
-                        lodepng_encode32_file((prefix + "goal_min_scale.png").c_str(),
-                                              (unsigned char*) min_scale_render.data(),
-                                              min_scale_render.width(),
-                                              min_scale_render.height());
-                        // Visualize the individual candidates
-                        const auto& candidates = planner_->candidateViews();
-                        for (size_t i = 0; i < candidates.size(); ++i) {
-                            std::stringstream suffix_ss;
-                            suffix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i
-                                      << "_entropy_" << candidates[i].entropy_ << "_yaw_"
-                                      << candidates[i].yaw_M_;
-                            const std::string suffix = suffix_ss.str();
-                            candidates[i].writeEntropyData(prefix + suffix + ".txt");
-                            const se::Image<uint32_t> entropy_render =
-                                candidates[i].renderEntropy();
-                            lodepng_encode32_file((prefix + suffix + ".png").c_str(),
-                                                  (unsigned char*) entropy_render.data(),
-                                                  entropy_render.width(),
-                                                  entropy_render.height());
-                        }
+                    write_view_data(planner_->goalView(),
+                                    base + "goal_view.txt",
+                                    base + "goal_entropy.txt",
+                                    base + "goal_entropy.png",
+                                    base + "goal_depth.png",
+                                    base + "goal_min_scale.png",
+                                    base + "goal_path_M.tsv");
+                    // Visualize the individual candidates
+                    const auto& candidates = planner_->candidateViews();
+                    for (size_t i = 0; i < candidates.size(); ++i) {
+                        std::stringstream prefix_ss;
+                        prefix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i;
+                        const std::string prefix = prefix_ss.str();
+                        write_view_data(candidates[i],
+                                        base + prefix + "_view.txt",
+                                        base + prefix + "_entropy.txt",
+                                        base + prefix + "_entropy.png",
+                                        base + prefix + "_depth.png",
+                                        base + prefix + "_min_scale.png",
+                                        base + prefix + "_path_M.tsv");
                     }
                     //if (supereight_config_.output_mesh_file != "") {
-                    //    stdfs::create_directories(supereight_config_.output_mesh_file);
-                    //    std::stringstream filename_ss;
-                    //    filename_ss << supereight_config_.output_mesh_file << "/planning_"
-                    //                << std::setw(5) << std::setfill('0') << num_planning_iterations_
-                    //                << "_goal_path_W.tsv";
-                    //    se::write_path_tsv(filename_ss.str(), path_WB);
                     //    saveCandidates();
                     //}
                 }

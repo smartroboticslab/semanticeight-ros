@@ -244,6 +244,14 @@ double computePositionError(const Eigen::Vector3d& r_WB_1, const Eigen::Vector3d
 
 double computeAngleError(const Eigen::Quaterniond& q_WB_1, const Eigen::Quaterniond& q_WB_2);
 
+void write_view_data(const se::CandidateView& view,
+                     const std::string& data_filename,
+                     const std::string& entropy_data_filename,
+                     const std::string& entropy_filename,
+                     const std::string& depth_filename,
+                     const std::string& min_scale_filename,
+                     const std::string& path_filename);
+
 } // namespace se
 
 #include "utilities_impl.hpp"

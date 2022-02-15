@@ -543,4 +543,44 @@ void publish_full_state_trajectory(se::ExplorationPlanner& planner,
     // Publish
     path_pub.publish(trajectoryMsg);
 }
+
+void write_view_data(const se::CandidateView& view,
+                     const std::string& data_filename,
+                     const std::string& entropy_data_filename,
+                     const std::string& entropy_filename,
+                     const std::string& depth_filename,
+                     const std::string& min_scale_filename,
+                     const std::string& path_filename)
+{
+    {
+        std::ofstream f(data_filename);
+        if (f.good()) {
+            f << view;
+        }
+    }
+    view.writeEntropyData(entropy_data_filename);
+    {
+        const se::Image<uint32_t> entropy_render = view.renderEntropy();
+        lodepng_encode32_file(entropy_filename.c_str(),
+                              reinterpret_cast<const unsigned char*>(entropy_render.data()),
+                              entropy_render.width(),
+                              entropy_render.height());
+    }
+    {
+        const se::Image<uint32_t> entropy_depth_render = view.renderDepth();
+        lodepng_encode32_file(depth_filename.c_str(),
+                              reinterpret_cast<const unsigned char*>(entropy_depth_render.data()),
+                              entropy_depth_render.width(),
+                              entropy_depth_render.height());
+    }
+    {
+        const se::Image<uint32_t> min_scale_render = view.renderMinScale();
+        lodepng_encode32_file(min_scale_filename.c_str(),
+                              reinterpret_cast<const unsigned char*>(min_scale_render.data()),
+                              min_scale_render.width(),
+                              min_scale_render.height());
+    }
+    se::write_path_tsv(path_filename, view.path());
+}
+
 } // namespace se
