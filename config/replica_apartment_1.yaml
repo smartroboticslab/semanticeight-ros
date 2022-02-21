@@ -11,7 +11,7 @@ supereight_ros:
 # Habitat-ROS node settings
 habitat:
   scene_file: "~/Documents/Datasets/Replica/apartment_1/habitat/mesh_semantic.ply"
-  initial_T_HB: [0.0, 0.0, 0.0]
+  initial_T_HB: [4.0, 0.0, 0.0]
 
 # Supereight settings
 supereight:
