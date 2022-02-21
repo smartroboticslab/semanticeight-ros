@@ -1,0 +1,93 @@
+#!/bin/sh
+set -eu
+
+usage() {
+	printf 'Usage: %s [-o FILE] LOGDIR...\n' "${0##*/}"
+}
+
+# Usage: get_column_index FILE COLUMN_NAME
+get_column_index() {
+	awk '
+		BEGIN { FS = "\t" }
+		NR == 1 {
+			for (i = 1; i <= NF; i++) {
+				if ($i == "'"$2"'") {
+					print i
+				}
+			}
+		}
+	' "$1"
+}
+
+# Usage: plot_data LOGDIR...
+plot_data() {
+	# Set default values for options.
+	save_command=${save_command:-''}
+
+	# Iterate over each log directory and find the planning stats.
+	object_files=""
+	while [ "$#" -gt 0 ]; do
+		f="$1/stats_object.tsv"
+		object_files="$object_files	$f"
+		# Get the indices of the required columns.
+		frame_idx=$(get_column_index "$f" 'Frame')
+		num_idx=$(get_column_index "$f" 'Number of objects')
+		s0_idx=$(get_column_index "$f" 'Scale 0')
+		s1_idx=$(get_column_index "$f" 'Scale 1')
+		s2_idx=$(get_column_index "$f" 'Scale 2')
+		s3_idx=$(get_column_index "$f" 'Scale 3')
+		shift
+	done
+
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	object_files = \"$object_files\";
+	set grid;
+	set style data lines;
+
+	set xlabel 'Mapping iteration';
+	set ylabel 'Blocks at scale (%)';
+	set ytics 10 nomirror;
+	set y2label 'Number of objects';
+	set y2tics 1;
+	set yrange [0:100];
+	set key left top;
+	plot for [f in object_files] f using (\$$frame_idx+1):$s0_idx title 'Scale 0' linetype rgb 'light-green',\
+		for [f in object_files] f using (\$$frame_idx+1):$s1_idx title 'Scale 1' linetype rgb 'sandybrown',\
+		for [f in object_files] f using (\$$frame_idx+1):$s2_idx title 'Scale 2' linetype rgb 'slategray',\
+		for [f in object_files] f using (\$$frame_idx+1):$s3_idx title 'Scale 3' linetype rgb 'violet',\
+		for [f in object_files] f using (\$$frame_idx+1):$num_idx title 'Objects' axes x1y2 linetype rgb 'black'
+	"
+}
+
+
+
+# Parse command line options.
+while getopts 'o:h' opt_name; do
+	case "$opt_name" in
+		o) # FILE   Save to FILE instead of displaying
+			save_command="set terminal png size 1920,1080; set output '$OPTARG';"
+			;;
+		h) #        Display this help message
+			usage
+			exit 0
+			;;
+		*)
+			usage
+			exit 1
+			;;
+	esac
+done
+shift "$((OPTIND - 1))"
+
+case "$#" in
+	0)
+		usage
+		exit 2
+		;;
+	*)
+		plot_data "$@"
+		;;
+esac
+

@@ -389,6 +389,8 @@ class SupereightNode {
                     "RAM usage",   "t_WB x",          "t_WB y",
                     "t_WB z",      "q_WB x",          "q_WB y",
                     "q_WB z",      "q_WB w"}},
+        {"Object",
+         {"Frame", "Timestamp", "Number of objects", "Scale 0", "Scale 1", "Scale 2", "Scale 3"}},
         {"Planning",
          {"Planning iteration",
           "Timestamp",

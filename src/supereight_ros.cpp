@@ -612,6 +612,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 {
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     newStatFrame("Fusion");
+    newStatFrame("Object");
     std::chrono::time_point<std::chrono::steady_clock> start_time;
     std::chrono::time_point<std::chrono::steady_clock> fusion_start_time =
         std::chrono::steady_clock::now();
@@ -854,6 +855,13 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     sampleStat("Fusion", "q_WB y", se_q_WB.y());
     sampleStat("Fusion", "q_WB z", se_q_WB.z());
     sampleStat("Fusion", "q_WB w", se_q_WB.w());
+    sampleTime("Object", "Timestamp");
+    sampleStat("Object", "Frame", frame);
+    sampleStat("Object", "Number of objects", pipeline_->getObjectMaps().size());
+    const auto pc = se::combinedPercentageAtScale(pipeline_->getObjectMaps());
+    for (int s = 0; s < pc.size(); ++s) {
+        sampleStat("Object", "Scale " + std::to_string(s), pc[s]);
+    }
 
     if (supereight_config_.rendering_rate > 0
         && (frame + 1) % supereight_config_.rendering_rate == 0
@@ -921,6 +929,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                std::chrono::duration<double>(std::chrono::steady_clock::now() - fusion_start_time)
                    .count());
     writeFrameStats("Fusion");
+    writeFrameStats("Object");
     printStats();
 
     if (std::chrono::duration<double>(std::chrono::steady_clock::now() - exploration_start_time_)
