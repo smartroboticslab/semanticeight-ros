@@ -1050,6 +1050,9 @@ void SupereightNode::plan()
                     sampleStat("Planning", "Goal entropy gain", goal_candidate.entropy_);
                     sampleStat("Planning", "Goal LoD gain", goal_candidate.lod_gain_);
                     sampleStat("Planning", "Goal path time", goal_candidate.path_time_);
+                    sampleStat("Planning",
+                               "Exploration dominant",
+                               static_cast<int>(planner_->explorationDominant()));
                     sampleStat("Planning", "Goal t_WB x", goal_t_WB.x());
                     sampleStat("Planning", "Goal t_WB y", goal_t_WB.y());
                     sampleStat("Planning", "Goal t_WB z", goal_t_WB.z());

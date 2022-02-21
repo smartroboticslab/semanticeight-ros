@@ -397,6 +397,7 @@ class SupereightNode {
           "Goal entropy gain",
           "Goal LoD gain",
           "Goal path time",
+          "Exploration dominant",
           "Goal t_WB x",
           "Goal t_WB y",
           "Goal t_WB z",
