@@ -57,13 +57,13 @@ supereight:
     sequence_name:              ""
     sequence_type:              "ros"
     log_path:                   "$ROS_LOG_DIR/latest/logs"
-    output_render_path:         "" #"$ROS_LOG_DIR/latest/renders"
+    output_render_path:         "$ROS_LOG_DIR/latest/renders"
     enable_meshing:             true
     output_mesh_path:           "$ROS_LOG_DIR/latest/meshes"
     # Rates
     tracking_rate:              1
     integration_rate:           1
-    rendering_rate:             4
+    rendering_rate:             1
     meshing_rate:               0
     fps:                        0.0
     # Other
@@ -99,7 +99,7 @@ supereight:
     enable_exploration:        true
     num_candidates:            20
     exploration_weight:        0.5
-    use_pose_history:          false
+    use_pose_history:          true
     raycast_width:             36
     raycast_height:            10
     linear_velocity:           1.5

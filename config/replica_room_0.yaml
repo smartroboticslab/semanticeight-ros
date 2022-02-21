@@ -16,8 +16,8 @@ habitat:
 # Supereight settings
 supereight:
   map:
-    size:                       512
-    dim:                        20.48
+    size:                       256
+    dim:                        10.24
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.
