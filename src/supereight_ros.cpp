@@ -314,11 +314,11 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         network_ = mr::MaskRCNNConfig(network_config_);
         if (!network_.build()) {
             ROS_FATAL("Couldn't initialize the network.");
-            raise(SIGINT);
+            ros::shutdown();
         }
 #else
         ROS_FATAL("Not compiled with Mask R-CNN support, run_segmentation must be set to false.");
-        raise(SIGINT);
+        ros::shutdown();
 #endif // SE_WITH_MASKRCNN
     }
 
@@ -927,7 +927,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             .count()
         > node_config_.max_exploration_time) {
         ROS_INFO("Reached time limit of %.3f s, stopping", node_config_.max_exploration_time);
-        raise(SIGINT);
+        ros::shutdown();
     }
     frame_++;
 }
@@ -1152,7 +1152,7 @@ void SupereightNode::plan()
         std::this_thread::sleep_for(std::chrono::duration<double>(0.05));
     }
     ROS_INFO("Failed to plan %d times, stopping", num_failed_planning_iterations_);
-    raise(SIGINT);
+    ros::shutdown();
 }
 
 
