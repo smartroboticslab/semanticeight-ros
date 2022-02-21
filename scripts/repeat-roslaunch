@@ -17,7 +17,10 @@ store_run_data() {
 }
 
 generate_run_plot() {
-	"$(script_dir)"/semanticeight-plot -o "$1"/plots.png "$1"/logs
+	mkdir -p "$1"/plots
+	"$(script_dir)"/semanticeight-plot -o "$1"/plots/plots.png "$1"/logs
+	"$(script_dir)"/semanticeight-utility-plot -o "$1"/plots/utility.png "$1"/logs
+	"$(script_dir)"/semanticeight-object-plot -o "$1"/plots/object_scales.png "$1"/logs
 }
 
 generate_combined_plot() {
