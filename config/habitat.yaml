@@ -54,7 +54,7 @@ habitat_mav_sim:
 # Supereight settings
 supereight:
   general:
-    sequence_name:              ""
+    sequence_name:              "habitat_skokloster_castle"
     sequence_type:              "ros"
     log_path:                   "$ROS_LOG_DIR/latest/logs"
     output_render_path:         "$ROS_LOG_DIR/latest/renders"
@@ -98,13 +98,14 @@ supereight:
   exploration:
     enable_exploration:        true
     num_candidates:            20
+    frontier_sampling_probability: 0.5
     exploration_weight:        0.5
     use_pose_history:          true
     raycast_width:             36
     raycast_height:            10
     linear_velocity:           1.5
     angular_velocity:          0.75
-    robot_radius:              0.05
+    robot_radius:              0.025
     safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05

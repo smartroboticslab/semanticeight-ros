@@ -15,6 +15,9 @@ habitat:
 
 # Supereight settings
 supereight:
+  general:
+    sequence_name:              "matterport3d_1LXtFkjw3qL"
+
   map:
     size:                       1024
     dim:                        40.96

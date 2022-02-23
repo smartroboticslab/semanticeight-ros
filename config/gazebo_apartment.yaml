@@ -10,6 +10,9 @@ supereight_ros:
 
 # Supereight settings
 supereight:
+  general:
+    sequence_name:              "gazebo_apartment"
+
   map:
     size:                       256
     dim:                        25.6

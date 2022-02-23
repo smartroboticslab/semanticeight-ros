@@ -10,6 +10,9 @@ supereight_ros:
 
 # Supereight settings
 supereight:
+  general:
+    sequence_name:              "gazebo_maze"
+
   map:
     size:                       512
     dim:                        51.2

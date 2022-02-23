@@ -27,7 +27,7 @@ supereight_ros:
 # Supereight settings
 supereight:
   general:
-    sequence_name:              ""
+    sequence_name:              "gazebo_apartment"
     sequence_type:              "ros"
     log_path:                   "$ROS_LOG_DIR/latest/logs"
     output_render_path:         "" #"$ROS_LOG_DIR/latest/renders"
@@ -68,6 +68,7 @@ supereight:
   exploration:
     enable_exploration:        true
     num_candidates:            20
+    frontier_sampling_probability: 0.5
     exploration_weight:        0.5
     use_pose_history:          false
     raycast_width:             36
