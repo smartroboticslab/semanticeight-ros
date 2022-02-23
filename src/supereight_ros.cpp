@@ -704,7 +704,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 
         if (!out_of_order_fusion) {
             const std::lock_guard<std::mutex> map_lock(pose_mutex_);
-            planner_->setT_WB(se_T_WB);
+            planner_->setT_WB(se_T_WB, pipeline_->getDepth());
         }
     }
     else {
@@ -918,6 +918,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             lodepng_encode32_file(
                 (prefix + "class_" + suffix).c_str(), (unsigned char*) class_render_.get(), w, h);
         }
+        //std::stringstream history_dir_ss;
+        //history_dir_ss << supereight_config_.output_render_file << "/history_" << std::setw(5)
+        //               << std::setfill('0') << frame;
+        //planner_->getPoseMaskHistory().writeMasks(history_dir_ss.str());
     }
 
     if (supereight_config_.meshing_rate > 0 && (frame + 1) % supereight_config_.meshing_rate == 0) {
