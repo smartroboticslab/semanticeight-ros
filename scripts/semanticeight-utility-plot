@@ -32,6 +32,11 @@ plot_data() {
 		# Get the indices of the required columns.
 		plan_idx=$(get_column_index "$f" 'Planning iteration')
 		dom_idx=$(get_column_index "$f" 'Exploration dominant')
+		combined_idx=$(get_column_index "$f" 'Goal utility')
+		exploration_idx=$(get_column_index "$f" 'Goal exploration utility')
+		object_idx=$(get_column_index "$f" 'Goal object utility')
+		entropy_idx=$(get_column_index "$f" 'Goal entropy gain')
+		lod_idx=$(get_column_index "$f" 'Goal LoD gain')
 		shift
 	done
 
@@ -41,12 +46,31 @@ plot_data() {
 	planning_files = \"$planning_files\";
 	set grid;
 	set style data lines;
+	set multiplot layout 2,2;
 
 	set xlabel 'Planning iteration';
 	set ylabel 'Dominant gain';
 	set yrange [-0.2:1.2];
 	set ytics ('Object LoD' 0, 'Exploration' 1);
-	plot for [f in planning_files] f using (\$$plan_idx+1):$dom_idx notitle
+	plot for [f in planning_files] f using (\$$plan_idx+1):$dom_idx notitle;
+	set ytics auto;
+
+	set key right bottom;
+	set xlabel 'Planning iteration';
+	set ylabel 'Gain';
+	set yrange [-0.2:1.2];
+	plot for [f in planning_files] f using (\$$plan_idx+1):$entropy_idx title 'Entropy gain',\
+		for [f in planning_files] f using (\$$plan_idx+1):$lod_idx title 'LoD gain';
+	set autoscale;
+
+	set key right bottom;
+	set xlabel 'Planning iteration';
+	set ylabel 'Utility (1/s)';
+	set yrange [-0.2:*];
+	plot for [f in planning_files] f using (\$$plan_idx+1):$combined_idx title 'Utility',\
+		for [f in planning_files] f using (\$$plan_idx+1):$exploration_idx title 'Exploration utility',\
+		for [f in planning_files] f using (\$$plan_idx+1):$object_idx title 'Object utility';
+	set autoscale;
 	"
 }
 
