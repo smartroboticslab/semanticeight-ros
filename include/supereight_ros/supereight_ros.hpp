@@ -396,6 +396,8 @@ class SupereightNode {
           "Timestamp",
           "Planning time",
           "Goal utility",
+          "Goal exploration utility",
+          "Goal object utility",
           "Goal entropy gain",
           "Goal LoD gain",
           "Goal path time",

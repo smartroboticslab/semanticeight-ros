@@ -1060,6 +1060,10 @@ void SupereightNode::plan()
                     const Eigen::Vector3f goal_t_WB = goal_T_WB.topRightCorner<3, 1>();
                     const Eigen::Quaternionf goal_q_WB(goal_T_WB.topLeftCorner<3, 3>());
                     sampleStat("Planning", "Goal utility", goal_candidate.utility());
+                    sampleStat("Planning",
+                               "Goal exploration utility",
+                               goal_candidate.explorationUtility());
+                    sampleStat("Planning", "Goal object utility", goal_candidate.objectUtility());
                     sampleStat("Planning", "Goal entropy gain", goal_candidate.entropy_);
                     sampleStat("Planning", "Goal LoD gain", goal_candidate.lod_gain_);
                     sampleStat("Planning", "Goal path time", goal_candidate.path_time_);
