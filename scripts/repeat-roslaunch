@@ -24,19 +24,6 @@ store_run_data() {
 	printf '%s\n' "$outdir"
 }
 
-generate_run_plots() {
-	mkdir -p "$1"/plots
-	"$(script_dir)"/semanticeight-plot -o "$1"/plots/plots.png "$1"/logs
-	"$(script_dir)"/semanticeight-utility-plot -o "$1"/plots/utility.png "$1"/logs
-	"$(script_dir)"/semanticeight-object-plot -o "$1"/plots/object_scales.png "$1"/logs
-}
-
-generate_combined_plot() {
-	image_file="$1"
-	shift
-	"$(script_dir)"/semanticeight-plot -o "$image_file" "$@"
-}
-
 generate_run_montage() {
 	render_dir="$1"/renders
 	if [ -d "$render_dir" ]
@@ -99,10 +86,10 @@ do
 	run_dir=$(store_run_data "$dir" "$i" "$1")
 	mv "$tmp_log" "$run_dir"/log
 	evaluate_object_meshes "$run_dir"
-	generate_run_plots "$run_dir"
+	"$(script_dir)"/generate-plots "$run_dir"/plots "$run_dir"/logs
 	generate_run_montage "$run_dir"
 	i=$((i+1))
 done
 
-generate_combined_plot "$dir"/plots.png "$dir"/*/logs
+"$(script_dir)"/generate-plots "$dir"/plots "$dir"/*/logs
 

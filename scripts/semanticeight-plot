@@ -4,6 +4,10 @@
 #   that the average does not extend all the way to the shortest data line.
 set -eu
 
+usage() {
+	printf 'Usage: %s TYPE LOGDIR...\n' "${0##*/}"
+}
+
 # Usage: get_column_index FILE COLUMN
 get_column_index() {
 	awk '
@@ -16,23 +20,6 @@ get_column_index() {
 			}
 		}
 	' "$1"
-}
-
-# Usage: get_axis_limit LIMITS PLOT AXIS
-# LIMITS is a string in the form X1:Y1,X2:Y2,X3:Y3,X4:Y4.
-# PLOT is the plot index in the range [1,4] inclusive.
-# AXIS is either x or y.
-get_axis_limit() {
-	printf '%s\n' "$1" | awk '
-		BEGIN {
-			RS = ","
-			FS = ":"
-			a["x"] = 1
-			a["y"] = 2
-		}
-		NR == '"$2"' {
-			print $a[tolower("'"$3"'")]
-		}'
 }
 
 # Usage: get_average_data LOGFILE...
@@ -72,135 +59,336 @@ get_average_data() {
 		}'
 }
 
-# Usage: plot_data FILE...
-plot_data() {
-	# Set default values for options.
-	extra_plots=${extra_plots:-0}
-	axis_limits=${axis_limits:-''}
-	save_command=${save_command:-''}
-
-	data_files=""
-	planning_files=""
-	# Iterate over each log directory.
-	while [ "$#" -gt 0 ]; do
-		data_files="$data_files	$1/stats_fusion.tsv"
-		planning_files="$planning_files	$1/stats_planning.tsv"
+# Usage: volume LOGNAME LOGDIR...
+log_filenames() {
+	name="$1"
+	shift
+	files=''
+	while [ "$#" -gt 0 ]
+	do
+		files="$files	$1/$name"
 		shift
 	done
-	# Average all runs
-	average_data_file=$(mktemp) || exit 1
-	get_average_data $data_files > "$average_data_file"
-	average_planning_file=$(mktemp) || exit 1
-	get_average_data $planning_files > "$average_planning_file"
-	# Get the indices of the required columns.
-	frame_idx=$(get_column_index "$average_data_file" 'Frame')
-	stamp_idx=$(get_column_index "$average_data_file" 'Timestamp')
-	pre_idx=$(get_column_index "$average_data_file" 'Preprocessing')
-	obj_int_idx=$(get_column_index "$average_data_file" 'Object integration')
-	fusion_idx=$(get_column_index "$average_data_file" 'Total')
-	free_idx=$(get_column_index "$average_data_file" 'Free volume')
-	occ_idx=$(get_column_index "$average_data_file" 'Occupied volume')
-	expl_idx=$(get_column_index "$average_data_file" 'Explored volume')
-	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
-	plan_stamp_idx=$(get_column_index "$average_planning_file" 'Timestamp')
-	plan_time_idx=$(get_column_index "$average_planning_file" 'Planning time')
+	printf '%s\n' "$files"
+}
 
+# Usage: volume LOGDIR...
+volume() {
+	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	# Average all runs.
+	average_fusion_file=$(mktemp) || exit 1
+	get_average_data $fusion_files > "$average_fusion_file"
+	# Get the indices of the required columns.
+	stamp_idx=$(get_column_index "$average_fusion_file" 'Timestamp')
+	free_idx=$(get_column_index "$average_fusion_file" 'Free volume')
+	occ_idx=$(get_column_index "$average_fusion_file" 'Occupied volume')
+	expl_idx=$(get_column_index "$average_fusion_file" 'Explored volume')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
-	data_files = \"$data_files\";
-	planning_files = \"$planning_files\";
-	set grid;
-	set style data lines;
-	set multiplot layout 2,2;
-
-	set key right bottom;
 	set xlabel 'Time (s)';
 	set ylabel 'Volume (m³)';
-	set xrange [0:$(get_axis_limit "$axis_limits" 1 x)];
-	set yrange [0:$(get_axis_limit "$axis_limits" 1 y)];
-	plot for [f in data_files] f using $stamp_idx:$free_idx notitle linetype rgb 'blue' dashtype \".\",\
-		for [f in data_files] f using $stamp_idx:$occ_idx notitle linetype rgb 'red' dashtype \".\",\
-		for [f in data_files] f using $stamp_idx:$expl_idx notitle linetype rgb 'green' dashtype \".\",\
-		'$average_data_file' using $stamp_idx:$free_idx title 'Free' linetype rgb 'blue' linewidth 3,\
-		'$average_data_file' using $stamp_idx:$occ_idx title 'Occupied' linetype rgb 'red' linewidth 3,\
-		'$average_data_file' using $stamp_idx:$expl_idx title 'Explored' linetype rgb 'green' linewidth 3,;
-
 	set key right bottom;
-	set xlabel 'Frame';
-	set ylabel 'Volume (m³)';
-	set xrange [0:$(get_axis_limit "$axis_limits" 2 x)];
-	set yrange [0:$(get_axis_limit "$axis_limits" 2 y)];
-	plot for [f in data_files] f using (\$$frame_idx+1):$free_idx notitle linetype rgb 'blue' dashtype \".\",\
-		for [f in data_files] f using (\$$frame_idx+1):$occ_idx notitle linetype rgb 'red' dashtype \".\",\
-		for [f in data_files] f using (\$$frame_idx+1):$expl_idx notitle linetype rgb 'green' dashtype \".\",\
-		'$average_data_file' using (\$$frame_idx+1):$free_idx title 'Free' linetype rgb 'blue' linewidth 3,\
-		'$average_data_file' using (\$$frame_idx+1):$occ_idx title 'Occupied' linetype rgb 'red' linewidth 3,\
-		'$average_data_file' using (\$$frame_idx+1):$expl_idx title 'Explored' linetype rgb 'green' linewidth 3,;
-
-
-	set xlabel 'Planning iteration';
-	set ylabel 'Planning time (s)';
-	set xrange [0:$(get_axis_limit "$axis_limits" 3 x)];
-	set yrange [0:$(get_axis_limit "$axis_limits" 3 y)];
-	plot for [f in planning_files] f using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' dashtype \".\",\
-		'$average_planning_file' using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' linewidth 3;
-
-	set key left top;
-	set xlabel 'Frame';
-	set ylabel 'Frame time (s)';
-	set xrange [0:$(get_axis_limit "$axis_limits" 4 x)];
-	set yrange [0:$(get_axis_limit "$axis_limits" 4 y)];
-	plot for [i=$pre_idx:$obj_int_idx:1] \
-		'$average_data_file' using (\$$frame_idx+1):(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1,\
-		'$average_data_file' using (\$$frame_idx+1):(\$$fusion_idx) title 'Total';
-
-	unset multiplot;"
-
-	if [ "$extra_plots" -eq 1 ]; then
-		gnuplot -p -e "
-		data_files = \"$data_files\";
-		planning_files = \"$planning_files\";
-		set grid;
-		set style data lines;
-
-		set key right top;
-		set xlabel 'Time (s)';
-		set ylabel 'Frame time (s)';
-		plot for [i=$pre_idx:$obj_int_idx:1] \
-			'$average_data_file' using $stamp_idx:(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1,\
-			'$average_planning_file' using $plan_stamp_idx:$plan_time_idx title 'Planning' with points linetype rgb 'red' linewidth 3;
-		"
-	fi
-
-	# Remove temporary files.
-	rm -f "$average_planning_file"
-	rm -f "$average_data_file"
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	fusion_files = \"$fusion_files\";
+	plot for [f in fusion_files] f using $stamp_idx:$free_idx notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in fusion_files] f using $stamp_idx:$occ_idx notitle linetype rgb 'red' dashtype \".\",\
+		for [f in fusion_files] f using $stamp_idx:$expl_idx notitle linetype rgb 'green' dashtype \".\",\
+		'$average_fusion_file' using $stamp_idx:$free_idx title 'Free' linetype rgb 'blue' linewidth 3,\
+		'$average_fusion_file' using $stamp_idx:$occ_idx title 'Occupied' linetype rgb 'red' linewidth 3,\
+		'$average_fusion_file' using $stamp_idx:$expl_idx title 'Explored' linetype rgb 'green' linewidth 3,;
+	"
+	# Remove temporary file.
+	rm -f "$average_fusion_file"
 }
 
-usage() {
-	printf 'Usage: %s LOGDIR...\n' "${0##*/}"
-	grep -E '[[:space:]].) #' "$0" | sed -e 's/) #//g' -e 's/^[ \t]*/  -/g'
-	printf 'LIMITS is in the form X1:Y1,X2:Y2,X3:Y3,X4:Y4\n'
-	printf 'where X* and Y* are the maximum x and y axis limits.\n'
-	printf 'They are applied to the plots in row-major order.\n'
+# Usage: volume_frame LOGDIR...
+volume_frame() {
+	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	# Average all runs.
+	average_fusion_file=$(mktemp) || exit 1
+	get_average_data $fusion_files > "$average_fusion_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_fusion_file" 'Frame')
+	free_idx=$(get_column_index "$average_fusion_file" 'Free volume')
+	occ_idx=$(get_column_index "$average_fusion_file" 'Occupied volume')
+	expl_idx=$(get_column_index "$average_fusion_file" 'Explored volume')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Frame';
+	set ylabel 'Volume (m³)';
+	set key right bottom;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	fusion_files = \"$fusion_files\";
+	plot for [f in fusion_files] f using (\$$frame_idx+1):$free_idx notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in fusion_files] f using (\$$frame_idx+1):$occ_idx notitle linetype rgb 'red' dashtype \".\",\
+		for [f in fusion_files] f using (\$$frame_idx+1):$expl_idx notitle linetype rgb 'green' dashtype \".\",\
+		'$average_fusion_file' using (\$$frame_idx+1):$free_idx title 'Free' linetype rgb 'blue' linewidth 3,\
+		'$average_fusion_file' using (\$$frame_idx+1):$occ_idx title 'Occupied' linetype rgb 'red' linewidth 3,\
+		'$average_fusion_file' using (\$$frame_idx+1):$expl_idx title 'Explored' linetype rgb 'green' linewidth 3,;
+	"
+	# Remove temporary file.
+	rm -f "$average_fusion_file"
+}
+
+# Usage: frame_time LOGDIR...
+frame_time() {
+	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	# Average all runs.
+	average_fusion_file=$(mktemp) || exit 1
+	get_average_data $fusion_files > "$average_fusion_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_fusion_file" 'Frame')
+	pre_idx=$(get_column_index "$average_fusion_file" 'Preprocessing')
+	obj_int_idx=$(get_column_index "$average_fusion_file" 'Object integration')
+	fusion_idx=$(get_column_index "$average_fusion_file" 'Total')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Frame';
+	set ylabel 'Frame time (s)';
+	set key left top;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	fusion_files = \"$fusion_files\";
+	plot for [i=$pre_idx:$obj_int_idx:1] \
+		'$average_fusion_file' using (\$$frame_idx+1):(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1,\
+		'$average_fusion_file' using (\$$frame_idx+1):(\$$fusion_idx) title 'Total';
+	"
+	# Remove temporary file.
+	rm -f "$average_fusion_file"
+}
+
+# Usage: planning_time LOGDIR...
+planning_time() {
+	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	# Average all runs.
+	average_planning_file=$(mktemp) || exit 1
+	get_average_data $planning_files > "$average_planning_file"
+	# Get the indices of the required columns.
+	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
+	plan_time_idx=$(get_column_index "$average_planning_file" 'Planning time')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Planning iteration';
+	set ylabel 'Planning time (s)';
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	planning_files = \"$planning_files\";
+	plot for [f in planning_files] f using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' dashtype \".\",\
+		'$average_planning_file' using (\$$plan_idx+1):$plan_time_idx notitle linetype rgb 'blue' linewidth 3;
+	"
+	# Remove temporary file.
+	rm -f "$average_planning_file"
+}
+
+# Usage: frame_planning_time LOGDIR...
+frame_planning_time() {
+	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	# Average all runs.
+	average_fusion_file=$(mktemp) || exit 1
+	get_average_data $fusion_files > "$average_fusion_file"
+	average_planning_file=$(mktemp) || exit 1
+	get_average_data $planning_files > "$average_planning_file"
+	# Get the indices of the required columns.
+	stamp_idx=$(get_column_index "$average_fusion_file" 'Timestamp')
+	pre_idx=$(get_column_index "$average_fusion_file" 'Preprocessing')
+	obj_int_idx=$(get_column_index "$average_fusion_file" 'Object integration')
+	fusion_idx=$(get_column_index "$average_fusion_file" 'Total')
+	plan_stamp_idx=$(get_column_index "$average_planning_file" 'Timestamp')
+	plan_time_idx=$(get_column_index "$average_planning_file" 'Planning time')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Time (s)';
+	set ylabel 'Frame time (s)';
+	set key right top;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	fusion_files = \"$fusion_files\";
+	planning_files = \"$planning_files\";
+	plot for [i=$pre_idx:$obj_int_idx:1] \
+		'$average_fusion_file' using $stamp_idx:(sum [col=i:$obj_int_idx] column(col)) title columnheader(i) with filledcurves x1,\
+		'$average_fusion_file' using $stamp_idx:(\$$fusion_idx) title 'Total',\
+		'$average_planning_file' using $plan_stamp_idx:$plan_time_idx title 'Planning' with points linetype rgb 'red' linewidth 3;
+	"
+	# Remove temporary files.
+	rm -f "$average_planning_file"
+	rm -f "$average_fusion_file"
+}
+
+# Usage: object_scale LOGDIR...
+object_scale() {
+	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	# Average all runs.
+	average_fusion_file=$(mktemp) || exit 1
+	get_average_data $fusion_files > "$average_fusion_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_fusion_file" 'Frame')
+	num_idx=$(get_column_index "$average_fusion_file" 'Number of objects')
+	s0_idx=$(get_column_index "$average_fusion_file" 'Scale 0')
+	s1_idx=$(get_column_index "$average_fusion_file" 'Scale 1')
+	s2_idx=$(get_column_index "$average_fusion_file" 'Scale 2')
+	s3_idx=$(get_column_index "$average_fusion_file" 'Scale 3')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Mapping iteration';
+	set ylabel 'Blocks at scale (%)';
+	set key left top;
+	set grid;
+	set style data lines;
+	set ytics 10 nomirror;
+	set y2label 'Number of objects';
+	set y2tics 1;
+	set xrange [$xmin:$xmax];
+	set yrange [0:100];
+	fusion_files = \"$fusion_files\";
+	plot for [f in fusion_files] f using (\$$frame_idx+1):$s0_idx notitle linetype rgb 'light-green' dashtype \".\",\
+		for [f in fusion_files] f using (\$$frame_idx+1):$s1_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
+		for [f in fusion_files] f using (\$$frame_idx+1):$s2_idx notitle linetype rgb 'slategray' dashtype \".\",\
+		for [f in fusion_files] f using (\$$frame_idx+1):$s3_idx notitle linetype rgb 'violet' dashtype \".\",\
+		for [f in fusion_files] f using (\$$frame_idx+1):$num_idx notitle axes x1y2 linetype rgb 'black' dashtype \".\",\
+		'$average_fusion_file' using (\$$frame_idx+1):$s0_idx title 'Scale 0' linetype rgb 'light-green' linewidth 3,\
+		'$average_fusion_file' using (\$$frame_idx+1):$s1_idx title 'Scale 1' linetype rgb 'sandybrown' linewidth 3,\
+		'$average_fusion_file' using (\$$frame_idx+1):$s2_idx title 'Scale 2' linetype rgb 'slategray' linewidth 3,\
+		'$average_fusion_file' using (\$$frame_idx+1):$s3_idx title 'Scale 3' linetype rgb 'violet' linewidth 3,\
+		'$average_fusion_file' using (\$$frame_idx+1):$num_idx title 'Objects' axes x1y2 linetype rgb 'black' linewidth 3;
+	"
+	# Remove temporary files.
+	rm -f "$average_fusion_file"
+}
+
+# Usage: utility LOGDIR...
+utility() {
+	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	# Average all runs.
+	average_planning_file=$(mktemp) || exit 1
+	get_average_data $planning_files > "$average_planning_file"
+	# Get the indices of the required columns.
+	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
+	combined_idx=$(get_column_index "$average_planning_file" 'Goal utility')
+	exploration_idx=$(get_column_index "$average_planning_file" 'Goal exploration utility')
+	object_idx=$(get_column_index "$average_planning_file" 'Goal object utility')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Planning iteration';
+	set ylabel 'Utility (1/s)';
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [-0.2:$ymax];
+	planning_files = \"$planning_files\";
+	plot for [f in planning_files] f using (\$$plan_idx+1):$combined_idx notitle linetype rgb 'light-green' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$exploration_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$object_idx notitle linetype rgb 'slategray' dashtype \".\",\
+		'$average_planning_file' using (\$$plan_idx+1):$combined_idx title 'Utility' linetype rgb 'light-green' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$exploration_idx title 'Exploration utility' linetype rgb 'sandybrown' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$object_idx title 'Object utility' linetype rgb 'slategray' linewidth 3;
+	"
+	# Remove temporary files.
+	rm -f "$average_planning_file"
+}
+
+# Usage: gain LOGDIR...
+gain() {
+	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	# Average all runs.
+	average_planning_file=$(mktemp) || exit 1
+	get_average_data $planning_files > "$average_planning_file"
+	# Get the indices of the required columns.
+	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
+	entropy_idx=$(get_column_index "$average_planning_file" 'Goal entropy gain')
+	lod_idx=$(get_column_index "$average_planning_file" 'Goal LoD gain')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Planning iteration';
+	set ylabel 'Gain';
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [-0.2:1.2];
+	planning_files = \"$planning_files\";
+	plot for [f in planning_files] f using (\$$plan_idx+1):$entropy_idx notitle linetype rgb 'light-green' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$lod_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
+		'$average_planning_file' using (\$$plan_idx+1):$entropy_idx title 'Entropy gain' linetype rgb 'light-green' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$lod_idx title 'LoD gain' linetype rgb 'sandybrown' linewidth 3;
+	"
+	# Remove temporary files.
+	rm -f "$average_planning_file"
+}
+
+# Usage: dominant_gain LOGDIR...
+dominant_gain() {
+	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	# Average all runs.
+	average_planning_file=$(mktemp) || exit 1
+	get_average_data $planning_files > "$average_planning_file"
+	# Get the indices of the required columns.
+	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
+	dom_idx=$(get_column_index "$average_planning_file" 'Exploration dominant')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Planning iteration';
+	set ylabel 'Dominant gain';
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [-0.2:1.2];
+	set ytics ('Object LoD' 0, 'Exploration' 1);
+	planning_files = \"$planning_files\";
+	plot for [f in planning_files] f using (\$$plan_idx+1):$dom_idx notitle linetype rgb 'light-green' dashtype \".\",\
+		'$average_planning_file' using (\$$plan_idx+1):$dom_idx title 'Entropy gain' linetype rgb 'light-green' linewidth 3;
+	"
+	# Remove temporary files.
+	rm -f "$average_planning_file"
 }
 
 
 
 # Parse command line options.
-while getopts 'el:o:h' opt_name; do
+xmin='*'
+ymin='*'
+xmax='*'
+ymax='*'
+save_command=''
+while getopts 'o:x:y:X:Y:h' opt_name
+do
 	case "$opt_name" in
-		e) #        Display extra plots
-			extra_plots=1
-			;;
-		l) # LIMITS Set the axis limits
-			axis_limits="$OPTARG"
-			;;
-		o) # FILE   Save to FILE instead of displaying
+		o)
 			save_command="set terminal png size 1920,1080; set output '$OPTARG';"
 			;;
-		h) #        Display this help message
+		x)
+			xmin="$OPTARG"
+			;;
+		y)
+			ymin="$OPTARG"
+			;;
+		X)
+			xmax="$OPTARG"
+			;;
+		Y)
+			ymax="$OPTARG"
+			;;
+		h)
 			usage
 			exit 0
 			;;
@@ -213,12 +401,14 @@ done
 shift "$((OPTIND - 1))"
 
 case "$#" in
-	0)
+	0|1)
 		usage
 		exit 2
 		;;
 	*)
-		plot_data "$@"
+		type="$1"
+		shift
+		"$type" "$@"
 		;;
 esac
 
