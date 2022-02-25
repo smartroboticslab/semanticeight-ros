@@ -27,7 +27,7 @@ plot_data() {
 	# Iterate over each log directory and find the planning stats.
 	object_files=""
 	while [ "$#" -gt 0 ]; do
-		f="$1/stats_object.tsv"
+		f="$1/stats_fusion.tsv"
 		object_files="$object_files	$f"
 		# Get the indices of the required columns.
 		frame_idx=$(get_column_index "$f" 'Frame')
