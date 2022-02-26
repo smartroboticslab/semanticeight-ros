@@ -306,6 +306,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     else {
         se::semantic_classes.setEnabled("chair");
     }
+    se::semantic_classes.setResAll(0.01f);
 
     if (node_config_.run_segmentation) {
 #ifdef SE_WITH_MASKRCNN
