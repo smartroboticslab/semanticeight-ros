@@ -267,6 +267,8 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
     }
     nh.getParam("supereight/exploration/enable_exploration", config.enable_exploration);
     nh.getParam("supereight/exploration/num_candidates", config.num_candidates);
+    nh.getParam("supereight/exploration/frontier_sampling_probability",
+                config.frontier_sampling_probability);
     nh.getParam("supereight/exploration/exploration_weight", config.exploration_weight);
     nh.getParam("supereight/exploration/use_pose_history", config.use_pose_history);
     nh.getParam("supereight/exploration/raycast_width", config.raycast_width);
