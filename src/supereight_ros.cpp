@@ -1099,54 +1099,53 @@ void SupereightNode::plan()
                                         goal_t_WB.z());
                     }
                     // Save candidate information.
-                    stdfs::create_directories(planning_log_dir);
-                    std::stringstream base_ss;
-                    base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
-                            << num_planning_iterations_ << "_";
-                    const std::string base = base_ss.str();
-
-                    write_view_data(planner_->goalView(),
-                                    base + "goal_view.txt",
-                                    base + "goal_entropy.txt",
-                                    base + "goal_entropy.png",
-                                    base + "goal_depth.png",
-                                    base + "goal_min_scale.png",
-                                    base + "goal_path_M.tsv");
+                    //stdfs::create_directories(planning_log_dir);
+                    //std::stringstream base_ss;
+                    //base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
+                    //        << num_planning_iterations_ << "_";
+                    //const std::string base = base_ss.str();
+                    //write_view_data(planner_->goalView(),
+                    //                base + "goal_view.txt",
+                    //                base + "goal_entropy.txt",
+                    //                base + "goal_entropy.png",
+                    //                base + "goal_depth.png",
+                    //                base + "goal_min_scale.png",
+                    //                base + "goal_path_M.tsv");
                     //if (supereight_config_.output_mesh_file != "") {
                     //    saveCandidates();
                     //}
                 }
 
                 // Save (rejected) candidate information.
-                stdfs::create_directories(planning_log_dir);
-                std::stringstream base_ss;
-                base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
-                        << num_planning_iterations_ << "_";
-                const std::string base = base_ss.str();
-                for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
-                    std::stringstream prefix_ss;
-                    prefix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i;
-                    const std::string prefix = prefix_ss.str();
-                    write_view_data(planner_->candidateViews()[i],
-                                    base + prefix + "_view.txt",
-                                    base + prefix + "_entropy.txt",
-                                    base + prefix + "_entropy.png",
-                                    base + prefix + "_depth.png",
-                                    base + prefix + "_min_scale.png",
-                                    base + prefix + "_path_M.tsv");
-                }
-                for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
-                    std::stringstream prefix_ss;
-                    prefix_ss << "rejected_" << std::setw(2) << std::setfill('0') << i;
-                    const std::string prefix = prefix_ss.str();
-                    write_view_data(planner_->rejectedCandidateViews()[i],
-                                    base + prefix + "_view.txt",
-                                    base + prefix + "_entropy.txt",
-                                    base + prefix + "_entropy.png",
-                                    base + prefix + "_depth.png",
-                                    base + prefix + "_min_scale.png",
-                                    base + prefix + "_path_M.tsv");
-                }
+                //stdfs::create_directories(planning_log_dir);
+                //std::stringstream base_ss;
+                //base_ss << planning_log_dir << "/planning_" << std::setw(5) << std::setfill('0')
+                //        << num_planning_iterations_ << "_";
+                //const std::string base = base_ss.str();
+                //for (size_t i = 0; i < planner_->candidateViews().size(); ++i) {
+                //    std::stringstream prefix_ss;
+                //    prefix_ss << "candidate_" << std::setw(2) << std::setfill('0') << i;
+                //    const std::string prefix = prefix_ss.str();
+                //    write_view_data(planner_->candidateViews()[i],
+                //                    base + prefix + "_view.txt",
+                //                    base + prefix + "_entropy.txt",
+                //                    base + prefix + "_entropy.png",
+                //                    base + prefix + "_depth.png",
+                //                    base + prefix + "_min_scale.png",
+                //                    base + prefix + "_path_M.tsv");
+                //}
+                //for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
+                //    std::stringstream prefix_ss;
+                //    prefix_ss << "rejected_" << std::setw(2) << std::setfill('0') << i;
+                //    const std::string prefix = prefix_ss.str();
+                //    write_view_data(planner_->rejectedCandidateViews()[i],
+                //                    base + prefix + "_view.txt",
+                //                    base + prefix + "_entropy.txt",
+                //                    base + prefix + "_entropy.png",
+                //                    base + prefix + "_depth.png",
+                //                    base + prefix + "_min_scale.png",
+                //                    base + prefix + "_path_M.tsv");
+                //}
                 num_planning_iterations_++;
                 writeFrameStats("Planning");
             }
