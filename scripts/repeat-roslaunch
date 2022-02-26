@@ -29,7 +29,7 @@ generate_run_montage() {
 	if [ -d "$render_dir" ]
 	then
 		printf 'Generating render montage...\n'
-		"$(script_dir)"/../semanticeight/se_tools/semanticeight_render_montage.sh "$render_dir"
+		"$(script_dir)"/../semanticeight/se_tools/semanticeight_render_montage.sh "$render_dir" && rm -rf "$render_dir"
 	else
 		printf 'Skipping render montage, %s is not a directory\n' "$render_dir"
 	fi
