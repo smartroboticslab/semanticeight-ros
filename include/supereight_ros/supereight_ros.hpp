@@ -260,18 +260,18 @@ class SupereightNode {
     std::chrono::time_point<std::chrono::steady_clock> exploration_start_time_;
 
     // Image buffers
-    std::unique_ptr<float> input_depth_;
-    std::unique_ptr<uint32_t> input_rgba_;
-    std::unique_ptr<uint32_t> rgba_render_;
-    std::unique_ptr<uint32_t> depth_render_;
-    std::unique_ptr<uint32_t> track_render_;
-    std::unique_ptr<uint32_t> volume_render_;
-    std::unique_ptr<uint32_t> volume_render_color_;
-    std::unique_ptr<uint32_t> volume_render_scale_;
-    std::unique_ptr<uint32_t> volume_render_min_scale_;
-    std::unique_ptr<uint32_t> class_render_;
-    std::unique_ptr<uint32_t> instance_render_;
-    std::unique_ptr<uint32_t> raycast_render_;
+    std::unique_ptr<float[]> input_depth_;
+    std::unique_ptr<uint32_t[]> input_rgba_;
+    std::unique_ptr<uint32_t[]> rgba_render_;
+    std::unique_ptr<uint32_t[]> depth_render_;
+    std::unique_ptr<uint32_t[]> track_render_;
+    std::unique_ptr<uint32_t[]> volume_render_;
+    std::unique_ptr<uint32_t[]> volume_render_color_;
+    std::unique_ptr<uint32_t[]> volume_render_scale_;
+    std::unique_ptr<uint32_t[]> volume_render_min_scale_;
+    std::unique_ptr<uint32_t[]> class_render_;
+    std::unique_ptr<uint32_t[]> instance_render_;
+    std::unique_ptr<uint32_t[]> raycast_render_;
 
     // Semantics
     se::SegmentationResult input_segmentation_;

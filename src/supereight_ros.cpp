@@ -75,30 +75,30 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
 
     // Allocate input image buffers.
     const size_t input_num_pixels = node_config_.input_res.prod();
-    input_depth_ = std::unique_ptr<float>(new float[input_num_pixels]);
+    input_depth_ = std::unique_ptr<float[]>(new float[input_num_pixels]);
     if (node_config_.enable_rgb) {
-        input_rgba_ = std::unique_ptr<uint32_t>(new uint32_t[input_num_pixels]);
+        input_rgba_ = std::unique_ptr<uint32_t[]>(new uint32_t[input_num_pixels]);
     }
 
     // Allocate rendered image buffers.
     if (node_config_.enable_rendering) {
         const size_t render_num_pixels = image_res_.prod();
-        depth_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+        depth_render_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
         if (node_config_.enable_rgb) {
-            rgba_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+            rgba_render_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
         }
         if (node_config_.enable_tracking) {
-            track_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+            track_render_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
         }
-        volume_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
-        volume_render_color_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
-        volume_render_scale_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
-        volume_render_min_scale_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+        volume_render_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
+        volume_render_color_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
+        volume_render_scale_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
+        volume_render_min_scale_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
         if (node_config_.enable_objects) {
-            class_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
-            instance_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+            class_render_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
+            instance_render_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
         }
-        raycast_render_ = std::unique_ptr<uint32_t>(new uint32_t[render_num_pixels]);
+        raycast_render_ = std::unique_ptr<uint32_t[]>(new uint32_t[render_num_pixels]);
     }
 
     // Initialize the sensor.
