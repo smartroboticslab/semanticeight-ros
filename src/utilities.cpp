@@ -550,6 +550,8 @@ void write_view_data(const se::CandidateView& view,
                      const std::string& entropy_filename,
                      const std::string& depth_filename,
                      const std::string& min_scale_filename,
+                     const std::string& bg_gain_filename,
+                     const std::string& object_gain_filename,
                      const std::string& path_filename)
 {
     {
@@ -579,6 +581,20 @@ void write_view_data(const se::CandidateView& view,
                               reinterpret_cast<const unsigned char*>(min_scale_render.data()),
                               min_scale_render.width(),
                               min_scale_render.height());
+    }
+    {
+        const se::Image<uint32_t> bg_gain_render = view.renderBGScaleGain();
+        lodepng_encode32_file(bg_gain_filename.c_str(),
+                              reinterpret_cast<const unsigned char*>(bg_gain_render.data()),
+                              bg_gain_render.width(),
+                              bg_gain_render.height());
+    }
+    {
+        const se::Image<uint32_t> object_gain_render = view.renderObjectScaleGain();
+        lodepng_encode32_file(object_gain_filename.c_str(),
+                              reinterpret_cast<const unsigned char*>(object_gain_render.data()),
+                              object_gain_render.width(),
+                              object_gain_render.height());
     }
     se::write_path_tsv(path_filename, view.path());
 }

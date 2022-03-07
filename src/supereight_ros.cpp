@@ -908,6 +908,16 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                               h);
         lodepng_encode32_file(
             (prefix + "raycast_" + suffix).c_str(), (unsigned char*) raycast_render_.get(), w, h);
+
+        for (const auto& o : pipeline_->getObjectMaps()) {
+            std::stringstream filename_ss;
+            filename_ss << prefix << "aabb_mask_" << std::setw(5) << std::setfill('0') << frame
+                        << "_" << std::setw(3) << std::setfill('0') << o->instance_id << ".png";
+            cv::imwrite(filename_ss.str(),
+                        o->bounding_volume_M_.raycastingMask(
+                            pipeline_->getImageResolution(), pipeline_->T_MC(), sensor_));
+        }
+
         if (node_config_.enable_objects) {
             lodepng_encode32_file((prefix + "instance_" + suffix).c_str(),
                                   (unsigned char*) instance_render_.get(),
@@ -1111,6 +1121,8 @@ void SupereightNode::plan()
                     //                base + "goal_entropy.png",
                     //                base + "goal_depth.png",
                     //                base + "goal_min_scale.png",
+                    //                base + "goal_bg_gain.png",
+                    //                base + "goal_object_gain.png",
                     //                base + "goal_path_M.tsv");
                     //if (supereight_config_.output_mesh_file != "") {
                     //    saveCandidates();
@@ -1133,6 +1145,8 @@ void SupereightNode::plan()
                 //                    base + prefix + "_entropy.png",
                 //                    base + prefix + "_depth.png",
                 //                    base + prefix + "_min_scale.png",
+                //                    base + prefix + "_bg_gain.png",
+                //                    base + prefix + "_object_gain.png",
                 //                    base + prefix + "_path_M.tsv");
                 //}
                 //for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
@@ -1145,6 +1159,8 @@ void SupereightNode::plan()
                 //                    base + prefix + "_entropy.png",
                 //                    base + prefix + "_depth.png",
                 //                    base + prefix + "_min_scale.png",
+                //                    base + prefix + "_bg_gain.png",
+                //                    base + prefix + "_object_gain.png",
                 //                    base + prefix + "_path_M.tsv");
                 //}
                 num_planning_iterations_++;
