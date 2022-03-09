@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 option(WITH_OPENMP "Compile with OpenMP" ON)
 option(WITH_MASKRCNN "Compile with libmaskrcnn-trt" ON)
 option(WITH_ASAN "Compile with the address sanitizer" OFF)
+option(WITH_UBSAN "Compile with the undefined behavior sanitizer" OFF)
 
 # Select the supereight voxel and sensor implementations to use.
 set(VOXEL_IMPL MultiresOFusion MultiresTSDF)
@@ -66,6 +67,11 @@ if(WITH_ASAN)
   else()
     link_libraries(-static-libasan)
   endif()
+endif()
+
+if(WITH_UBSAN)
+  add_compile_options(-fsanitize=undefined)
+  link_libraries(-fsanitize=undefined)
 endif()
 
 # Compile supereight
