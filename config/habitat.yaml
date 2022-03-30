@@ -99,7 +99,7 @@ supereight:
     enable_exploration:        true
     num_candidates:            20
     frontier_sampling_probability: 0.5
-    exploration_weight:        0.5
+    utility_weights:           [0.333, 0.333]
     use_pose_history:          true
     raycast_width:             36
     raycast_height:            10
