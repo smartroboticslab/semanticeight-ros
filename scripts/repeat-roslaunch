@@ -9,7 +9,7 @@ sequence_name() {
 	log_file="$1"/log
 	if [ -r "$log_file" ]
 	then
-		grep -F 'sequence_name:' "$log_file" | head -n 1 | sed 's/^.*:  *//g'
+		grep -F 'Sequence name:' "$log_file" | head -n 1 | sed 's/^.*:  *//g'
 	fi
 }
 
