@@ -252,6 +252,7 @@ void write_view_data(const se::CandidateView& view,
                      const std::string& min_scale_filename,
                      const std::string& bg_gain_filename,
                      const std::string& object_gain_filename,
+                     const std::string& object_dist_gain_filename,
                      const std::string& path_filename);
 
 } // namespace se

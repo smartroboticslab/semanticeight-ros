@@ -552,6 +552,7 @@ void write_view_data(const se::CandidateView& view,
                      const std::string& min_scale_filename,
                      const std::string& bg_gain_filename,
                      const std::string& object_gain_filename,
+                     const std::string& object_dist_gain_filename,
                      const std::string& path_filename)
 {
     {
@@ -595,6 +596,13 @@ void write_view_data(const se::CandidateView& view,
                               reinterpret_cast<const unsigned char*>(object_gain_render.data()),
                               object_gain_render.width(),
                               object_gain_render.height());
+    }
+    {
+        const se::Image<uint32_t> render = view.renderObjectDistGain();
+        lodepng_encode32_file(object_dist_gain_filename.c_str(),
+                              reinterpret_cast<const unsigned char*>(render.data()),
+                              render.width(),
+                              render.height());
     }
     se::write_path_tsv(path_filename, view.path());
 }
