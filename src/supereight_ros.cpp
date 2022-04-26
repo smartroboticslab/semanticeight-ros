@@ -1216,8 +1216,7 @@ void SupereightNode::saveMap()
 
         {
             std::stringstream output_octomap_file_ss;
-            output_octomap_file_ss << supereight_config_.output_mesh_file << "/mesh_"
-                                   << std::setw(5) << std::setfill('0') << frame_ << ".bt";
+            output_octomap_file_ss << supereight_config_.output_mesh_file << "/mesh.bt";
             std::unique_ptr<octomap::OcTree> octomap(se::to_octomap(*(pipeline_->getMap())));
             if (octomap) {
                 octomap->writeBinary(output_octomap_file_ss.str());
@@ -1225,25 +1224,21 @@ void SupereightNode::saveMap()
         }
 
         std::stringstream output_mesh_meter_file_ss;
-        output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh_" << std::setw(5)
-                                  << std::setfill('0') << frame_ << ".ply";
+        output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh.ply";
         pipeline_->saveMesh(output_mesh_meter_file_ss.str(), T_HW);
 
         std::stringstream output_mesh_object_file_ss;
-        output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_"
-                                   << std::setw(5) << std::setfill('0') << frame_ << "_object";
+        output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_object";
         pipeline_->saveObjectMeshes(output_mesh_object_file_ss.str(), T_HW);
         std::stringstream output_path_ply_file_ss;
-        output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
-                                << std::setfill('0') << frame_ << ".ply";
+        output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path.ply";
         planner_->writePathPLY(output_path_ply_file_ss.str(), T_HW);
         //std::stringstream output_path_tsv_file_ss;
-        //output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path_" << std::setw(5)
-        //                        << std::setfill('0') << frame_ << ".tsv";
+        //output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path.tsv";
         //planner_->writePathTSV(output_path_tsv_file_ss.str(), T_HW);
         std::stringstream output_wedges_ply_file_ss;
-        output_wedges_ply_file_ss << supereight_config_.output_mesh_file << "/pose_grid_history_"
-                                  << std::setw(5) << std::setfill('0') << frame_ << ".ply";
+        output_wedges_ply_file_ss << supereight_config_.output_mesh_file
+                                  << "/pose_grid_history.ply";
         se::io::save_mesh_ply(planner_->getPoseGridHistory().wedgeMesh(),
                               output_wedges_ply_file_ss.str(),
                               T_HW * T_WM_);

@@ -64,7 +64,7 @@ supereight:
     tracking_rate:              1
     integration_rate:           1
     rendering_rate:             1
-    meshing_rate:               0
+    meshing_rate:               50
     fps:                        0.0
     # Other
     drop_frames:                false
