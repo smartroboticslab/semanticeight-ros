@@ -747,8 +747,9 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             volume_render_pub_.publish(
                 RGBA_to_msg(volume_render_.get(), image_res_, depth_image->header));
 
-            pipeline_->renderObjects(
-                volume_render_color_.get(), image_res_, sensor_, RenderMode::Color, false);
+            //pipeline_->renderObjects(
+            //    volume_render_color_.get(), image_res_, sensor_, RenderMode::Color, false);
+            pipeline_->renderVolume(volume_render_color_.get(), image_res_, sensor_, true);
             volume_render_color_pub_.publish(
                 RGBA_to_msg(volume_render_color_.get(), image_res_, depth_image->header));
 
