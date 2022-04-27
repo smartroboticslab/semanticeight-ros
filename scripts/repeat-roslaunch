@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
 set -eu
 
 script_dir() {
@@ -37,9 +40,12 @@ do
 	roslaunch supereight_ros "$@" 2>&1 | tee "$tmp_log"
 	run_dir=$(store_run_data "$dir" "$i" "$1")
 	mv "$tmp_log" "$run_dir"/log
-	"$(script_dir)"/generate-plots "$run_dir"/plots "$run_dir"/logs
+	"$(script_dir)"/render-montage "$run_dir" || true
+	#"$(script_dir)"/postprocess-meshes "$run_dir"/meshes || true # TODO removes information needed for evaluate-meshes, change evaluate-meshes dir after this is fixed
+	"$(script_dir)"/evaluate-meshes "$run_dir"/meshes || true
+	"$(script_dir)"/generate-plots "$run_dir"/plots "$run_dir"/logs || true
 	i=$((i+1))
 done
 
-"$(script_dir)"/generate-plots "$dir"/plots "$dir"/*/logs
+"$(script_dir)"/generate-plots "$dir"/plots "$dir"/*/logs || true
 
