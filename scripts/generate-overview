@@ -1,0 +1,57 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+set -eu
+
+usage() {
+	printf 'Usage: %s DIR ...\n' "${0##*/}"
+}
+
+mesh_comparison_log() {
+	find "$@" -type f -name mesh_comparison.log
+}
+
+mesh_comparison_tsv() {
+	find "$@" -type f -name mesh_comparison.tsv
+}
+
+mesh_stats() {
+	# https://git.sr.ht/~sotirisp/dots/blob/master/.local/bin/tsvavg
+	# shellcheck disable=SC2046
+	tsvavg -a $(mesh_comparison_tsv "$@") | cut -f 4- | column -t -s '	'
+}
+
+objects_found() {
+	# shellcheck disable=SC2046
+	sed -nE -e 's|^Matched (.*) target meshes$|\1|p' $(mesh_comparison_log "$@") | awk '
+	BEGIN { FS = "/" }
+	NR == 1 { num_objects = $2 }
+	{
+		if ($2 != num_objects) {
+			printf "Warning: skipping line with different number of objects %d != %d\n", $2, num_objects
+			next
+		}
+		s += $1
+		n += 1
+	}
+	END { printf "Objects found: %.2f%%   (%.2f/%d)\n", 100*s/n/num_objects, s/n, num_objects}
+	'
+}
+
+
+
+if [ "$#" -eq 0 ]
+then
+	usage
+	exit 2
+fi
+
+num_runs=$(mesh_comparison_tsv "$@" | wc -l)
+if [ "$num_runs" -gt 1 ]
+then
+	printf 'Data averaged over %d runs\n' "$num_runs"
+fi
+objects_found "$@"
+mesh_stats "$@"
+
