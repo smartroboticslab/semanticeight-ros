@@ -1,0 +1,71 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+set -eu
+
+usage() {
+	printf 'Usage: %s MESHDIR ...\n' "${0##*/}"
+}
+
+script_dir() {
+	dirname "$0"
+}
+
+trim_trailing_slashes() {
+	printf '%s\n' "${1%${1##*[!/]}}"
+}
+
+sequence_name() {
+	log_file="$1"/log
+	if [ -r "$log_file" ]
+	then
+		grep -F 'Sequence name:' "$log_file" | head -n 1 | sed 's/^.*:  *//g'
+	fi
+}
+
+evaluate_object_meshes() {
+	sequence=$(sequence_name "$(dirname "$1")")
+	if [ -z "$sequence" ]
+	then
+		printf 'Skipping mesh evaluation, sequence name is empty\n'
+		return
+	fi
+	mesh_dir="$(trim_trailing_slashes "$1")"
+	if ! [ -d "$mesh_dir" ]
+	then
+		printf 'Skipping mesh evaluation, %s is not a directory\n' "$mesh_dir"
+		return
+	fi
+	gt_mesh_dir="$HOME/Documents/Datasets/gt_meshes/$sequence"
+	if ! [ -d "$gt_mesh_dir" ]
+	then
+		printf 'Skipping mesh evaluation, %s is not a directory\n' "$gt_mesh_dir"
+		return
+	fi
+	exe="$(script_dir)"/../../mesh_diff_tool/build/compareMultiple
+	if [ -x "$exe" ]
+	then
+		printf 'Evaluating meshes...\n'
+		"$exe" "$mesh_dir" "$gt_mesh_dir" > "$mesh_dir"/mesh_comparison.log
+	else
+		printf 'Skipping mesh evaluation, %s is not an executable\n' "$exe"
+	fi
+}
+
+
+
+if [ "$#" -eq 0 ]
+then
+	usage
+	exit 2
+fi
+
+i=1
+while [ "$#" -gt 0 ]
+do
+	printf '%d/%d\n' "$i" "$#"
+	evaluate_object_meshes "$1"
+	i=$((i+=1))
+	shift
+done
