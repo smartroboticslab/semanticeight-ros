@@ -16,26 +16,6 @@ store_run_data() {
 	printf '%s\n' "$outdir"
 }
 
-generate_run_montages() {
-	render_dir="$1"/renders
-	if [ -d "$render_dir" ]
-	then
-		printf 'Generating render montage...\n'
-		"$(script_dir)"/../semanticeight/se_tools/semanticeight_render_montage.sh "$render_dir" && rm -rf "$render_dir"
-	else
-		printf 'Skipping render montage, %s is not a directory\n' "$render_dir"
-	fi
-	planning_dir="$1"/planning
-	if [ -d "$planning_dir" ]
-	then
-		printf 'Generating planning montage...\n'
-		"$(script_dir)"/../semanticeight/se_tools/semanticeight_planning_montage.sh "$planning_dir"
-	else
-		printf 'Skipping planning montage, %s is not a directory\n' "$planning_dir"
-	fi
-
-}
-
 
 
 if [ "$#" -lt 2 ]
@@ -58,7 +38,6 @@ do
 	run_dir=$(store_run_data "$dir" "$i" "$1")
 	mv "$tmp_log" "$run_dir"/log
 	"$(script_dir)"/generate-plots "$run_dir"/plots "$run_dir"/logs
-	generate_run_montages "$run_dir"
 	i=$((i+1))
 done
 
