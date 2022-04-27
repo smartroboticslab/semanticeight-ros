@@ -44,38 +44,6 @@ generate_run_montages() {
 
 }
 
-postprocess_object_meshes() {
-	mesh_dir="$1"/meshes
-	if ! [ -d "$mesh_dir" ]
-	then
-		printf 'Skipping mesh postprocessing, %s is not a directory\n' "$mesh_dir"
-		return
-	fi
-	if "$(find "$mesh_dir" -type f -name '*object*.ply' | wc -l)" -eq 0
-	then
-		printf 'Skipping mesh postprocessing, no object meshes in %s\n' "$mesh_dir"
-		return
-	fi
-	processed_mesh_dir="$1"/meshes_post
-	process_exe="$(script_dir)"/../../semanticeight_clean_mesh/postprocess-meshes.py
-	if [ -x "$process_exe" ]
-	then
-		printf 'Postprocessing object meshes...\n'
-		"$process_exe" -o "$processed_mesh_dir" "$mesh_dir"/*object*.ply >/dev/null 2>&1
-	else
-		printf 'Skipping object mesh postprocessing, %s is not an executable\n' "$process_exe"
-	fi
-	matched_mesh_dir="$1"/meshes_matched
-	match_exe="$(script_dir)"/../../semanticeight_clean_mesh/combine-duplicate-meshes.py
-	if [ -x "$match_exe" ]
-	then
-		printf 'Matching object meshes...\n'
-		"$match_exe" -o "$matched_mesh_dir" "$processed_mesh_dir"/*object*.ply >/dev/null 2>&1
-	else
-		printf 'Skipping object mesh matching, %s is not an executable\n' "$match_exe"
-	fi
-}
-
 evaluate_object_meshes() {
 	sequence=$(sequence_name "$1")
 	mesh_dir="$1"/meshes
@@ -126,7 +94,6 @@ do
 	roslaunch supereight_ros "$@" 2>&1 | tee "$tmp_log"
 	run_dir=$(store_run_data "$dir" "$i" "$1")
 	mv "$tmp_log" "$run_dir"/log
-	postprocess_object_meshes "$run_dir"
 	evaluate_object_meshes "$run_dir"
 	"$(script_dir)"/generate-plots "$run_dir"/plots "$run_dir"/logs
 	generate_run_montages "$run_dir"

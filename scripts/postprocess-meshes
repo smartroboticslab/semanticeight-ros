@@ -1,0 +1,69 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+set -eu
+
+usage() {
+	printf 'Usage: %s MESHDIR ...\n' "${0##*/}"
+}
+
+script_dir() {
+	dirname "$0"
+}
+
+trim_trailing_slashes() {
+	printf '%s\n' "${1%${1##*[!/]}}"
+}
+
+# Usage: postprocess_object_meshes DIR
+postprocess_object_meshes() {
+	mesh_dir="$(trim_trailing_slashes "$1")"
+	if ! [ -d "$mesh_dir" ]
+	then
+		printf 'Skipping mesh postprocessing, %s is not a directory\n' "$mesh_dir"
+		return
+	fi
+	if [ "$(find "$mesh_dir" -type f -name '*object*.ply' | wc -l)" -eq 0 ]
+	then
+		printf 'Skipping mesh postprocessing, no PLY object meshes in %s\n' "$mesh_dir"
+		return
+	fi
+	processed_mesh_dir="${mesh_dir}_processed"
+	process_exe="$(script_dir)"/../../semanticeight_clean_mesh/postprocess-meshes.py
+	if [ -x "$process_exe" ]
+	then
+		printf 'Postprocessing object meshes...\n'
+		"$process_exe" -j 4 -o "$processed_mesh_dir" "$mesh_dir"/*object*.ply >/dev/null 2>&1
+	else
+		printf 'Skipping object mesh postprocessing, %s is not an executable\n' "$process_exe"
+	fi
+	matched_mesh_dir="${mesh_dir}_matched"
+	match_exe="$(script_dir)"/../../semanticeight_clean_mesh/combine-duplicate-meshes.py
+	if [ -x "$match_exe" ]
+	then
+		printf 'Matching object meshes...\n'
+		"$match_exe" -o "$matched_mesh_dir" "$processed_mesh_dir"/*object*.ply >/dev/null 2>&1
+		rm -f "$processed_mesh_dir"/*object*.ply
+		rmdir "$processed_mesh_dir" 2>/dev/null || true
+	else
+		printf 'Skipping object mesh matching, %s is not an executable\n' "$match_exe"
+	fi
+}
+
+
+
+if [ "$#" -eq 0 ]
+then
+	usage
+	exit 2
+fi
+
+i=1
+while [ "$#" -gt 0 ]
+do
+	printf '%d/%d\n' "$i" "$#"
+	postprocess_object_meshes "$1"
+	i=$((i+=1))
+	shift
+done
