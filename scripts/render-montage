@@ -25,7 +25,7 @@ generate_run_montages() {
 	if [ -d "$planning_dir" ]
 	then
 		printf 'Generating planning montage...\n'
-		"$(script_dir)"/../semanticeight/se_tools/semanticeight_planning_montage.sh "$planning_dir" && rm -f "$planning_dir"/*.png
+		"$(script_dir)"/../semanticeight/se_tools/semanticeight_planning_montage.sh "$planning_dir" && find "$planning_dir" -type f -name *.png -exec rm '{}' \;
 	else
 		printf 'Skipping planning montage, %s is not a directory\n' "$planning_dir"
 	fi
