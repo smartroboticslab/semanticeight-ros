@@ -23,20 +23,23 @@ mesh_stats() {
 }
 
 objects_found() {
-	# shellcheck disable=SC2046
-	sed -nE -e 's|^Matched (.*) target meshes$|\1|p' $(mesh_comparison_log "$@") | awk '
-	BEGIN { FS = "/" }
-	NR == 1 { num_objects = $2 }
-	{
-		if ($2 != num_objects) {
-			printf "Warning: skipping line with different number of objects %d != %d\n", $2, num_objects
-			next
+	if [ -n "$(mesh_comparison_log)" ]
+	then
+		# shellcheck disable=SC2046
+		sed -nE -e 's|^Matched (.*) target meshes$|\1|p' $(mesh_comparison_log "$@") | awk '
+		BEGIN { FS = "/" }
+		NR == 1 { num_objects = $2 }
+		{
+			if ($2 != num_objects) {
+				printf "Warning: skipping line with different number of objects %d != %d\n", $2, num_objects
+				next
+			}
+			s += $1
+			n += 1
 		}
-		s += $1
-		n += 1
-	}
-	END { printf "Objects found: %.2f%%   (%.2f/%d)\n", 100*s/n/num_objects, s/n, num_objects}
-	'
+		END { printf "Objects found: %.2f%%   (%.2f/%d)\n", 100*s/n/num_objects, s/n, num_objects}
+		'
+	fi
 }
 
 
