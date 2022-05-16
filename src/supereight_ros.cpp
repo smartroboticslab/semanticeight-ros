@@ -1068,12 +1068,20 @@ void SupereightNode::plan()
                     const Eigen::Vector3f goal_t_WB = goal_T_WB.topRightCorner<3, 1>();
                     const Eigen::Quaternionf goal_q_WB(goal_T_WB.topLeftCorner<3, 3>());
                     sampleStat("Planning", "Goal utility", goal_candidate.utility());
+                    sampleStat("Planning", "Goal entropy utility", goal_candidate.entropyUtility());
+                    sampleStat(
+                        "Planning", "Goal object LoD utility", goal_candidate.objectLoDUtility());
+                    sampleStat(
+                        "Planning", "Goal object dist utility", goal_candidate.objectDistUtility());
                     sampleStat("Planning",
-                               "Goal exploration utility",
-                               goal_candidate.explorationUtility());
-                    sampleStat("Planning", "Goal object utility", goal_candidate.objectUtility());
-                    sampleStat("Planning", "Goal entropy gain", goal_candidate.entropy_);
-                    sampleStat("Planning", "Goal LoD gain", goal_candidate.lod_gain_);
+                               "Goal object compl utility",
+                               goal_candidate.objectComplUtility());
+                    sampleStat("Planning", "Goal entropy gain", goal_candidate.entropy_gain_);
+                    sampleStat("Planning", "Goal object LoD gain", goal_candidate.object_lod_gain_);
+                    sampleStat(
+                        "Planning", "Goal object dist gain", goal_candidate.object_dist_gain_);
+                    sampleStat(
+                        "Planning", "Goal object compl gain", goal_candidate.object_compl_gain_);
                     sampleStat("Planning", "Goal path time", goal_candidate.path_time_);
                     sampleStat("Planning",
                                "Exploration dominant",
@@ -1124,6 +1132,8 @@ void SupereightNode::plan()
                     //                base + "goal_min_scale.png",
                     //                base + "goal_bg_gain.png",
                     //                base + "goal_object_gain.png",
+                    //                base + "goal_object_dist_gain.png",
+                    //                base + "goal_object_compl_gain.png",
                     //                base + "goal_path_M.tsv");
                     //if (supereight_config_.output_mesh_file != "") {
                     //    saveCandidates();
@@ -1148,6 +1158,8 @@ void SupereightNode::plan()
                 //                    base + prefix + "_min_scale.png",
                 //                    base + prefix + "_bg_gain.png",
                 //                    base + prefix + "_object_gain.png",
+                //                    base + prefix + "_object_dist_gain.png",
+                //                    base + prefix + "_object_compl_gain.png",
                 //                    base + prefix + "_path_M.tsv");
                 //}
                 //for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {

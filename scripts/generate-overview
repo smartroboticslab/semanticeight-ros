@@ -19,14 +19,19 @@ mesh_comparison_tsv() {
 mesh_stats() {
 	# https://git.sr.ht/~sotirisp/dots/blob/master/.local/bin/tsvavg
 	# shellcheck disable=SC2046
-	tsvavg -a $(mesh_comparison_tsv "$@") | cut -f 4- | column -t -s '	'
+	mesh_tsvs=$(mesh_comparison_tsv "$@")
+	if [ -n "$mesh_tsvs" ]
+	then
+		tsvavg -a $mesh_tsvs | cut -f 4- | column -t -s '	'
+	fi
 }
 
 objects_found() {
-	if [ -n "$(mesh_comparison_log)" ]
+	mesh_logs=$(mesh_comparison_log "$@")
+	if [ -n "$mesh_logs" ]
 	then
 		# shellcheck disable=SC2046
-		sed -nE -e 's|^Matched (.*) target meshes$|\1|p' $(mesh_comparison_log "$@") | awk '
+		sed -nE -e 's|^Matched (.*) target meshes$|\1|p' $mesh_logs | awk '
 		BEGIN { FS = "/" }
 		NR == 1 { num_objects = $2 }
 		{

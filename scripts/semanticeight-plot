@@ -312,8 +312,10 @@ utility() {
 	# Get the indices of the required columns.
 	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
 	combined_idx=$(get_column_index "$average_planning_file" 'Goal utility')
-	exploration_idx=$(get_column_index "$average_planning_file" 'Goal exploration utility')
-	object_idx=$(get_column_index "$average_planning_file" 'Goal object utility')
+	exploration_idx=$(get_column_index "$average_planning_file" 'Goal entropy utility')
+	object_lod_idx=$(get_column_index "$average_planning_file" 'Goal object LoD utility')
+	object_dist_idx=$(get_column_index "$average_planning_file" 'Goal object dist utility')
+	object_compl_idx=$(get_column_index "$average_planning_file" 'Goal object compl utility')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
@@ -326,10 +328,14 @@ utility() {
 	planning_files = \"$planning_files\";
 	plot for [f in planning_files] f using (\$$plan_idx+1):$combined_idx notitle linetype rgb 'light-green' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$exploration_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
-		for [f in planning_files] f using (\$$plan_idx+1):$object_idx notitle linetype rgb 'slategray' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$object_lod_idx notitle linetype rgb 'slategray' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$object_dist_idx notitle linetype rgb 'brown4' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$object_compl_idx notitle linetype rgb 'dark-violet' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$combined_idx title 'Utility' linetype rgb 'light-green' linewidth 3,\
 		'$average_planning_file' using (\$$plan_idx+1):$exploration_idx title 'Exploration utility' linetype rgb 'sandybrown' linewidth 3,\
-		'$average_planning_file' using (\$$plan_idx+1):$object_idx title 'Object utility' linetype rgb 'slategray' linewidth 3;
+		'$average_planning_file' using (\$$plan_idx+1):$object_lod_idx title 'Object LoD utility' linetype rgb 'slategray' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$object_dist_idx title 'Object dist utility' linetype rgb 'brown4' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$object_compl_idx title 'Object compl utility' linetype rgb 'dark-violet' linewidth 3;
 	"
 	# Remove temporary files.
 	rm -f "$average_planning_file"
@@ -348,7 +354,9 @@ gain() {
 	# Get the indices of the required columns.
 	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
 	entropy_idx=$(get_column_index "$average_planning_file" 'Goal entropy gain')
-	lod_idx=$(get_column_index "$average_planning_file" 'Goal LoD gain')
+	lod_idx=$(get_column_index "$average_planning_file" 'Goal object LoD gain')
+	dist_idx=$(get_column_index "$average_planning_file" 'Goal object dist gain')
+	compl_idx=$(get_column_index "$average_planning_file" 'Goal object compl gain')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
@@ -361,8 +369,12 @@ gain() {
 	planning_files = \"$planning_files\";
 	plot for [f in planning_files] f using (\$$plan_idx+1):$entropy_idx notitle linetype rgb 'light-green' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$lod_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$dist_idx notitle linetype rgb 'brown4' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$compl_idx notitle linetype rgb 'dark-violet' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$entropy_idx title 'Entropy gain' linetype rgb 'light-green' linewidth 3,\
-		'$average_planning_file' using (\$$plan_idx+1):$lod_idx title 'LoD gain' linetype rgb 'sandybrown' linewidth 3;
+		'$average_planning_file' using (\$$plan_idx+1):$lod_idx title 'LoD gain' linetype rgb 'sandybrown' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$dist_idx title 'Dist gain' linetype rgb 'brown4' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$compl_idx title 'Compl gain' linetype rgb 'dark-violet' linewidth 3;
 	"
 	# Remove temporary files.
 	rm -f "$average_planning_file"
