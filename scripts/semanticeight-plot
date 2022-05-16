@@ -59,22 +59,27 @@ get_average_data() {
 		}'
 }
 
-# Usage: volume LOGNAME LOGDIR...
-log_filenames() {
+# Usage: log_files LOGNAME LOGDIR...
+log_files() {
 	name="$1"
 	shift
-	files=''
-	while [ "$#" -gt 0 ]
+	find "$@" -name "$name" -type f | while read -r file
 	do
-		files="$files	$1/$name"
-		shift
+		if [ "$(awk 'END { print NR }' "$file")" -gt 1 ]
+		then
+			# Only consider TSV files with at least one data line.
+			printf '%s\n' "$file"
+		fi
 	done
-	printf '%s\n' "$files"
 }
 
 # Usage: volume LOGDIR...
 volume() {
-	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	fusion_files=$(log_files 'stats_fusion.tsv' "$@")
+	if [ -z "$fusion_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_fusion_file=$(mktemp) || exit 1
 	get_average_data $fusion_files > "$average_fusion_file"
@@ -107,7 +112,11 @@ volume() {
 
 # Usage: volume_frame LOGDIR...
 volume_frame() {
-	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	fusion_files=$(log_files 'stats_fusion.tsv' "$@")
+	if [ -z "$fusion_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_fusion_file=$(mktemp) || exit 1
 	get_average_data $fusion_files > "$average_fusion_file"
@@ -140,7 +149,11 @@ volume_frame() {
 
 # Usage: frame_time LOGDIR...
 frame_time() {
-	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	fusion_files=$(log_files 'stats_fusion.tsv' "$@")
+	if [ -z "$fusion_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_fusion_file=$(mktemp) || exit 1
 	get_average_data $fusion_files > "$average_fusion_file"
@@ -170,7 +183,11 @@ frame_time() {
 
 # Usage: planning_time LOGDIR...
 planning_time() {
-	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	planning_files=$(log_files 'stats_planning.tsv' "$@")
+	if [ -z "$planning_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_planning_file=$(mktemp) || exit 1
 	get_average_data $planning_files > "$average_planning_file"
@@ -196,8 +213,12 @@ planning_time() {
 
 # Usage: frame_planning_time LOGDIR...
 frame_planning_time() {
-	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
-	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	fusion_files=$(log_files 'stats_fusion.tsv' "$@")
+	planning_files=$(log_files 'stats_planning.tsv' "$@")
+	if [ -z "$fusion_files" ] || [ -z "$planning_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_fusion_file=$(mktemp) || exit 1
 	get_average_data $fusion_files > "$average_fusion_file"
@@ -234,7 +255,11 @@ frame_planning_time() {
 
 # Usage: object_scale LOGDIR...
 object_scale() {
-	fusion_files=$(log_filenames 'stats_fusion.tsv' "$@")
+	fusion_files=$(log_files 'stats_fusion.tsv' "$@")
+	if [ -z "$fusion_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_fusion_file=$(mktemp) || exit 1
 	get_average_data $fusion_files > "$average_fusion_file"
@@ -276,7 +301,11 @@ object_scale() {
 
 # Usage: utility LOGDIR...
 utility() {
-	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	planning_files=$(log_files 'stats_planning.tsv' "$@")
+	if [ -z "$planning_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_planning_file=$(mktemp) || exit 1
 	get_average_data $planning_files > "$average_planning_file"
@@ -308,7 +337,11 @@ utility() {
 
 # Usage: gain LOGDIR...
 gain() {
-	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	planning_files=$(log_files 'stats_planning.tsv' "$@")
+	if [ -z "$planning_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_planning_file=$(mktemp) || exit 1
 	get_average_data $planning_files > "$average_planning_file"
@@ -337,7 +370,11 @@ gain() {
 
 # Usage: dominant_gain LOGDIR...
 dominant_gain() {
-	planning_files=$(log_filenames 'stats_planning.tsv' "$@")
+	planning_files=$(log_files 'stats_planning.tsv' "$@")
+	if [ -z "$planning_files" ]
+	then
+		return
+	fi
 	# Average all runs.
 	average_planning_file=$(mktemp) || exit 1
 	get_average_data $planning_files > "$average_planning_file"
