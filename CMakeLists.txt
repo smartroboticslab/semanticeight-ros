@@ -131,10 +131,11 @@ set(SUPEREIGHT_LIB "SE::DenseSLAM${SENSOR_IMPL}")
 add_executable(supereight_ros
   "src/control_interface.cpp"
   "src/dataset.cpp"
+  "src/stats.cpp"
   "src/utilities.cpp"
+  "src/supereight_ros.cpp"
   "src/supereight_ros_config.cpp"
   "src/supereight_ros_visualization.cpp"
-  "src/supereight_ros.cpp"
   "src/supereight_ros_node.cpp"
 )
 
