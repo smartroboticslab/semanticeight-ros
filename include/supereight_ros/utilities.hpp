@@ -61,11 +61,6 @@ std::string ros_log_dir();
 
 
 
-template<typename T>
-int append_tsv_line(const std::string& filename, const std::vector<T>& line_data);
-
-
-
 static float to_log_odds(const float probability)
 {
     return std::log2f(probability / (1.0f - probability));

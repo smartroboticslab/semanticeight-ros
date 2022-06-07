@@ -37,6 +37,7 @@
 #    include "maskrcnn_trt/maskrcnn.hpp"
 #endif // SE_WITH_MASKRCNN
 
+#include "supereight_ros/stats.hpp"
 #include "supereight_ros/supereight_ros_config.hpp"
 
 
@@ -372,63 +373,7 @@ class SupereightNode {
     visualization_msgs::Marker map_dim_msg_;
 
     // Statistics
-    // Statistics for a single frame.
-    typedef std::map<std::string, double> FrameStats;
-    // Statistics for a all frames for a single section, e.g. Planning.
-    typedef std::vector<FrameStats> SectionStats;
-    // Statistics for all sections.
-    typedef std::map<std::string, SectionStats> Stats;
-    // Valid statistic names for each section in the order in which they should be printed.
-    typedef std::map<std::string, std::vector<std::string>> StatNames;
-
-    const StatNames stat_names_ = {
-        {"Fusion", {"Frame",       "Timestamp",       "Preprocessing",
-                    "Tracking",    "Integration",     "Object integration",
-                    "Rendering",   "Visualization",   "Total",
-                    "Free volume", "Occupied volume", "Explored volume",
-                    "RAM usage",   "t_WB x",          "t_WB y",
-                    "t_WB z",      "q_WB x",          "q_WB y",
-                    "q_WB z",      "q_WB w",          "Number of objects",
-                    "Scale 0",     "Scale 1",         "Scale 2",
-                    "Scale 3"}},
-        {"Planning",
-         {"Planning iteration",
-          "Timestamp",
-          "Planning time",
-          "Goal utility",
-          "Goal entropy utility",
-          "Goal object LoD utility",
-          "Goal object dist utility",
-          "Goal object compl utility",
-          "Goal entropy gain",
-          "Goal object LoD gain",
-          "Goal object dist gain",
-          "Goal object compl gain",
-          "Goal path time",
-          "Exploration dominant",
-          "Goal t_WB x",
-          "Goal t_WB y",
-          "Goal t_WB z",
-          "Goal q_WB x",
-          "Goal q_WB y",
-          "Goal q_WB z",
-          "Goal q_WB w"}},
-        {"Network", {"Timestamp", "Network time"}}};
     Stats stats_;
-    std::map<std::string, std::string> stat_tsv_filenames_;
-    mutable std::mutex stat_mutex_;
-
-    double start_time_;
-    void initStats();
-    void newStatFrame(const std::string& section);
-    void sampleStat(const std::string& section, const std::string& stat, double value);
-    void sampleTime(const std::string& section,
-                    const std::string& stat,
-                    double value = ros::WallTime::now().toSec());
-    double getStat(const std::string& section, const std::string& stat) const;
-    std::vector<double> getLastStats(const std::string& section) const;
-    void printStats() const;
-    void writeFrameStats(const std::string& section) const;
 };
 
 } // namespace se
