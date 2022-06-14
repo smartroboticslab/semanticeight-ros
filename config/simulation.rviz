@@ -328,18 +328,6 @@ Visualization Manager:
       Topic: /supereight/pose
       Unreliable: false
       Value: true
-    - Class: rviz/Image
-      Enabled: false
-      Image Topic: /supereight/min_scale_render
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: Min scale
-      Normalize Range: true
-      Queue Size: 2
-      Transport Hint: raw
-      Unreliable: false
-      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

@@ -784,10 +784,8 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             // Entropy
             se::Image<uint32_t> entropy_render(1, 1);
             se::Image<uint32_t> depth_render(1, 1);
-            se::Image<uint32_t> min_scale_render(1, 1);
             if (supereight_config_.enable_exploration) {
                 planner_->renderCurrentEntropyDepth(entropy_render, depth_render);
-                min_scale_render = planner_->renderMinScale();
             }
             else {
                 entropy_render = se::Image<uint32_t>(supereight_config_.raycast_width,
@@ -811,11 +809,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                             Eigen::Vector2i(depth_render.width(), depth_render.height()),
                             depth_image->header);
             entropy_depth_render_pub_.publish(entropy_depth_render_msg);
-            const sensor_msgs::Image min_scale_render_msg =
-                RGBA_to_msg(min_scale_render.data(),
-                            Eigen::Vector2i(min_scale_render.width(), min_scale_render.height()),
-                            depth_image->header);
-            min_scale_render_pub_.publish(min_scale_render_msg);
         }
     }
     stats_.sample(
@@ -859,10 +852,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     stats_.sample("fusion", "q_WB z", se_q_WB.z());
     stats_.sample("fusion", "q_WB w", se_q_WB.w());
     stats_.sample("fusion", "Number of objects", pipeline_->getObjectMaps().size());
-    const auto pc = se::combinedPercentageAtScale(pipeline_->getObjectMaps());
-    for (int s = 0; s < pc.size(); ++s) {
-        stats_.sample("fusion", "Scale " + std::to_string(s), pc[s]);
-    }
 
     if (supereight_config_.rendering_rate > 0
         && (frame + 1) % supereight_config_.rendering_rate == 0
@@ -1081,15 +1070,11 @@ void SupereightNode::plan()
                     stats_.sample(
                         "planning", "Goal entropy utility", goal_candidate.entropyUtility());
                     stats_.sample(
-                        "planning", "Goal object LoD utility", goal_candidate.objectLoDUtility());
-                    stats_.sample(
                         "planning", "Goal object dist utility", goal_candidate.objectDistUtility());
                     stats_.sample("planning",
                                   "Goal object compl utility",
                                   goal_candidate.objectComplUtility());
                     stats_.sample("planning", "Goal entropy gain", goal_candidate.entropy_gain_);
-                    stats_.sample(
-                        "planning", "Goal object LoD gain", goal_candidate.object_lod_gain_);
                     stats_.sample(
                         "planning", "Goal object dist gain", goal_candidate.object_dist_gain_);
                     stats_.sample(
@@ -1141,9 +1126,6 @@ void SupereightNode::plan()
                     //                base + "goal_entropy.txt",
                     //                base + "goal_entropy.png",
                     //                base + "goal_depth.png",
-                    //                base + "goal_min_scale.png",
-                    //                base + "goal_bg_gain.png",
-                    //                base + "goal_object_gain.png",
                     //                base + "goal_object_dist_gain.png",
                     //                base + "goal_object_compl_gain.png",
                     //                base + "goal_path_M.tsv");
@@ -1167,9 +1149,6 @@ void SupereightNode::plan()
                 //                    base + prefix + "_entropy.txt",
                 //                    base + prefix + "_entropy.png",
                 //                    base + prefix + "_depth.png",
-                //                    base + prefix + "_min_scale.png",
-                //                    base + prefix + "_bg_gain.png",
-                //                    base + prefix + "_object_gain.png",
                 //                    base + prefix + "_object_dist_gain.png",
                 //                    base + prefix + "_object_compl_gain.png",
                 //                    base + prefix + "_path_M.tsv");
@@ -1183,9 +1162,6 @@ void SupereightNode::plan()
                 //                    base + prefix + "_entropy.txt",
                 //                    base + prefix + "_entropy.png",
                 //                    base + prefix + "_depth.png",
-                //                    base + prefix + "_min_scale.png",
-                //                    base + prefix + "_bg_gain.png",
-                //                    base + prefix + "_object_gain.png",
                 //                    base + prefix + "_path_M.tsv");
                 //}
                 num_planning_iterations_++;
@@ -1408,8 +1384,6 @@ void SupereightNode::setupRos()
         entropy_render_pub_ = nh_.advertise<sensor_msgs::Image>("/supereight/entropy_render", 1);
         entropy_depth_render_pub_ =
             nh_.advertise<sensor_msgs::Image>("/supereight/entropy_depth_render", 1);
-        min_scale_render_pub_ =
-            nh_.advertise<sensor_msgs::Image>("/supereight/min_scale_render", 1);
     }
 
     // Visualization publishers

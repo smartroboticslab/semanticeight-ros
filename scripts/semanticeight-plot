@@ -253,52 +253,6 @@ frame_planning_time() {
 	rm -f "$average_fusion_file"
 }
 
-# Usage: object_scale LOGDIR...
-object_scale() {
-	fusion_files=$(log_files 'stats_fusion.tsv' "$@")
-	if [ -z "$fusion_files" ]
-	then
-		return
-	fi
-	# Average all runs.
-	average_fusion_file=$(mktemp) || exit 1
-	get_average_data $fusion_files > "$average_fusion_file"
-	# Get the indices of the required columns.
-	frame_idx=$(get_column_index "$average_fusion_file" 'Frame')
-	num_idx=$(get_column_index "$average_fusion_file" 'Number of objects')
-	s0_idx=$(get_column_index "$average_fusion_file" 'Scale 0')
-	s1_idx=$(get_column_index "$average_fusion_file" 'Scale 1')
-	s2_idx=$(get_column_index "$average_fusion_file" 'Scale 2')
-	s3_idx=$(get_column_index "$average_fusion_file" 'Scale 3')
-	# Plot the data.
-	gnuplot -p -e "
-	$save_command
-	set xlabel 'Mapping iteration';
-	set ylabel 'Blocks at scale (%)';
-	set key left top;
-	set grid;
-	set style data lines;
-	set ytics 10 nomirror;
-	set y2label 'Number of objects';
-	set y2tics 1;
-	set xrange [$xmin:$xmax];
-	set yrange [0:100];
-	fusion_files = \"$fusion_files\";
-	plot for [f in fusion_files] f using (\$$frame_idx+1):$s0_idx notitle linetype rgb 'light-green' dashtype \".\",\
-		for [f in fusion_files] f using (\$$frame_idx+1):$s1_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
-		for [f in fusion_files] f using (\$$frame_idx+1):$s2_idx notitle linetype rgb 'slategray' dashtype \".\",\
-		for [f in fusion_files] f using (\$$frame_idx+1):$s3_idx notitle linetype rgb 'violet' dashtype \".\",\
-		for [f in fusion_files] f using (\$$frame_idx+1):$num_idx notitle axes x1y2 linetype rgb 'black' dashtype \".\",\
-		'$average_fusion_file' using (\$$frame_idx+1):$s0_idx title 'Scale 0' linetype rgb 'light-green' linewidth 3,\
-		'$average_fusion_file' using (\$$frame_idx+1):$s1_idx title 'Scale 1' linetype rgb 'sandybrown' linewidth 3,\
-		'$average_fusion_file' using (\$$frame_idx+1):$s2_idx title 'Scale 2' linetype rgb 'slategray' linewidth 3,\
-		'$average_fusion_file' using (\$$frame_idx+1):$s3_idx title 'Scale 3' linetype rgb 'violet' linewidth 3,\
-		'$average_fusion_file' using (\$$frame_idx+1):$num_idx title 'Objects' axes x1y2 linetype rgb 'black' linewidth 3;
-	"
-	# Remove temporary files.
-	rm -f "$average_fusion_file"
-}
-
 # Usage: utility LOGDIR...
 utility() {
 	planning_files=$(log_files 'stats_planning.tsv' "$@")
@@ -313,7 +267,6 @@ utility() {
 	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
 	combined_idx=$(get_column_index "$average_planning_file" 'Goal utility')
 	exploration_idx=$(get_column_index "$average_planning_file" 'Goal entropy utility')
-	object_lod_idx=$(get_column_index "$average_planning_file" 'Goal object LoD utility')
 	object_dist_idx=$(get_column_index "$average_planning_file" 'Goal object dist utility')
 	object_compl_idx=$(get_column_index "$average_planning_file" 'Goal object compl utility')
 	# Plot the data.
@@ -328,12 +281,10 @@ utility() {
 	planning_files = \"$planning_files\";
 	plot for [f in planning_files] f using (\$$plan_idx+1):$combined_idx notitle linetype rgb 'light-green' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$exploration_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
-		for [f in planning_files] f using (\$$plan_idx+1):$object_lod_idx notitle linetype rgb 'slategray' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$object_dist_idx notitle linetype rgb 'brown4' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$object_compl_idx notitle linetype rgb 'dark-violet' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$combined_idx title 'Utility' linetype rgb 'light-green' linewidth 3,\
 		'$average_planning_file' using (\$$plan_idx+1):$exploration_idx title 'Exploration utility' linetype rgb 'sandybrown' linewidth 3,\
-		'$average_planning_file' using (\$$plan_idx+1):$object_lod_idx title 'Object LoD utility' linetype rgb 'slategray' linewidth 3,\
 		'$average_planning_file' using (\$$plan_idx+1):$object_dist_idx title 'Object dist utility' linetype rgb 'brown4' linewidth 3,\
 		'$average_planning_file' using (\$$plan_idx+1):$object_compl_idx title 'Object compl utility' linetype rgb 'dark-violet' linewidth 3;
 	"
@@ -354,7 +305,6 @@ gain() {
 	# Get the indices of the required columns.
 	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
 	entropy_idx=$(get_column_index "$average_planning_file" 'Goal entropy gain')
-	lod_idx=$(get_column_index "$average_planning_file" 'Goal object LoD gain')
 	dist_idx=$(get_column_index "$average_planning_file" 'Goal object dist gain')
 	compl_idx=$(get_column_index "$average_planning_file" 'Goal object compl gain')
 	# Plot the data.
@@ -368,11 +318,9 @@ gain() {
 	set yrange [-0.2:1.2];
 	planning_files = \"$planning_files\";
 	plot for [f in planning_files] f using (\$$plan_idx+1):$entropy_idx notitle linetype rgb 'light-green' dashtype \".\",\
-		for [f in planning_files] f using (\$$plan_idx+1):$lod_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$dist_idx notitle linetype rgb 'brown4' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$compl_idx notitle linetype rgb 'dark-violet' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$entropy_idx title 'Entropy gain' linetype rgb 'light-green' linewidth 3,\
-		'$average_planning_file' using (\$$plan_idx+1):$lod_idx title 'LoD gain' linetype rgb 'sandybrown' linewidth 3,\
 		'$average_planning_file' using (\$$plan_idx+1):$dist_idx title 'Dist gain' linetype rgb 'brown4' linewidth 3,\
 		'$average_planning_file' using (\$$plan_idx+1):$compl_idx title 'Compl gain' linetype rgb 'dark-violet' linewidth 3;
 	"
@@ -402,7 +350,7 @@ dominant_gain() {
 	set style data lines;
 	set xrange [$xmin:$xmax];
 	set yrange [-0.2:1.2];
-	set ytics ('Object LoD' 0, 'Exploration' 1);
+	set ytics ('Object' 0, 'Exploration' 1);
 	planning_files = \"$planning_files\";
 	plot for [f in planning_files] f using (\$$plan_idx+1):$dom_idx notitle linetype rgb 'light-green' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$dom_idx title 'Entropy gain' linetype rgb 'light-green' linewidth 3;

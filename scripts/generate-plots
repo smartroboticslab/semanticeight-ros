@@ -16,7 +16,6 @@ shift
 "$script_dir"/semanticeight-plot -o "$plot_dir"/frame_time.png frame_time "$@"
 "$script_dir"/semanticeight-plot -o "$plot_dir"/planning_time.png planning_time "$@"
 "$script_dir"/semanticeight-plot -o "$plot_dir"/frame_planning_time.png frame_planning_time "$@"
-"$script_dir"/semanticeight-plot -o "$plot_dir"/object_scale.png object_scale "$@"
 "$script_dir"/semanticeight-plot -o "$plot_dir"/utility.png utility "$@"
 "$script_dir"/semanticeight-plot -o "$plot_dir"/gain.png gain "$@"
 "$script_dir"/semanticeight-plot -o "$plot_dir"/dominant_gain.png dominant_gain "$@"

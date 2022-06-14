@@ -549,9 +549,6 @@ void write_view_data(const se::CandidateView& view,
                      const std::string& entropy_data_filename,
                      const std::string& entropy_filename,
                      const std::string& depth_filename,
-                     const std::string& min_scale_filename,
-                     const std::string& bg_gain_filename,
-                     const std::string& object_gain_filename,
                      const std::string& object_dist_gain_filename,
                      const std::string& object_compl_gain_filename,
                      const std::string& path_filename)
@@ -576,27 +573,6 @@ void write_view_data(const se::CandidateView& view,
                               reinterpret_cast<const unsigned char*>(entropy_depth_render.data()),
                               entropy_depth_render.width(),
                               entropy_depth_render.height());
-    }
-    {
-        const se::Image<uint32_t> min_scale_render = view.renderMinScale();
-        lodepng_encode32_file(min_scale_filename.c_str(),
-                              reinterpret_cast<const unsigned char*>(min_scale_render.data()),
-                              min_scale_render.width(),
-                              min_scale_render.height());
-    }
-    {
-        const se::Image<uint32_t> bg_gain_render = view.renderBGScaleGain();
-        lodepng_encode32_file(bg_gain_filename.c_str(),
-                              reinterpret_cast<const unsigned char*>(bg_gain_render.data()),
-                              bg_gain_render.width(),
-                              bg_gain_render.height());
-    }
-    {
-        const se::Image<uint32_t> object_gain_render = view.renderObjectScaleGain();
-        lodepng_encode32_file(object_gain_filename.c_str(),
-                              reinterpret_cast<const unsigned char*>(object_gain_render.data()),
-                              object_gain_render.width(),
-                              object_gain_render.height());
     }
     {
         const se::Image<uint32_t> render = view.renderObjectDistGain();
