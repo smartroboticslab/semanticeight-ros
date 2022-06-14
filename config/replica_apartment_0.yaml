@@ -22,6 +22,11 @@ supereight:
     size:                       512
     dim:                        20.48
 
+  exploration:
+    frontier_sampling_probability: 0.5
+    utility_weights:        [0.001, 0.4995, 0.4995]
+    #utility_weights:        [0.001, 0.999]
+
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.
 
