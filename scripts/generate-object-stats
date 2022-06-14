@@ -1,0 +1,44 @@
+#!/bin/sh
+set -eu
+
+usage() {
+	printf 'Usage: %s RUNDIR...\n' "${0##*/}"
+}
+
+mesh_comparison_tsv() {
+	find -H "$1" -type f -path '*/meshes_*/mesh_comparison.tsv' | sort
+}
+
+filename_to_frame() {
+	printf '%s\n' "$1" | sed -e 's|^.*meshes_0*||' -e 's|/.*$||'
+}
+
+# Usage: generate_object_stats RUNDIR
+generate_object_stats() {
+	printf 'Frame\tAccuracy (m)\tCompleteness (%%)\tMean observed dist (m)\tDesired observed dist (%%)\tObjects found (%%)\n'
+	mesh_comparison_tsv "$1" | while IFS= read -r tsv
+	do
+		frame=$(filename_to_frame "$tsv")
+		printf '%s\t' "$frame"
+		# https://git.sr.ht/~sotirisp/dots/blob/master/.local/bin/tsvavg
+		tsvavg "$tsv" | tail -n 1 | cut -f 4,5,7,8 | tr -d '\n'
+		log="${tsv%.tsv}.log"
+		printf '\t%s\n' "$(objects_found "$log" | objects_found_to_pc)"
+	done
+}
+
+
+
+if [ "$#" -eq 0 ]
+then
+	usage
+	exit 2
+fi
+
+. "$(dirname "$0")/lib.sh"
+
+while [ "$#" -gt 0 ]
+do
+	generate_object_stats "$1"
+	shift
+done

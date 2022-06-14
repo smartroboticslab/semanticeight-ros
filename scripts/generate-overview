@@ -22,28 +22,7 @@ mesh_stats() {
 	mesh_tsvs=$(mesh_comparison_tsv "$@")
 	if [ -n "$mesh_tsvs" ]
 	then
-		tsvavg -a $mesh_tsvs | cut -f 4- | column -t -s '	'
-	fi
-}
-
-objects_found() {
-	mesh_logs=$(mesh_comparison_log "$@")
-	if [ -n "$mesh_logs" ]
-	then
-		# shellcheck disable=SC2046
-		sed -nE -e 's|^Matched (.*) target meshes$|\1|p' $mesh_logs | awk '
-		BEGIN { FS = "/" }
-		NR == 1 { num_objects = $2 }
-		{
-			if ($2 != num_objects) {
-				printf "Warning: skipping line with different number of objects %d != %d\n", $2, num_objects
-				next
-			}
-			s += $1
-			n += 1
-		}
-		END { printf "Objects found: %.2f%%   (%.2f/%d)\n", 100*s/n/num_objects, s/n, num_objects}
-		'
+		tsvavg -a $mesh_tsvs | cut -f 4,5,7,8 | column -t -s '	'
 	fi
 }
 
@@ -55,11 +34,12 @@ then
 	exit 2
 fi
 
+. "$(dirname "$0")/lib.sh"
+
 num_runs=$(mesh_comparison_tsv "$@" | wc -l)
 if [ "$num_runs" -gt 1 ]
 then
 	printf 'Data averaged over %d runs\n' "$num_runs"
 fi
-objects_found "$@"
+objects_found $(mesh_comparison_log "$@")
 mesh_stats "$@"
-
