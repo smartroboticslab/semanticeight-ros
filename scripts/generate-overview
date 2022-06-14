@@ -9,11 +9,11 @@ usage() {
 }
 
 mesh_comparison_log() {
-	find "$@" -type f -name mesh_comparison.log
+	find -L "$@" -type f -path '*/meshes/mesh_comparison.log'
 }
 
 mesh_comparison_tsv() {
-	find "$@" -type f -name mesh_comparison.tsv
+	find -L "$@" -type f -path '*/meshes/mesh_comparison.tsv'
 }
 
 mesh_stats() {

@@ -46,7 +46,7 @@ evaluate_object_meshes() {
 	exe="$(script_dir)"/../../mesh_diff_tool/build/compareMultiple
 	if [ -x "$exe" ]
 	then
-		printf 'Evaluating meshes...\n'
+		printf 'Evaluating meshes in %s\n' "$mesh_dir"
 		"$exe" "$mesh_dir" "$gt_mesh_dir" > "$mesh_dir"/mesh_comparison.log
 	else
 		printf 'Skipping mesh evaluation, %s is not an executable\n' "$exe"
@@ -62,9 +62,10 @@ then
 fi
 
 i=1
+n="$#"
 while [ "$#" -gt 0 ]
 do
-	printf '%d/%d\n' "$i" "$#"
+	printf '%d/%d\n' "$i" "$n"
 	evaluate_object_meshes "$1"
 	i=$((i+=1))
 	shift

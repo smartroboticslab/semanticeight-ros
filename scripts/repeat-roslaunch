@@ -16,6 +16,16 @@ store_run_data() {
 	outdir=$(printf '%s/%03d_%s' "$1" "$2" "$(basename "$log_dir")")
 	mkdir -p "$1"
 	mv "$log_dir" "$outdir"
+	# Create a symbolic link to the latest mesh directory if it doesn't
+	# exist.
+	if [ ! -e "$outdir/meshes" ]
+	then
+		(
+		cd "$outdir" || exit
+		latest_mesh_dir=$(find . -type d -name 'meshes_*' | sort | tail -n 1)
+		ln -s "$latest_mesh_dir" meshes
+		)
+	fi
 	printf '%s\n' "$outdir"
 }
 
@@ -42,8 +52,8 @@ do
 	mv "$tmp_log" "$run_dir"/log
 	# Process this run.
 	"$(script_dir)"/render-montage "$run_dir" || true
-	#"$(script_dir)"/postprocess-meshes "$run_dir"/meshes || true # TODO removes information needed for evaluate-meshes, change evaluate-meshes dir after this is fixed
-	"$(script_dir)"/evaluate-meshes "$run_dir"/meshes || true
+	#"$(script_dir)"/postprocess-meshes "$run_dir"/meshes* || true # TODO removes information needed for evaluate-meshes, change evaluate-meshes dir after this is fixed
+	"$(script_dir)"/evaluate-meshes "$run_dir"/meshes* || true
 	"$(script_dir)"/generate-plots "$run_dir"/plots "$run_dir"/logs || true
 	"$(script_dir)"/generate-overview "$run_dir"/ > "$run_dir"/overview.txt || true
 	# Process all runs so far.

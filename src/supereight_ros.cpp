@@ -1192,6 +1192,8 @@ void SupereightNode::plan()
 
 void SupereightNode::saveMap()
 {
+    constexpr bool overwrite_old_meshes = false;
+
     if (supereight_config_.enable_meshing && !supereight_config_.output_mesh_file.empty()) {
         Eigen::Matrix4f T_HW = Eigen::Matrix4f::Identity();
         if (base_dataset(node_config_.dataset) == Dataset::Habitat) {
@@ -1212,37 +1214,79 @@ void SupereightNode::saveMap()
             }
         }
 
-        stdfs::create_directories(supereight_config_.output_mesh_file);
+        std::stringstream output_mesh_dir_ss;
+        output_mesh_dir_ss << supereight_config_.output_mesh_file;
+        if constexpr (!overwrite_old_meshes) {
+            output_mesh_dir_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
+        }
+        const std::string output_mesh_dir = output_mesh_dir_ss.str();
+        stdfs::create_directories(output_mesh_dir);
+
+        //{
+        //    std::stringstream output_octomap_file_ss;
+        //    output_octomap_file_ss << output_mesh_dir << "/mesh";
+        //    if constexpr (!overwrite_old_meshes) {
+        //        output_octomap_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
+        //    }
+        //    output_octomap_file_ss << output_mesh_dir << ".bt";
+        //    std::unique_ptr<octomap::OcTree> octomap(se::to_octomap(*(pipeline_->getMap())));
+        //    if (octomap) {
+        //        octomap->writeBinary(output_octomap_file_ss.str());
+        //    }
+        //}
 
         {
-            std::stringstream output_octomap_file_ss;
-            output_octomap_file_ss << supereight_config_.output_mesh_file << "/mesh.bt";
-            std::unique_ptr<octomap::OcTree> octomap(se::to_octomap(*(pipeline_->getMap())));
-            if (octomap) {
-                octomap->writeBinary(output_octomap_file_ss.str());
+            std::stringstream output_mesh_meter_file_ss;
+            output_mesh_meter_file_ss << output_mesh_dir << "/mesh";
+            if constexpr (!overwrite_old_meshes) {
+                output_mesh_meter_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
             }
+            output_mesh_meter_file_ss << ".ply";
+            pipeline_->saveMesh(output_mesh_meter_file_ss.str(), T_HW);
         }
 
-        std::stringstream output_mesh_meter_file_ss;
-        output_mesh_meter_file_ss << supereight_config_.output_mesh_file << "/mesh.ply";
-        pipeline_->saveMesh(output_mesh_meter_file_ss.str(), T_HW);
+        {
+            std::stringstream output_mesh_object_file_ss;
+            output_mesh_object_file_ss << output_mesh_dir << "/mesh";
+            if constexpr (!overwrite_old_meshes) {
+                output_mesh_object_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
+            }
+            output_mesh_object_file_ss << "_object";
+            pipeline_->saveObjectMeshes(output_mesh_object_file_ss.str(), T_HW);
+        }
 
-        std::stringstream output_mesh_object_file_ss;
-        output_mesh_object_file_ss << supereight_config_.output_mesh_file << "/mesh_object";
-        pipeline_->saveObjectMeshes(output_mesh_object_file_ss.str(), T_HW);
-        std::stringstream output_path_ply_file_ss;
-        output_path_ply_file_ss << supereight_config_.output_mesh_file << "/path.ply";
-        planner_->writePathPLY(output_path_ply_file_ss.str(), T_HW);
-        //std::stringstream output_path_tsv_file_ss;
-        //output_path_tsv_file_ss << supereight_config_.output_mesh_file << "/path.tsv";
-        //planner_->writePathTSV(output_path_tsv_file_ss.str(), T_HW);
-        std::stringstream output_wedges_ply_file_ss;
-        output_wedges_ply_file_ss << supereight_config_.output_mesh_file
-                                  << "/pose_grid_history.ply";
-        se::io::save_mesh_ply(planner_->getPoseGridHistory().wedgeMesh(),
-                              output_wedges_ply_file_ss.str(),
-                              T_HW * T_WM_);
-        ROS_INFO("Map saved in %s\n", supereight_config_.output_mesh_file.c_str());
+        {
+            std::stringstream output_path_ply_file_ss;
+            output_path_ply_file_ss << output_mesh_dir << "/path";
+            if constexpr (!overwrite_old_meshes) {
+                output_path_ply_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
+            }
+            output_path_ply_file_ss << ".ply";
+            planner_->writePathPLY(output_path_ply_file_ss.str(), T_HW);
+        }
+
+        //{
+        //    std::stringstream output_path_tsv_file_ss;
+        //    output_path_tsv_file_ss << output_mesh_dir << "/path";
+        //    if constexpr (!overwrite_old_meshes) {
+        //        output_path_tsv_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
+        //    }
+        //    output_path_tsv_file_ss << ".tsv";
+        //    planner_->writePathTSV(output_path_tsv_file_ss.str(), T_HW);
+        //}
+
+        //{
+        //    std::stringstream output_wedges_ply_file_ss;
+        //    output_wedges_ply_file_ss << output_mesh_dir << "/pose_grid_history";
+        //    if constexpr (!overwrite_old_meshes) {
+        //        output_wedges_ply_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
+        //    }
+        //    output_wedges_ply_file_ss << ".ply";
+        //    se::io::save_mesh_ply(planner_->getPoseGridHistory().wedgeMesh(),
+        //                          output_wedges_ply_file_ss.str(),
+        //                          T_HW * T_WM_);
+        //}
+        ROS_INFO("Map saved in %s\n", output_mesh_dir.c_str());
     }
 }
 
