@@ -53,6 +53,6 @@
 
   <include file="$(find mpc)/launch/firefly_habitat.launch" unless="$(arg teleop)"/>
 
-  <include file="$(find supereight_ros)/launch/rviz.launch"/>
+  <!-- <include file="$(find supereight_ros)/launch/rviz.launch"/> -->
 </launch>
 
