@@ -901,14 +901,14 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         lodepng_encode32_file(
             (prefix + "raycast_" + suffix).c_str(), (unsigned char*) raycast_render_.get(), w, h);
 
-        for (const auto& o : pipeline_->getObjectMaps()) {
-            std::stringstream filename_ss;
-            filename_ss << prefix << "aabb_mask_" << std::setw(5) << std::setfill('0') << frame
-                        << "_" << std::setw(3) << std::setfill('0') << o->instance_id << ".png";
-            cv::imwrite(filename_ss.str(),
-                        o->bounding_volume_M_.raycastingMask(
-                            pipeline_->getImageResolution(), pipeline_->T_MC(), sensor_));
-        }
+        //for (const auto& o : pipeline_->getObjectMaps()) {
+        //    std::stringstream filename_ss;
+        //    filename_ss << prefix << "aabb_mask_" << std::setw(5) << std::setfill('0') << frame
+        //                << "_" << std::setw(3) << std::setfill('0') << o->instance_id << ".png";
+        //    cv::imwrite(filename_ss.str(),
+        //                o->bounding_volume_M_.raycastingMask(
+        //                    pipeline_->getImageResolution(), pipeline_->T_MC(), sensor_));
+        //}
 
         if (node_config_.enable_objects) {
             lodepng_encode32_file((prefix + "instance_" + suffix).c_str(),
@@ -1162,6 +1162,8 @@ void SupereightNode::plan()
                 //                    base + prefix + "_entropy.txt",
                 //                    base + prefix + "_entropy.png",
                 //                    base + prefix + "_depth.png",
+                //                    base + prefix + "_object_dist_gain.png",
+                //                    base + prefix + "_object_compl_gain.png",
                 //                    base + prefix + "_path_M.tsv");
                 //}
                 num_planning_iterations_++;
