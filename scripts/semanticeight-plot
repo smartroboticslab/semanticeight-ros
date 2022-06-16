@@ -359,6 +359,105 @@ dominant_gain() {
 	rm -f "$average_planning_file"
 }
 
+# Usage: objects LOGDIR...
+objects() {
+	objects_files=$(log_files 'stats_objects.tsv' "$@")
+	if [ -z "$objects_files" ]
+	then
+		return
+	fi
+	# Average all runs.
+	average_objects_file=$(mktemp) || exit 1
+	get_average_data $objects_files > "$average_objects_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_objects_file" 'Frame')
+	completeness_idx=$(get_column_index "$average_objects_file" 'Completeness (%)')
+	desired_dist_idx=$(get_column_index "$average_objects_file" 'Desired observed dist (%)')
+	objects_idx=$(get_column_index "$average_objects_file" 'Objects found (%)')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Frame';
+	set ylabel '(%)';
+	set key right bottom;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [0:100];
+	objects_files = \"$objects_files\";
+	plot for [f in objects_files] f using $frame_idx:$completeness_idx notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in objects_files] f using $frame_idx:$desired_dist_idx notitle linetype rgb 'red' dashtype \".\",\
+		for [f in objects_files] f using $frame_idx:$objects_idx notitle linetype rgb 'green' dashtype \".\",\
+		'$average_objects_file' using $frame_idx:$completeness_idx title 'Completeness' linetype rgb 'blue' linewidth 3,\
+		'$average_objects_file' using $frame_idx:$desired_dist_idx title 'Desired observed dist' linetype rgb 'red' linewidth 3,\
+		'$average_objects_file' using $frame_idx:$objects_idx title 'Objects found' linetype rgb 'green' linewidth 3,;
+	"
+	# Remove temporary file.
+	rm -f "$average_objects_file"
+}
+
+# Usage: objects_acc LOGDIR...
+objects_acc() {
+	objects_files=$(log_files 'stats_objects.tsv' "$@")
+	if [ -z "$objects_files" ]
+	then
+		return
+	fi
+	# Average all runs.
+	average_objects_file=$(mktemp) || exit 1
+	get_average_data $objects_files > "$average_objects_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_objects_file" 'Frame')
+	accuracy_idx=$(get_column_index "$average_objects_file" 'Accuracy (m)')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Frame';
+	set ylabel 'Accuracy (m)';
+	set key right bottom;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	objects_files = \"$objects_files\";
+	plot for [f in objects_files] f using $frame_idx:$accuracy_idx notitle linetype rgb 'blue' dashtype \".\",\
+		'$average_objects_file' using $frame_idx:$accuracy_idx notitle linetype rgb 'blue' linewidth 3;
+	"
+	# Remove temporary file.
+	rm -f "$average_objects_file"
+}
+
+# Usage: objects_dist LOGDIR...
+objects_dist() {
+	objects_files=$(log_files 'stats_objects.tsv' "$@")
+	if [ -z "$objects_files" ]
+	then
+		return
+	fi
+	# Average all runs.
+	average_objects_file=$(mktemp) || exit 1
+	get_average_data $objects_files > "$average_objects_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_objects_file" 'Frame')
+	mean_dist_idx=$(get_column_index "$average_objects_file" 'Mean observed dist (m)')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Frame';
+	set ylabel 'Mean observed distance (m)';
+	set key right bottom;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	objects_files = \"$objects_files\";
+	plot for [f in objects_files] f using $frame_idx:$mean_dist_idx notitle linetype rgb 'blue' dashtype \".\",\
+		'$average_objects_file' using $frame_idx:$mean_dist_idx notitle linetype rgb 'blue' linewidth 3;
+	"
+	# Remove temporary file.
+	rm -f "$average_objects_file"
+}
+
 
 
 # Parse command line options.

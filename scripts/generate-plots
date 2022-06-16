@@ -19,4 +19,6 @@ shift
 "$script_dir"/semanticeight-plot -o "$plot_dir"/utility.png utility "$@"
 "$script_dir"/semanticeight-plot -o "$plot_dir"/gain.png gain "$@"
 "$script_dir"/semanticeight-plot -o "$plot_dir"/dominant_gain.png dominant_gain "$@"
-
+"$script_dir"/semanticeight-plot -o "$plot_dir"/objects.png objects "$@"
+"$script_dir"/semanticeight-plot -o "$plot_dir"/objects_acc.png objects_acc "$@"
+"$script_dir"/semanticeight-plot -o "$plot_dir"/objects_dist.png objects_dist "$@"
