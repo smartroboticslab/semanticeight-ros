@@ -32,13 +32,13 @@ get_average_data() {
 			for (i in data_sum) { printf "\t%f", data_sum[i]/'"$#"' }
 			printf "\n"
 		}
+		BEGIN { prev_frame = "none" }
 		# Print the first header line found and ignore the rest
 		/^[^[:digit:]]/ { if (!header) { print; header = 1 } }
 		/^[[:digit:]]/ {
 			# We have found data for a new frame, print the
-			# previous frame data. prev_frame is initialized to 0
-			# so this is not entered at first.
-			if (prev_frame != $1) {
+			# previous frame data.
+			if (prev_frame != $1 && prev_frame != "none") {
 				# Exit if not all files had data for the previous frame.
 				if (n != '"$#"') { exit 0 }
 				# Print the averaged data of the previous frame.
