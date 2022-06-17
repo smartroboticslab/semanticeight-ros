@@ -550,7 +550,6 @@ void write_view_data(const se::CandidateView& view,
                      const std::string& entropy_filename,
                      const std::string& depth_filename,
                      const std::string& object_dist_gain_filename,
-                     const std::string& object_compl_gain_filename,
                      const std::string& path_filename)
 {
     {
@@ -577,13 +576,6 @@ void write_view_data(const se::CandidateView& view,
     {
         const se::Image<uint32_t> render = view.renderObjectDistGain();
         lodepng_encode32_file(object_dist_gain_filename.c_str(),
-                              reinterpret_cast<const unsigned char*>(render.data()),
-                              render.width(),
-                              render.height());
-    }
-    {
-        const se::Image<uint32_t> render = view.renderObjectCompletionGain();
-        lodepng_encode32_file(object_compl_gain_filename.c_str(),
                               reinterpret_cast<const unsigned char*>(render.data()),
                               render.width(),
                               render.height());
