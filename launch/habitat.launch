@@ -15,13 +15,6 @@
   <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
-  <remap from="/autopilot/trajectory"                to="/supereight/path" unless="$(arg teleop)"/>
-  <remap from="/habitat/depth/image_raw"             to="/camera/depth_image"/>
-  <remap from="/habitat/rgb/image_raw"               to="/camera/rgb_image"/>
-  <remap from="/habitat/pose"                        to="/pose"/>
-  <remap from="/habitat/semantic_class/image_raw"    to="/camera/class"/>
-  <remap from="/habitat/semantic_instance/image_raw" to="/camera/instance"/>
-
   <node pkg="habitat_ros"
         type="habitat_node.py"
         name="habitat"
@@ -35,11 +28,6 @@
     <env name="MAGNUM_LOG" value="quiet"/>
   </node>
 
-  <group unless="$(arg teleop)">
-    <param name="wp_x" type="double" value="$(arg waypoint_x)"/>
-    <param name="wp_y" type="double" value="$(arg waypoint_y)"/>
-    <param name="wp_z" type="double" value="$(arg waypoint_z)"/>
-  </group>
   <node pkg="supereight_ros"
         type="supereight_ros"
         name="semanticeight"
@@ -47,12 +35,25 @@
         output="screen"
         required="true"
         launch-prefix="">
+    <param name="wp_x" type="double" value="$(arg waypoint_x)" unless="$(arg teleop)"/>
+    <param name="wp_y" type="double" value="$(arg waypoint_y)" unless="$(arg teleop)"/>
+    <param name="wp_z" type="double" value="$(arg waypoint_z)" unless="$(arg teleop)"/>
     <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
     <rosparam command="load" file="$(arg config)"/>
+    <remap from="/camera/depth_image" to="/habitat/depth/image_raw"/>
+    <remap from="/camera/rgb_image"   to="/habitat/rgb/image_raw"/>
+    <remap from="/camera/class"       to="/habitat/semantic_class/image_raw"/>
+    <remap from="/camera/instance"    to="/habitat/semantic_instance/image_raw"/>
+    <remap from="/pose"               to="/habitat/pose"/>
   </node>
 
-  <include file="$(find mpc)/launch/firefly_habitat.launch" unless="$(arg teleop)"/>
+  <group unless="$(arg teleop)">
+    <param name="wp_x" type="double" value="$(arg waypoint_x)"/>
+    <param name="wp_y" type="double" value="$(arg waypoint_y)"/>
+    <param name="wp_z" type="double" value="$(arg waypoint_z)"/>
+    <remap from="/autopilot/trajectory" to="/supereight/path"/>
+    <include file="$(find mpc)/launch/firefly_habitat.launch"/>
+  </group>
 
   <!-- <include file="$(find supereight_ros)/launch/rviz.launch"/> -->
 </launch>
-
