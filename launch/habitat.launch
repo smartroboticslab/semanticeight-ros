@@ -26,6 +26,7 @@
     <!-- Hide Habitat-Sim logs -->
     <env name="GLOG_minloglevel" value="1"/>
     <env name="MAGNUM_LOG" value="quiet"/>
+    <remap from="/habitat/external_pose" to="/teleop/command" if="$(arg teleop)"/>
   </node>
 
   <node pkg="supereight_ros"
