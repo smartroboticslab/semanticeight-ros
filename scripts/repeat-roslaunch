@@ -48,7 +48,7 @@ do
 	printf 'Run %d/%d\n' "$i" "$n"
 	tmp_log=$(mktemp)
 	roslaunch supereight_ros "$@" 2>&1 | tee "$tmp_log"
-	run_dir=$(store_run_data "$dir" "$i" "$1")
+	run_dir=$(store_run_data "$dir" "$i")
 	mv "$tmp_log" "$run_dir"/log
 	# Process this run.
 	"$(script_dir)"/render-montage "$run_dir" || true
