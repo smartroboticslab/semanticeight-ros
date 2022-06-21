@@ -364,14 +364,14 @@ objects() {
 	average_objects_file=$(mktemp) || exit 1
 	get_average_data $objects_files > "$average_objects_file"
 	# Get the indices of the required columns.
-	frame_idx=$(get_column_index "$average_objects_file" 'Frame')
+	frame_idx=$(get_column_index "$average_objects_file" 'Time (s)')
 	completeness_idx=$(get_column_index "$average_objects_file" 'Completeness (%)')
 	desired_dist_idx=$(get_column_index "$average_objects_file" 'Desired observed dist (%)')
 	objects_idx=$(get_column_index "$average_objects_file" 'Objects found (%)')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
-	set xlabel 'Frame';
+	set xlabel 'Time (s)';
 	set ylabel '(%)';
 	set key right bottom;
 	set grid;
@@ -401,12 +401,12 @@ objects_acc() {
 	average_objects_file=$(mktemp) || exit 1
 	get_average_data $objects_files > "$average_objects_file"
 	# Get the indices of the required columns.
-	frame_idx=$(get_column_index "$average_objects_file" 'Frame')
+	frame_idx=$(get_column_index "$average_objects_file" 'Time (s)')
 	accuracy_idx=$(get_column_index "$average_objects_file" 'Accuracy (m)')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
-	set xlabel 'Frame';
+	set xlabel 'Time (s)';
 	set ylabel 'Accuracy (m)';
 	set key right bottom;
 	set grid;
@@ -432,12 +432,12 @@ objects_dist() {
 	average_objects_file=$(mktemp) || exit 1
 	get_average_data $objects_files > "$average_objects_file"
 	# Get the indices of the required columns.
-	frame_idx=$(get_column_index "$average_objects_file" 'Frame')
+	frame_idx=$(get_column_index "$average_objects_file" 'Time (s)')
 	mean_dist_idx=$(get_column_index "$average_objects_file" 'Mean observed dist (m)')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
-	set xlabel 'Frame';
+	set xlabel 'Time (s)';
 	set ylabel 'Mean observed distance (m)';
 	set key right bottom;
 	set grid;
