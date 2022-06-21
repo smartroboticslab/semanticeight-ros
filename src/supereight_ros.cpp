@@ -38,7 +38,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         nh_(nh),
         nh_private_(nh_private),
         sensor_({1, 1, false, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f}),
-        frame_(0),
+        frame_(-1),
         num_planning_iterations_(0),
         num_failed_planning_iterations_(0),
         max_failed_planning_iterations_(0),
@@ -611,6 +611,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                           const ros::Time& depth_timestamp,
                           const bool out_of_order_fusion)
 {
+    frame_++;
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     stats_.newFrame("fusion");
     std::chrono::time_point<std::chrono::steady_clock> start_time;
@@ -949,7 +950,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         ROS_INFO("Reached time limit of %.3f s, stopping", node_config_.max_exploration_time);
         ros::shutdown();
     }
-    frame_++;
 }
 
 
