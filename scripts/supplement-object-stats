@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+usage() {
+	printf 'Usage: %s RUNDIR...\n' "${0##*/}"
+}
+
+# Add the time to the object stats by reading it from the fusion stats.
+supplement_object_stats() {
+	objects="$1/logs/stats_objects.tsv"
+	fusion="$1/logs/stats_fusion.tsv"
+	# https://git.sr.ht/~sotirisp/tsvutils
+	{
+	printf 'Time (s)\t'
+	head -n 1 "$objects"
+	tsvcut 'Frame' < "$objects" | tail -n +2 | while IFS= read -r frame
+	do
+		tsvcut 'Frame' 'Timestamp' < "$fusion" | tail -n +2 | grep '^'"$frame"'\.' | cut -f 2 | sed 's/$/\t/' | tr -d '\n'
+		tail -n +2 "$objects" | grep '^'"$frame"'	'
+	done
+	} > "$objects".tmp
+	mv "$objects".tmp "$objects"
+}
+
+
+
+if [ "$#" -eq 0 ]
+then
+	usage
+	exit 2
+fi
+
+while [ "$#" -gt 0 ]
+do
+	supplement_object_stats "$1"
+	shift
+done

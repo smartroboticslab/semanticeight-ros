@@ -55,6 +55,7 @@ do
 	#"$(script_dir)"/postprocess-meshes "$run_dir"/meshes* || true # TODO removes information needed for evaluate-meshes, change evaluate-meshes dir after this is fixed
 	"$(script_dir)"/evaluate-meshes "$run_dir"/meshes* || true
 	"$(script_dir)"/generate-object-stats "$run_dir" > "$run_dir"/logs/stats_objects.tsv || true
+	"$(script_dir)"/supplement-object-stats "$run_dir" || true
 	"$(script_dir)"/generate-plots "$run_dir"/plots "$run_dir"/logs || true
 	"$(script_dir)"/generate-overview "$run_dir"/ > "$run_dir"/overview.txt || true
 	# Process all runs so far.
