@@ -452,6 +452,7 @@ void SupereightNode::matchAndFuse()
         { // Block to reduce the scope of depth_lock.
             const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
             if (depth_buffer_.empty()) {
+                ROS_DEBUG_THROTTLE_NAMED(5, "matching", "Matching: waiting for depth image");
                 continue;
             }
             else {
@@ -465,6 +466,7 @@ void SupereightNode::matchAndFuse()
         if (node_config_.enable_rgb) {
             const std::lock_guard<std::mutex> rgb_lock(rgb_buffer_mutex_);
             if (rgb_buffer_.empty()) {
+                ROS_DEBUG_THROTTLE_NAMED(5, "matching", "Matching: waiting for colour image");
                 continue;
             }
             else {
@@ -474,6 +476,7 @@ void SupereightNode::matchAndFuse()
                                                        get_image_timestamp,
                                                        current_rgb_msg);
                 if (!found) {
+                    ROS_DEBUG_NAMED("matching", "Matching: no matching colour image found");
                     continue;
                 }
             }
@@ -531,6 +534,7 @@ void SupereightNode::matchAndFuse()
                 rgb_buffer_.clear();      // OK to call even when RGB images are not used
                 class_buffer_.clear();    // OK to call even when class images are not used
                 instance_buffer_.clear(); // OK to call even when instance images are not used
+                ROS_DEBUG_THROTTLE_NAMED(5, "matching", "Matching: waiting for pose");
                 continue;
             }
             else {
@@ -543,11 +547,13 @@ void SupereightNode::matchAndFuse()
                     // Remove the depth image, it will never be matched to poses.
                     const std::lock_guard<std::mutex> depth_lock(depth_buffer_mutex_);
                     depth_buffer_.pop_front();
+                    ROS_DEBUG_NAMED("matching", "Matching: depth timestamp earlier than all poses");
                     continue;
                 }
                 else if (result == InterpResult::query_greater) {
                     // Remove the first poses, they will never be matched to depth images.
                     pose_buffer_.erase_begin(pose_buffer_.size() - 1);
+                    ROS_DEBUG_NAMED("matching", "Matching: depth timestamp later than all poses");
                     continue;
                 }
 
@@ -956,6 +962,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 
 void SupereightNode::plan()
 {
+    ROS_DEBUG_NAMED("planning", "Planning: waiting for initial pose");
     // Wait for the first pose
     while (true) {
         std::this_thread::sleep_for(std::chrono::duration<double>(0.01));
@@ -965,6 +972,7 @@ void SupereightNode::plan()
         }
     }
     // Free the initial position to allow planning.
+    ROS_DEBUG_NAMED("planning", "Planning: freeing the initial pose");
     {
         const std::lock_guard<std::mutex> map_lock(map_mutex_);
         pipeline_->freeInitialPosition(
@@ -974,9 +982,11 @@ void SupereightNode::plan()
                  : "cylinder"));
     }
     // Wait for a few frame to be integrated.
+    ROS_DEBUG_NAMED("planning", "Planning: waiting for some integrations");
     while (frame_ < 3) {
         ros::Duration(0.5).sleep();
     }
+    ROS_DEBUG_NAMED("planning", "Planning: starting");
     const std::string planning_log_dir = ros_log_dir() + "/latest/planning";
     // Exploration planning
     while ((num_failed_planning_iterations_ < max_failed_planning_iterations_
