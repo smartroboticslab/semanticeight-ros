@@ -1,4 +1,5 @@
 #!/bin/bash
+# Launch some ROS executable and use the MAV as the ROS master.
 ros_bash_file=$(printf '%s\n' /opt/ros/*/setup.bash | cut -f 1 -d ' ')
 source "$ros_bash_file"
 own_ipv4=$(ip -4 -oneline -brief address show | awk '/^(wlp|wlan).*UP/ { print $3 }' | sed -E 's|/[0-9]+$||')

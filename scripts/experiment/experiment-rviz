@@ -1,4 +1,5 @@
 #!/bin/bash
+# Launch rviz with the appropriate config and use the MAV as the ROS master.
 set -euo pipefail
 
 ros_bash_file=$(printf '%s\n' /opt/ros/*/setup.bash | cut -f 1 -d ' ')
