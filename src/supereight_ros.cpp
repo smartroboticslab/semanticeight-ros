@@ -1186,6 +1186,9 @@ void SupereightNode::plan()
                 publish_path_vertex(*planner_, path_pub_, world_frame_id_, node_config_.dataset);
             }
         }
+        else if (num_planning_iterations_ > 0) {
+            visualizeGoal();
+        }
         std::this_thread::sleep_for(std::chrono::duration<double>(0.05));
     }
     ROS_INFO("Failed to plan %d times, stopping", num_failed_planning_iterations_);
