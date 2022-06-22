@@ -39,7 +39,7 @@ cpu_max_freq() {
 	printf '[OK]   CPU locked to maximum frequency\n'
 }
 
-data_disk_mounted() {
+ssd_disk_mounted() {
 	if mount | grep -q '/dev/nvme.*'; then
 		printf '[OK]   NVMe SSD mounted\n'
 	else
@@ -70,9 +70,9 @@ wifi_latency() {
 }
 
 show_free_space() {
-	if data_disk_mounted > /dev/null; then
+	if ssd_disk_mounted > /dev/null; then
 		printf '\n%siB free on /data\n' \
-			"$(df -h | grep -F '/data' | awk '{ print $4 }')"
+			"$(df -h | grep -F '/dev/nvme' | awk '{ print $4 }')"
 	fi
 }
 
@@ -90,7 +90,7 @@ pixhawk_connected() {
 check is_root
 check wifi_power_save
 check cpu_max_freq
-check data_disk_mounted
+check ssd_disk_mounted
 check realsense_found
 check wifi_latency
 check pixhawk_connected
