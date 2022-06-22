@@ -20,7 +20,7 @@
         required="true"
         launch-prefix="">
     <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
-    <rosparam command="load" file="$(find supereight_ros)/config/experiment_handheld.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/experiment_handheld_pc.yaml"/>
   </node>
 
   <include file="$(find supereight_ros)/launch/rviz.launch">
