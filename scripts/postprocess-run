@@ -1,0 +1,31 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+set -eu
+
+script_dir() {
+	dirname "$0"
+}
+
+if [ "$#" -eq 0 ]
+then
+	printf 'Usage: %s RUNDIR...\n' "$(basename "$0")"
+	exit 2
+fi
+
+i=1
+n="$#"
+while [ "$#" -gt 0 ]
+do
+	printf 'Processing run %d/%d %s\n' "$i" "$n" "$1"
+	"$(script_dir)"/render-montage "$1" || true
+	#"$(script_dir)"/postprocess-meshes "$1"/meshes* || true # TODO removes information needed for evaluate-meshes, change evaluate-meshes dir after this is fixed
+	"$(script_dir)"/evaluate-meshes "$1"/meshes* || true
+	"$(script_dir)"/generate-object-stats "$1" > "$1"/logs/stats_objects.tsv || true
+	"$(script_dir)"/supplement-object-stats "$1" || true
+	"$(script_dir)"/generate-plots "$1"/plots "$1"/logs || true
+	"$(script_dir)"/generate-overview "$1"/ > "$1"/overview.txt || true
+	i=$((i + 1))
+	shift
+done
