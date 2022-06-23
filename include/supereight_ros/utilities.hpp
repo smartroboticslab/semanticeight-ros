@@ -245,6 +245,7 @@ void write_view_data(const se::CandidateView& view,
                      const std::string& entropy_filename,
                      const std::string& depth_filename,
                      const std::string& object_dist_gain_filename,
+                     const std::string& bg_dist_gain_filename,
                      const std::string& path_filename);
 
 } // namespace se

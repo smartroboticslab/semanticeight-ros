@@ -1081,9 +1081,12 @@ void SupereightNode::plan()
                         "planning", "Goal entropy utility", goal_candidate.entropyUtility());
                     stats_.sample(
                         "planning", "Goal object dist utility", goal_candidate.objectDistUtility());
+                    stats_.sample(
+                        "planning", "Goal bg dist utility", goal_candidate.bgDistUtility());
                     stats_.sample("planning", "Goal entropy gain", goal_candidate.entropy_gain_);
                     stats_.sample(
                         "planning", "Goal object dist gain", goal_candidate.object_dist_gain_);
+                    stats_.sample("planning", "Goal bg dist gain", goal_candidate.bg_dist_gain_);
                     stats_.sample("planning", "Goal path time", goal_candidate.path_time_);
                     stats_.sample("planning",
                                   "Exploration dominant",
@@ -1132,6 +1135,7 @@ void SupereightNode::plan()
                     //                base + "goal_entropy.png",
                     //                base + "goal_depth.png",
                     //                base + "goal_object_dist_gain.png",
+                    //                base + "goal_bg_dist_gain.png",
                     //                base + "goal_path_M.tsv");
                     //if (supereight_config_.output_mesh_file != "") {
                     //    saveCandidates();
@@ -1154,6 +1158,7 @@ void SupereightNode::plan()
                 //                    base + prefix + "_entropy.png",
                 //                    base + prefix + "_depth.png",
                 //                    base + prefix + "_object_dist_gain.png",
+                //                    base + prefix + "_bg_dist_gain.png",
                 //                    base + prefix + "_path_M.tsv");
                 //}
                 //for (size_t i = 0; i < planner_->rejectedCandidateViews().size(); ++i) {
@@ -1166,6 +1171,7 @@ void SupereightNode::plan()
                 //                    base + prefix + "_entropy.png",
                 //                    base + prefix + "_depth.png",
                 //                    base + prefix + "_object_dist_gain.png",
+                //                    base + prefix + "_bg_dist_gain.png",
                 //                    base + prefix + "_path_M.tsv");
                 //}
                 num_planning_iterations_++;

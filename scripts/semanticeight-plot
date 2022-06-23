@@ -268,6 +268,7 @@ utility() {
 	combined_idx=$(get_column_index "$average_planning_file" 'Goal utility')
 	exploration_idx=$(get_column_index "$average_planning_file" 'Goal entropy utility')
 	object_dist_idx=$(get_column_index "$average_planning_file" 'Goal object dist utility')
+	bg_dist_idx=$(get_column_index "$average_planning_file" 'Goal bg dist utility')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
@@ -281,9 +282,11 @@ utility() {
 	plot for [f in planning_files] f using (\$$plan_idx+1):$combined_idx notitle linetype rgb 'light-green' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$exploration_idx notitle linetype rgb 'sandybrown' dashtype \".\",\
 		for [f in planning_files] f using (\$$plan_idx+1):$object_dist_idx notitle linetype rgb 'brown4' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$bg_dist_idx notitle linetype rgb 'dark-violet' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$combined_idx title 'Utility' linetype rgb 'light-green' linewidth 3,\
 		'$average_planning_file' using (\$$plan_idx+1):$exploration_idx title 'Exploration utility' linetype rgb 'sandybrown' linewidth 3,\
-		'$average_planning_file' using (\$$plan_idx+1):$object_dist_idx title 'Object dist utility' linetype rgb 'brown4' linewidth 3;
+		'$average_planning_file' using (\$$plan_idx+1):$object_dist_idx title 'Object dist utility' linetype rgb 'brown4' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$bg_dist_idx title 'BG dist utility' linetype rgb 'brown4' linewidth 3;
 	"
 	# Remove temporary files.
 	rm -f "$average_planning_file"
@@ -302,7 +305,8 @@ gain() {
 	# Get the indices of the required columns.
 	plan_idx=$(get_column_index "$average_planning_file" 'Planning iteration')
 	entropy_idx=$(get_column_index "$average_planning_file" 'Goal entropy gain')
-	dist_idx=$(get_column_index "$average_planning_file" 'Goal object dist gain')
+	obj_dist_idx=$(get_column_index "$average_planning_file" 'Goal object dist gain')
+	bg_dist_idx=$(get_column_index "$average_planning_file" 'Goal bg dist gain')
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
@@ -314,9 +318,11 @@ gain() {
 	set yrange [-0.2:1.2];
 	planning_files = \"$planning_files\";
 	plot for [f in planning_files] f using (\$$plan_idx+1):$entropy_idx notitle linetype rgb 'light-green' dashtype \".\",\
-		for [f in planning_files] f using (\$$plan_idx+1):$dist_idx notitle linetype rgb 'brown4' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$obj_dist_idx notitle linetype rgb 'brown4' dashtype \".\",\
+		for [f in planning_files] f using (\$$plan_idx+1):$bg_dist_idx notitle linetype rgb 'dark-violet' dashtype \".\",\
 		'$average_planning_file' using (\$$plan_idx+1):$entropy_idx title 'Entropy gain' linetype rgb 'light-green' linewidth 3,\
-		'$average_planning_file' using (\$$plan_idx+1):$dist_idx title 'Dist gain' linetype rgb 'brown4' linewidth 3;
+		'$average_planning_file' using (\$$plan_idx+1):$obj_dist_idx title 'Obj dist gain' linetype rgb 'brown4' linewidth 3,\
+		'$average_planning_file' using (\$$plan_idx+1):$bg_dist_idx title 'BG dist gain' linetype rgb 'dark-violet' linewidth 3;
 	"
 	# Remove temporary files.
 	rm -f "$average_planning_file"
