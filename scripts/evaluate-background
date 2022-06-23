@@ -1,0 +1,68 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+set -eu
+
+usage() {
+	printf 'Usage: %s MESH ...\n' "${0##*/}"
+}
+
+script_dir() {
+	dirname "$0"
+}
+
+sequence_name() {
+	log_file="$1"/log
+	if [ -r "$log_file" ]
+	then
+		grep -F 'Sequence name:' "$log_file" | head -n 1 | sed 's/^.*_//g'
+	fi
+}
+
+evaluate_bg_mesh() {
+	mesh_dir=$(dirname "$1")
+	sequence=$(sequence_name "$mesh_dir/..")
+	if [ -z "$sequence" ]
+	then
+		printf 'Skipping BG mesh evaluation, sequence name is empty\n'
+		return
+	fi
+	if ! [ -f "$1" ]
+	then
+		printf 'Skipping BG mesh evaluation, %s is not a file\n' "$1"
+		return
+	fi
+	gt_mesh="$HOME/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/$sequence/${sequence}_semantic.ply"
+	if ! [ -f "$gt_mesh" ]
+	then
+		printf 'Skipping BG mesh evaluation, %s is not a file\n' "$gt_mesh"
+		return
+	fi
+	exe="$(script_dir)"/../../mesh_diff_tool/build/compare-single
+	if [ -x "$exe" ]
+	then
+		printf 'Evaluating BG mesh %s\n' "$1"
+		"$exe" --heatmap-dir "$mesh_dir/heatmaps" --tsv "$mesh_dir/bg_evaluation.tsv" "$1" "$gt_mesh"
+	else
+		printf 'Skipping BG mesh evaluation, %s is not an executable\n' "$exe"
+	fi
+}
+
+
+
+if [ "$#" -eq 0 ]
+then
+	usage
+	exit 2
+fi
+
+i=1
+n="$#"
+while [ "$#" -gt 0 ]
+do
+	printf '%d/%d\n' "$i" "$n"
+	evaluate_bg_mesh "$1"
+	i=$((i+=1))
+	shift
+done
