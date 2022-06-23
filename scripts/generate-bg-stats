@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+usage() {
+	printf 'Usage: %s RUNDIR...\n' "${0##*/}"
+}
+
+bg_evaluation_tsv() {
+	find -H "$1" -type f -path '*/meshes_*/bg_evaluation.tsv' | sort
+}
+
+filename_to_frame() {
+	printf '%s\n' "$1" | sed -e 's|^.*meshes_0*||' -e 's|/.*$||'
+}
+
+# Usage: generate_bg_stats RUNDIR
+generate_bg_stats() {
+	printf 'Frame\tAccuracy (m)\tCompleteness (%%)\tMean observed dist (m)\tDesired observed dist (%%)\n'
+	bg_evaluation_tsv "$1" | while IFS= read -r tsv
+	do
+		frame=$(filename_to_frame "$tsv")
+		printf '%s\t' "$frame"
+		tail -n 1 "$tsv" | cut -f 4,5,7,8
+	done
+}
+
+
+
+if [ "$#" -eq 0 ]
+then
+	usage
+	exit 2
+fi
+
+. "$(dirname "$0")/lib.sh"
+
+while [ "$#" -gt 0 ]
+do
+	generate_bg_stats "$1"
+	shift
+done
