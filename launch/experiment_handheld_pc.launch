@@ -24,7 +24,7 @@
   </node>
 
   <include file="$(find supereight_ros)/launch/rviz.launch">
-    <arg name="config" value="$(find supereight_ros)/config/experiment.rviz"/>
+    <arg name="config" value="$(find supereight_ros)/config/experiment_handheld_pc.rviz"/>
   </include>
 </launch>
 
