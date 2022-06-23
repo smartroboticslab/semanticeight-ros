@@ -12,7 +12,10 @@ plot_dir="$1"
 mkdir -p "$plot_dir"
 shift
 
-plots='dominant_gain
+plots='bg
+bg_acc
+bg_dist
+dominant_gain
 frame_planning_time
 frame_time
 gain

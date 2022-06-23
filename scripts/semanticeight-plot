@@ -458,6 +458,102 @@ objects_dist() {
 	rm -f "$average_objects_file"
 }
 
+# Usage: bg LOGDIR...
+bg() {
+	bg_files=$(log_files 'stats_bg.tsv' "$@")
+	if [ -z "$bg_files" ]
+	then
+		return
+	fi
+	# Average all runs.
+	average_bg_file=$(mktemp) || exit 1
+	get_average_data $bg_files > "$average_bg_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_bg_file" 'Time (s)')
+	completeness_idx=$(get_column_index "$average_bg_file" 'Completeness (%)')
+	desired_dist_idx=$(get_column_index "$average_bg_file" 'Desired observed dist (%)')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Time (s)';
+	set ylabel '(%)';
+	set key right bottom;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [0:100];
+	bg_files = \"$bg_files\";
+	plot for [f in bg_files] f using $frame_idx:$completeness_idx notitle linetype rgb 'blue' dashtype \".\",\
+		for [f in bg_files] f using $frame_idx:$desired_dist_idx notitle linetype rgb 'red' dashtype \".\",\
+		'$average_bg_file' using $frame_idx:$completeness_idx title 'Completeness' linetype rgb 'blue' linewidth 3,\
+		'$average_bg_file' using $frame_idx:$desired_dist_idx title 'Desired observed dist' linetype rgb 'red' linewidth 3;
+	"
+	# Remove temporary file.
+	rm -f "$average_bg_file"
+}
+
+# Usage: bg_acc LOGDIR...
+bg_acc() {
+	bg_files=$(log_files 'stats_bg.tsv' "$@")
+	if [ -z "$bg_files" ]
+	then
+		return
+	fi
+	# Average all runs.
+	average_bg_file=$(mktemp) || exit 1
+	get_average_data $bg_files > "$average_bg_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_bg_file" 'Time (s)')
+	accuracy_idx=$(get_column_index "$average_bg_file" 'Accuracy (m)')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Time (s)';
+	set ylabel 'Accuracy (m)';
+	set key right bottom;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	bg_files = \"$bg_files\";
+	plot for [f in bg_files] f using $frame_idx:$accuracy_idx notitle linetype rgb 'blue' dashtype \".\",\
+		'$average_bg_file' using $frame_idx:$accuracy_idx notitle linetype rgb 'blue' linewidth 3;
+	"
+	# Remove temporary file.
+	rm -f "$average_bg_file"
+}
+
+# Usage: bg_dist LOGDIR...
+bg_dist() {
+	bg_files=$(log_files 'stats_bg.tsv' "$@")
+	if [ -z "$bg_files" ]
+	then
+		return
+	fi
+	# Average all runs.
+	average_bg_file=$(mktemp) || exit 1
+	get_average_data $bg_files > "$average_bg_file"
+	# Get the indices of the required columns.
+	frame_idx=$(get_column_index "$average_bg_file" 'Time (s)')
+	mean_dist_idx=$(get_column_index "$average_bg_file" 'Mean observed dist (m)')
+	# Plot the data.
+	gnuplot -p -e "
+	$save_command
+	set xlabel 'Time (s)';
+	set ylabel 'Mean observed distance (m)';
+	set key right bottom;
+	set grid;
+	set style data lines;
+	set xrange [$xmin:$xmax];
+	set yrange [$ymin:$ymax];
+	bg_files = \"$bg_files\";
+	plot for [f in bg_files] f using $frame_idx:$mean_dist_idx notitle linetype rgb 'blue' dashtype \".\",\
+		'$average_bg_file' using $frame_idx:$mean_dist_idx notitle linetype rgb 'blue' linewidth 3;
+	"
+	# Remove temporary file.
+	rm -f "$average_bg_file"
+}
+
 
 
 # Parse command line options.
