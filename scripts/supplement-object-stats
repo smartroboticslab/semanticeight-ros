@@ -7,9 +7,14 @@ usage() {
 
 # Add the time to the object stats by reading it from the fusion stats.
 supplement_object_stats() {
-	objects="$1/logs/stats_objects.tsv"
-	fusion="$1/logs/stats_fusion.tsv"
 	# https://git.sr.ht/~sotirisp/tsvutils
+	objects="$1/logs/stats_objects.tsv"
+	# Do nothing if the Time column already exists.
+	if [ -n "$(tsvcut '^Time \(s\)$' < "$objects")" ]
+	then
+		return
+	fi
+	fusion="$1/logs/stats_fusion.tsv"
 	{
 	printf 'Time (s)\t'
 	head -n 1 "$objects"
