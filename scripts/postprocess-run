@@ -20,8 +20,8 @@ while [ "$#" -gt 0 ]
 do
 	printf 'Processing run %d/%d %s\n' "$i" "$n" "$1"
 	"$(script_dir)"/render-montage "$1" || true
-	#"$(script_dir)"/postprocess-meshes "$1"/meshes* || true # TODO removes information needed for evaluate-meshes, change evaluate-meshes dir after this is fixed
-	"$(script_dir)"/evaluate-meshes "$1"/meshes* || true
+	#"$(script_dir)"/postprocess-objects "$1"/meshes* || true # TODO removes information needed for evaluate-objects, change evaluate-objects dir after this is fixed
+	"$(script_dir)"/evaluate-objects "$1"/meshes* || true
 	"$(script_dir)"/generate-object-stats "$1" > "$1"/logs/stats_objects.tsv || true
 	"$(script_dir)"/supplement-object-stats "$1" || true
 	"$(script_dir)"/generate-plots "$1"/plots "$1"/logs || true
