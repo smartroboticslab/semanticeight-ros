@@ -16,13 +16,27 @@ mesh_comparison_tsv() {
 	find -L "$@" -type f -path '*/meshes/mesh_comparison.tsv'
 }
 
-mesh_stats() {
+bg_evaluation_tsv() {
+	find -L "$@" -type f -path '*/meshes/bg_evaluation.tsv'
+}
+
+object_stats() {
 	# https://git.sr.ht/~sotirisp/dots/blob/master/.local/bin/tsvavg
 	# shellcheck disable=SC2046
-	mesh_tsvs=$(mesh_comparison_tsv "$@")
-	if [ -n "$mesh_tsvs" ]
+	object_tsvs=$(mesh_comparison_tsv "$@")
+	if [ -n "$object_tsvs" ]
 	then
-		tsvavg -a $mesh_tsvs | cut -f 4,5,7,8 | column -t -s '	'
+		tsvavg -a $object_tsvs | cut -f 4,5,7,8 | column -t -s '	'
+	fi
+}
+
+bg_stats() {
+	# https://git.sr.ht/~sotirisp/dots/blob/master/.local/bin/tsvavg
+	# shellcheck disable=SC2046
+	bg_tsvs=$(bg_evaluation_tsv "$@")
+	if [ -n "$bg_tsvs" ]
+	then
+		tsvavg -a $bg_tsvs | cut -f 4,5,7,8 | column -t -s '	'
 	fi
 }
 
@@ -42,4 +56,6 @@ then
 	printf 'Data averaged over %d runs\n' "$num_runs"
 fi
 objects_found $(mesh_comparison_log "$@")
-mesh_stats "$@"
+object_stats "$@"
+printf 'Background\n'
+bg_stats "$@"
