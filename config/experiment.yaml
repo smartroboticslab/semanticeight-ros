@@ -68,7 +68,7 @@ supereight:
                                  0, 0, 1, 0,
                                  0, 0, 0, 1]
     near_plane:                 0.4
-    far_plane:                  3.0
+    far_plane:                  4.0
 
   exploration:
     enable_exploration:        true

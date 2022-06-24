@@ -4,12 +4,9 @@
 
 supereight_ros:
   control_interface: "habitat"
+  visualize_360_raycasting: true
 
 supereight:
   general:
     sequence_name:              "experiment_handheld"
-
-  map:
-    sampling_min_W: [-10000, -10000, -10000]
-    sampling_max_W: [ 10000,  10000,  10000]
 
