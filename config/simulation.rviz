@@ -109,7 +109,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Image
       Enabled: true
-      Image Topic: /camera/depth_image
+      Image Topic: /habitat/depth/image_raw
       Max Value: 1
       Median window: 5
       Min Value: 0
