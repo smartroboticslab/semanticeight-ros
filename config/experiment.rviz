@@ -241,7 +241,7 @@ Visualization Manager:
       Frames:
         All Enabled: false
         camera:
-          Value: true
+          Value: false
         map:
           Value: true
         vicon/s550_jetson/s550_jetson:
