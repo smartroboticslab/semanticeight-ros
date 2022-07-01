@@ -1192,7 +1192,7 @@ void SupereightNode::plan()
                 publish_path_vertex(*planner_, path_pub_, world_frame_id_, node_config_.dataset);
             }
         }
-        else if (num_planning_iterations_ > 0) {
+        else if (num_planning_iterations_ > 0 && node_config_.dataset == Dataset::Real) {
             visualizeGoal();
         }
         std::this_thread::sleep_for(std::chrono::duration<double>(0.05));
