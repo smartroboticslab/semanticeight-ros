@@ -7,6 +7,7 @@
 
 
   <include file="$(find supereight_ros)/launch/vicon.launch"></include>
+  <include file="$(find supereight_ros)/launch/experiment_throttle.launch"></include>
   <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
 
   <node pkg="supereight_ros"
