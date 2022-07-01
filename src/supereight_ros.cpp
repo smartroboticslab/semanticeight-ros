@@ -1241,7 +1241,7 @@ void SupereightNode::saveMap()
             if constexpr (!overwrite_old_meshes) {
                 output_octomap_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
             }
-            output_octomap_file_ss << output_mesh_dir << ".bt";
+            output_octomap_file_ss << ".bt";
             std::unique_ptr<octomap::OcTree> octomap(se::to_octomap(*(pipeline_->getMap())));
             if (octomap) {
                 octomap->writeBinary(output_octomap_file_ss.str());
