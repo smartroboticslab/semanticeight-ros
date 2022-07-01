@@ -367,7 +367,7 @@ void SupereightNode::visualizeCandidates(float opacity)
     desired_marker.pose.orientation = make_quaternion();
     desired_marker.scale = make_vector3(diameter);
     desired_marker.color = eigen_to_color(color_candidate_);
-    desired_marker.color.a = 0.25f;
+    desired_marker.color.a = node_config_.dataset == Dataset::Real ? 0.05f : 0.25f;
     desired_marker.lifetime = ros::Duration(0.0);
     desired_marker.frame_locked = true;
     // Publish the markers for each candidate.
@@ -381,12 +381,14 @@ void SupereightNode::visualizeCandidates(float opacity)
             map_candidate_pub_.publish(pose_marker);
             pose_marker.id++;
             // ID.
-            id_marker.pose.position = pose_marker.pose.position;
-            // Place the ID above the candidate
-            id_marker.pose.position.z += id_marker.scale.z / 2.0f;
-            id_marker.text = std::to_string(id_marker.id);
-            map_candidate_pub_.publish(id_marker);
-            id_marker.id++;
+            if (node_config_.dataset != Dataset::Real) {
+                id_marker.pose.position = pose_marker.pose.position;
+                // Place the ID above the candidate
+                id_marker.pose.position.z += id_marker.scale.z / 2.0f;
+                id_marker.text = std::to_string(id_marker.id);
+                map_candidate_pub_.publish(id_marker);
+                id_marker.id++;
+            }
             // Path.
             path_marker.points.clear();
             const se::Path& path = candidate.path();
@@ -403,24 +405,26 @@ void SupereightNode::visualizeCandidates(float opacity)
             desired_marker.id++;
         }
     }
-    // Visualize the rejected candidate positions as spheres.
-    visualization_msgs::Marker rejected_marker;
-    rejected_marker.header = header;
-    rejected_marker.ns = "rejected";
-    rejected_marker.id = 0;
-    rejected_marker.type = visualization_msgs::Marker::SPHERE;
-    rejected_marker.action = visualization_msgs::Marker::ADD;
-    rejected_marker.pose.orientation = make_quaternion();
-    rejected_marker.scale = make_vector3(diameter);
-    rejected_marker.color = eigen_to_color(color_rejected_candidate_);
-    rejected_marker.lifetime = ros::Duration(0.0);
-    rejected_marker.frame_locked = true;
-    // Publish the marker for each rejected candidate.
-    for (const auto& candidate : planner_->rejectedCandidateViews()) {
-        const Eigen::Matrix4f& goal_T_MB = candidate.goalT_MB();
-        rejected_marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3, 1>());
-        map_candidate_pub_.publish(rejected_marker);
-        rejected_marker.id++;
+    if (node_config_.dataset != Dataset::Real) {
+        // Visualize the rejected candidate positions as spheres.
+        visualization_msgs::Marker rejected_marker;
+        rejected_marker.header = header;
+        rejected_marker.ns = "rejected";
+        rejected_marker.id = 0;
+        rejected_marker.type = visualization_msgs::Marker::SPHERE;
+        rejected_marker.action = visualization_msgs::Marker::ADD;
+        rejected_marker.pose.orientation = make_quaternion();
+        rejected_marker.scale = make_vector3(diameter);
+        rejected_marker.color = eigen_to_color(color_rejected_candidate_);
+        rejected_marker.lifetime = ros::Duration(0.0);
+        rejected_marker.frame_locked = true;
+        // Publish the marker for each rejected candidate.
+        for (const auto& candidate : planner_->rejectedCandidateViews()) {
+            const Eigen::Matrix4f& goal_T_MB = candidate.goalT_MB();
+            rejected_marker.pose.position = eigen_to_point(goal_T_MB.topRightCorner<3, 1>());
+            map_candidate_pub_.publish(rejected_marker);
+            rejected_marker.id++;
+        }
     }
 }
 

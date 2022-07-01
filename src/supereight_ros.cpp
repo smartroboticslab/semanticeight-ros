@@ -1068,7 +1068,7 @@ void SupereightNode::plan()
                     num_failed_planning_iterations_++;
                 }
                 else {
-                    visualizeCandidates();
+                    visualizeCandidates(node_config_.dataset == Dataset::Real ? 0.1f : 1.0f);
                     visualizeGoal();
                     // Save more statistics.
                     const auto& goal_candidate =
