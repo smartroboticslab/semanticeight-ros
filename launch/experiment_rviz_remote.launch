@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<launch>
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
+  <env name="ROS_IP" value="192.168.1.183"/> <!-- PC on WiFi -->
+  <env name="ROS_MASTER_URI" value="http://192.168.1.120:11311/"/> <!-- MAV on WiFi -->
+  <!-- <env name="ROS_MASTER_URI" value="http://192.168.1.204:11311/"/> --> <!-- MAV on Ethernet -->
+
+  <node pkg="rviz" type="rviz" name="rviz" required="true"
+        args="-d $(find supereight_ros)/config/experiment.rviz"/>
+</launch>
