@@ -1235,18 +1235,18 @@ void SupereightNode::saveMap()
         const std::string output_mesh_dir = output_mesh_dir_ss.str();
         stdfs::create_directories(output_mesh_dir);
 
-        //{
-        //    std::stringstream output_octomap_file_ss;
-        //    output_octomap_file_ss << output_mesh_dir << "/mesh";
-        //    if constexpr (!overwrite_old_meshes) {
-        //        output_octomap_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
-        //    }
-        //    output_octomap_file_ss << output_mesh_dir << ".bt";
-        //    std::unique_ptr<octomap::OcTree> octomap(se::to_octomap(*(pipeline_->getMap())));
-        //    if (octomap) {
-        //        octomap->writeBinary(output_octomap_file_ss.str());
-        //    }
-        //}
+        if (node_config_.dataset == Dataset::Real) {
+            std::stringstream output_octomap_file_ss;
+            output_octomap_file_ss << output_mesh_dir << "/mesh";
+            if constexpr (!overwrite_old_meshes) {
+                output_octomap_file_ss << "_" << std::setw(5) << std::setfill('0') << frame_;
+            }
+            output_octomap_file_ss << output_mesh_dir << ".bt";
+            std::unique_ptr<octomap::OcTree> octomap(se::to_octomap(*(pipeline_->getMap())));
+            if (octomap) {
+                octomap->writeBinary(output_octomap_file_ss.str());
+            }
+        }
 
         {
             std::stringstream output_mesh_meter_file_ss;
