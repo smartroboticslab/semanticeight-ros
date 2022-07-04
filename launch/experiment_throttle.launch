@@ -12,8 +12,5 @@
 
   <node pkg="topic_tools" type="throttle" name="throttle_entropy"
         args="messages /supereight/entropy_render 0.5"/>
-
-  <node pkg="topic_tools" type="throttle" name="throttle_goal"
-        args="messages /supereight/planner/goal 2.0"/>
 </launch>
 

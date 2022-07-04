@@ -42,7 +42,7 @@ Visualization Manager:
       Value: false
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /supereight/planner/goal_throttle
+      Marker Topic: /supereight/planner/goal
       Name: Goal
       Namespaces:
         frustum: false
