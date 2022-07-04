@@ -1194,6 +1194,7 @@ void SupereightNode::plan()
         }
         else if (num_planning_iterations_ > 0 && node_config_.dataset == Dataset::Real) {
             visualizeGoal();
+            std::this_thread::sleep_for(std::chrono::duration<double>(0.05));
         }
         std::this_thread::sleep_for(std::chrono::duration<double>(0.05));
     }
