@@ -1261,7 +1261,7 @@ void SupereightNode::saveMap()
                 }
                 output_slice_voxel_file_ss << "_" << std::setw(1) << std::setfill('0') << i
                                            << ".vtk";
-                pipeline_->saveSliceZ(output_slice_voxel_file_ss.str(), z_values[i]);
+                pipeline_->saveThresholdSliceZ(output_slice_voxel_file_ss.str(), z_values[i]);
             }
         }
 
