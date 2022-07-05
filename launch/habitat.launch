@@ -5,6 +5,8 @@
 <launch>
   <!-- Sequence-specific config file -->
   <arg name="config" default="$(find supereight_ros)/config/habitat.yaml"/>
+  <!-- Launch rviz -->
+  <arg name="rviz" default="false"/>
   <!-- Enable teleoperation of the MAV instead of using the autopilot -->
   <arg name="teleop" default="false"/>
   <!-- Initial Waypoint sent to the autopilot -->
@@ -56,5 +58,7 @@
     <include file="$(find mpc)/launch/firefly_habitat.launch"/>
   </group>
 
-  <!-- <include file="$(find supereight_ros)/launch/rviz.launch"/> -->
+  <group if="$(arg rviz)">
+    <include file="$(find supereight_ros)/launch/rviz.launch"/>
+  </group>
 </launch>
