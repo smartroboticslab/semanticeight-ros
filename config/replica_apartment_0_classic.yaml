@@ -24,7 +24,7 @@ supereight:
 
   exploration:
     frontier_sampling_probability: 1.0
-    utility_weights:        [1.0, 0.0]
+    utility_weights:        [1.0, 0.0, 0.0]
 
 # WARNING: Any voxel parameters added in this file will be ignored. Change the
 # defaults if you need different values.
