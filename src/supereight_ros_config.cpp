@@ -271,6 +271,7 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
                 config.frontier_sampling_probability);
     std::vector<float> utility_weights_vector;
     if (nh.getParam("supereight/exploration/utility_weights", utility_weights_vector)) {
+        config.utility_weights = Eigen::VectorXf(utility_weights_vector.size());
         for (size_t i = 0; i < utility_weights_vector.size(); ++i) {
             config.utility_weights[i] = utility_weights_vector[i];
         }
