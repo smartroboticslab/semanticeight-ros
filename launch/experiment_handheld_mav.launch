@@ -5,10 +5,11 @@
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
-
-  <include file="$(find supereight_ros)/launch/vicon.launch"></include>
-  <include file="$(find supereight_ros)/launch/experiment_throttle.launch"></include>
-  <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
+  <include file="$(find supereight_ros)/launch/experiment_throttle.launch"/>
+  <include file="$(find supereight_ros)/launch/realsense_D455.launch"/>
+  <include file="$(find vicon_bridge)/launch/vicon.launch">
+    <arg name="datastream_hostport" value="192.168.1.164:801"/>
+  </include>
 
   <node pkg="supereight_ros"
         type="supereight_ros"
