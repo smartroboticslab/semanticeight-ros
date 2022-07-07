@@ -5,10 +5,6 @@
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
-  <remap to="/D455/depth0/image"       from="/camera/depth_image"/>
-  <remap to="/D455/rgb0/image"         from="/camera/rgb_image"/>
-  <remap to="/vicon/d455_ros/d455_ros" from="/pose"/>
-
   <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
   <include file="$(find vicon_bridge)/launch/vicon.launch">
     <arg name="datastream_hostport" value="192.168.1.164:801"/>
@@ -23,6 +19,9 @@
         launch-prefix="">
     <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
     <rosparam command="load" file="$(find supereight_ros)/config/experiment_handheld_pc.yaml"/>
+    <remap from="/camera/depth_image" to="/D455/depth0/image"/>
+    <remap from="/camera/rgb_image"   to="/D455/rgb0/image"/>
+    <remap from="/pose"               to="/vicon/d455_ros/d455_ros"/>
   </node>
 
   <include file="$(find supereight_ros)/launch/rviz.launch">

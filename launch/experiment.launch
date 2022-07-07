@@ -5,10 +5,6 @@
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
-  <remap to="/D455/depth0/image"             from="/camera/depth_image"/>
-  <remap to="/D455/rgb0/image"               from="/camera/rgb_image"/>
-  <remap to="/vicon/s550_jetson/s550_jetson" from="/pose"/>
-
   <include file="$(find supereight_ros)/launch/experiment_throttle.launch"></include>
   <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
 
@@ -20,6 +16,9 @@
         required="true"
         launch-prefix="">
     <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
+    <remap from="/camera/depth_image" to="/D455/depth0/image"/>
+    <remap from="/camera/rgb_image"   to="/D455/rgb0/image"/>
+    <remap from="/pose"               to="/vicon/s550_jetson/s550_jetson"/>
   </node>
 
    <node pkg="rosbag" type="record" name="record" args="--all --exclude '/(.*)(theora|compressed|compressedDepth)'"/>
