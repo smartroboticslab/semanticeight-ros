@@ -218,6 +218,10 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
                 config.T_BC(i, j) = T_BC_vector[i * 4 + j];
             }
         }
+        if (!se::math::is_valid_transformation(config.T_BC)) {
+            ROS_FATAL("Supplied T_BC is not a homogeneous transformation");
+            abort();
+        }
     }
 
     std::vector<float> init_T_WB_vector;
@@ -227,6 +231,10 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
             for (size_t j = 0; j < std::sqrt(init_T_WB_vector.size()); ++j) {
                 config.init_T_WB(i, j) = init_T_WB_vector[i * 4 + j];
             }
+        }
+        if (!se::math::is_valid_transformation(config.init_T_WB)) {
+            ROS_FATAL("Supplied init_T_WB is not a homogeneous transformation");
+            abort();
         }
     }
 
