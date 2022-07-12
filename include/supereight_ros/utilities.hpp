@@ -248,6 +248,14 @@ void write_view_data(const se::CandidateView& view,
                      const std::string& bg_dist_gain_filename,
                      const std::string& path_filename);
 
+bool write_as_tum_rgbd(const std::string& directory,
+                       const double timestamp,
+                       const float* depth,
+                       const uint32_t* rgba,
+                       const Eigen::Vector2i& res,
+                       const se::SegmentationResult& segmentation,
+                       const Eigen::Matrix4f& T_WC);
+
 } // namespace se
 
 #include "utilities_impl.hpp"

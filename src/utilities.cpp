@@ -17,6 +17,7 @@
 #include <ros/ros.h>
 #include <thread>
 
+#include "se/filesystem.hpp"
 #include "se/image_utils.hpp"
 
 
@@ -589,6 +590,60 @@ void write_view_data(const se::CandidateView& view,
                               render.height());
     }
     se::write_path_tsv(path_filename, view.path());
+}
+
+
+
+bool write_as_tum_rgbd(const std::string& directory,
+                       const double timestamp,
+                       const float* depth,
+                       const uint32_t* rgba,
+                       const Eigen::Vector2i& res,
+                       const se::SegmentationResult& segmentation,
+                       const Eigen::Matrix4f& T_WC)
+{
+    const std::string t = std::to_string(timestamp);
+
+    stdfs::create_directories(directory + "/depth");
+    se::save_depth_png(depth, res, directory + "/depth/" + t + ".png", 5000.0f);
+
+    stdfs::create_directories(directory + "/rgb");
+    std::unique_ptr<uint8_t[]> rgb(new uint8_t[3 * res.prod()]);
+    se::rgba_to_rgb(rgba, rgb.get(), res.prod());
+    lodepng_encode_file(
+        (directory + "/rgb/" + t + ".png").c_str(), rgb.get(), res.x(), res.y(), LCT_RGB, 8);
+
+    stdfs::create_directories(directory + "/segmentation");
+    segmentation.write(directory + "/segmentation", t);
+
+    for (const auto& n : {"depth", "rgb"}) {
+        const std::string filename = directory + "/" + n + ".txt";
+        if (!stdfs::is_regular_file(filename)) {
+            std::ofstream f(filename);
+            f << "# " << n << " images\n";
+            f << "# timestamp filename\n";
+        }
+        {
+            std::ofstream f(filename, std::ios_base::app);
+            f << t << " " << n << "/" << t << ".png\n";
+        }
+    }
+
+    const std::string groundtruth_txt = directory + "/groundtruth.txt";
+    if (!stdfs::is_regular_file(groundtruth_txt)) {
+        std::ofstream f(groundtruth_txt);
+        f << "# ground truth trajectory\n";
+        f << "# timestamp tx ty tz qx qy qz qw\n";
+    }
+    {
+        const Eigen::Vector3f t_WC = T_WC.topRightCorner<3, 1>();
+        const Eigen::Quaternionf q_WC(T_WC.topLeftCorner<3, 3>());
+        std::ofstream f(groundtruth_txt, std::ios_base::app);
+        f << std::fixed << t << " " << t_WC.x() << " " << t_WC.y() << " " << t_WC.z() << " "
+          << q_WC.x() << " " << q_WC.y() << " " << q_WC.z() << " " << q_WC.w() << "\n";
+    }
+
+    return true;
 }
 
 } // namespace se
