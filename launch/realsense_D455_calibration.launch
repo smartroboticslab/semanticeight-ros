@@ -1,4 +1,8 @@
 <launch>
+  <include file="$(find vicon_bridge)/launch/vicon.launch">
+    <arg name="datastream_hostport" value="192.168.1.164:801"/>
+  </include>
+
   <!-- INTEL REALSENSE D455 -->
   <node pkg="rs4se"
       type="intel_d435i"
