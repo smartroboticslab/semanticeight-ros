@@ -208,6 +208,15 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
     }
     config.left_hand_frame = config.sensor_intrinsics[1] < 0;
 
+    std::vector<float> sensor_distortion_vector;
+    if (!nh.getParam("supereight/sensor/distortion", sensor_distortion_vector)
+        || sensor_distortion_vector.empty()) {
+        ros::shutdown();
+    }
+    for (size_t i = 0; i < sensor_distortion_vector.size(); i++) {
+        config.sensor_distortion[i] = sensor_distortion_vector[i];
+    }
+
     nh.getParam("supereight/sensor/downsampling_factor", config.sensor_downsampling_factor);
 
     std::vector<float> T_BC_vector;

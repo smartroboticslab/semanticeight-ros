@@ -244,6 +244,10 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
          supereight_config_.sensor_intrinsics[1] / supereight_config_.sensor_downsampling_factor,
          supereight_config_.sensor_intrinsics[2] / supereight_config_.sensor_downsampling_factor,
          supereight_config_.sensor_intrinsics[3] / supereight_config_.sensor_downsampling_factor,
+         supereight_config_.sensor_distortion[0],
+         supereight_config_.sensor_distortion[1],
+         supereight_config_.sensor_distortion[2],
+         supereight_config_.sensor_distortion[3],
          azimuth_angles,
          elevation_angles});
 
