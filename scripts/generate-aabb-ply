@@ -17,6 +17,8 @@ zmax=$(printf '%s\n' "$6" | tr -d ',[]')
 cat << EOF
 ply
 format ascii 1.0
+comment [$xmin, $ymin, $zmin]
+comment [$xmax, $ymax, $zmax]
 element vertex 8
 property float x
 property float y
