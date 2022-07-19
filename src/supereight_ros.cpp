@@ -617,6 +617,11 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                           const ros::Time& depth_timestamp,
                           const bool out_of_order_fusion)
 {
+    if (node_config_.dataset == Dataset::Real
+        && node_config_.control_interface == ControlInterface::SRL && frame_ == -1) {
+        std::cout << "PRESS ENTER TO BEGIN" << std::endl;
+        std::cin.get();
+    }
     frame_++;
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     stats_.newFrame("fusion");
