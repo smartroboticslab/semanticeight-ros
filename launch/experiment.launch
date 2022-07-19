@@ -5,6 +5,7 @@
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
+  <include file="$(find mpc_ros)/launch/autopilot_S550_experiment.launch"></include>
   <include file="$(find supereight_ros)/launch/experiment_throttle.launch"></include>
   <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
 
