@@ -639,14 +639,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         to_supereight_RGB(color_image, input_rgba_.get());
     }
 
-    write_as_tum_rgbd(ros_log_dir() + "/latest/tum_rec",
-                      depth_image->header.stamp.toSec(),
-                      input_depth_.get(),
-                      input_rgba_.get(),
-                      node_config_.input_res,
-                      segmentation,
-                      T_WC);
-
     // Preprocessing
     start_time = std::chrono::steady_clock::now();
     pipeline_->preprocessDepth(
