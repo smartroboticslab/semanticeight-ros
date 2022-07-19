@@ -1254,23 +1254,6 @@ void SupereightNode::saveMap()
             }
         }
 
-        if (node_config_.dataset == Dataset::Real) {
-            const float z_min = (T_MW_ * supereight_config_.sampling_min_W.homogeneous()).z();
-            const float z_max = (T_MW_ * supereight_config_.sampling_max_W.homogeneous()).z();
-            const std::array z_values = {z_min, (z_min + z_max) / 2.0f, z_max};
-            for (size_t i = 0; i < z_values.size(); ++i) {
-                std::stringstream output_slice_voxel_file_ss;
-                output_slice_voxel_file_ss << output_mesh_dir << "/slice";
-                if constexpr (!overwrite_old_meshes) {
-                    output_slice_voxel_file_ss << "_" << std::setw(5) << std::setfill('0')
-                                               << frame_;
-                }
-                output_slice_voxel_file_ss << "_" << std::setw(1) << std::setfill('0') << i
-                                           << ".vtk";
-                pipeline_->saveThresholdSliceZ(output_slice_voxel_file_ss.str(), z_values[i]);
-            }
-        }
-
         {
             std::stringstream output_mesh_meter_file_ss;
             output_mesh_meter_file_ss << output_mesh_dir << "/mesh";
