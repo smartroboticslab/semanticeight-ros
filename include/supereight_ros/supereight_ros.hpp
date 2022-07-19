@@ -358,6 +358,7 @@ class SupereightNode {
     std::thread matching_thread_;
     std::thread planning_thread_;
     std::atomic_bool keep_running_;
+    std::atomic_bool fused_at_goal_;
 
     /*!
      * Global/map coordinate frame. Will always look up TF transforms to this

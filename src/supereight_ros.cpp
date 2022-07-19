@@ -48,6 +48,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
 #endif // SE_WITH_MASKRCNN
         tf_listener_(tf_buffer_),
         keep_running_(true),
+        fused_at_goal_(true),
         world_frame_id_("world"),
         map_frame_id_("map"),
         body_frame_id_("body"),
@@ -719,6 +720,9 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         if (!out_of_order_fusion) {
             const std::lock_guard<std::mutex> map_lock(pose_mutex_);
             planner_->setT_WB(se_T_WB, pipeline_->getDepth());
+            if (planner_->inGoalCandidateThreshold(se_T_WB)) {
+                fused_at_goal_ = true;
+            }
         }
     }
     else {
@@ -1042,7 +1046,8 @@ void SupereightNode::plan()
         ROS_DEBUG_NAMED("goal", "Goal reached: %s", goal_reached ? "YES" : "NO");
 
 
-        if (goal_reached || num_planning_iterations_ == 0) {
+        if (goal_reached && fused_at_goal_ || num_planning_iterations_ == 0) {
+            fused_at_goal_ = false;
             visualizeCandidates(0.25f);
             visualizeGoal(0.25f);
             if (planner_->needsNewGoal()) {
