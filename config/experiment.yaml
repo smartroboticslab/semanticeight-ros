@@ -46,7 +46,7 @@ supereight:
     pyramid:                    [10, 5, 4]
 
   map:
-    size:                       256
+    size:                       128
     dim:                        10.24
     t_MW_factor:                [0.501, 0.501, 0.501]
     aabb_min_W:                 [-5.0, -5.0, -1.0]
