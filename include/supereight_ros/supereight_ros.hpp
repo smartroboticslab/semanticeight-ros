@@ -79,6 +79,8 @@ class SupereightNode {
 
     void plan();
 
+    void saveGainRenders(const std::string& suffix) const;
+
     /*!
      * \brief Save the current supereight map to a `.vtk` file.
      *

@@ -22,6 +22,7 @@
 #include <tf_conversions/tf_eigen.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
 
+#include "se/dist.hpp"
 #include "se/io/meshing_io.hpp"
 #include "se/system_info.hpp"
 #include "se/voxel_implementations.hpp"
@@ -1214,6 +1215,54 @@ void SupereightNode::plan()
     }
     ROS_INFO("Failed to plan %d times, stopping", num_failed_planning_iterations_);
     ros::shutdown();
+}
+
+
+
+void SupereightNode::saveGainRenders(const std::string& suffix) const
+{
+    if (supereight_config_.rendering_rate > 0
+        && (frame_ + 1) % supereight_config_.rendering_rate == 0
+        && supereight_config_.output_render_file != "") {
+        stdfs::create_directories(supereight_config_.output_render_file);
+
+        const int w = (pipeline_->getImageResolution()).x();
+        const int h = (pipeline_->getImageResolution()).y();
+        const Eigen::Matrix4f T_MB = T_MW_ * pipeline_->T_WC() * T_CB_;
+        const Eigen::VectorXf weights =
+            (supereight_config_.utility_weights / supereight_config_.utility_weights.sum());
+        const std::string p = supereight_config_.output_render_file + "/";
+        std::stringstream path_suffix_ss;
+        path_suffix_ss << suffix << std::setw(5) << std::setfill('0') << frame_ << ".png";
+        const std::string s = path_suffix_ss.str();
+
+        se::Image<float> entropy(w, h);
+        se::Image<Eigen::Vector3f> entropy_hits_M(w, h);
+        se::raycast_entropy(entropy,
+                            entropy_hits_M,
+                            *(pipeline_->getMap()),
+                            sensor_,
+                            T_MB,
+                            supereight_config_.T_BC);
+        const se::Image<float> obj_dist = se::object_dist_gain(
+            entropy_hits_M, pipeline_->getObjectMaps(), sensor_, T_MB, supereight_config_.T_BC);
+        const se::Image<float> bg_dist = se::bg_dist_gain(
+            entropy_hits_M, *(pipeline_->getMap()), sensor_, T_MB, supereight_config_.T_BC);
+        const se::Image<float> gain =
+            se::CandidateView::computeGainImage({entropy, obj_dist, bg_dist}, weights);
+
+        const se::Image<uint32_t> entropy_render = se::visualize_entropy(entropy, 0, 0, false);
+        const se::Image<uint32_t> obj_dist_render = se::visualize_entropy(obj_dist, 0, 0, false);
+        const se::Image<uint32_t> bg_dist_render = se::visualize_entropy(bg_dist, 0, 0, false);
+        const se::Image<uint32_t> gain_render = se::visualize_entropy(gain, 0, 0, false);
+        lodepng_encode32_file(
+            (p + "entropy_" + s).c_str(), (unsigned char*) entropy_render.data(), w, h);
+        lodepng_encode32_file(
+            (p + "obj_dist_" + s).c_str(), (unsigned char*) obj_dist_render.data(), w, h);
+        lodepng_encode32_file(
+            (p + "bg_dist_" + s).c_str(), (unsigned char*) bg_dist_render.data(), w, h);
+        lodepng_encode32_file((p + "gain_" + s).c_str(), (unsigned char*) gain_render.data(), w, h);
+    }
 }
 
 
