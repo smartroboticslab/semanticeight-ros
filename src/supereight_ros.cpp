@@ -1234,8 +1234,10 @@ void SupereightNode::saveGainRenders(const std::string& suffix) const
         && supereight_config_.output_render_file != "") {
         stdfs::create_directories(supereight_config_.output_render_file);
 
-        const int w = (pipeline_->getImageResolution()).x();
-        const int h = (pipeline_->getImageResolution()).y();
+        const int w = std::min(pipeline_->getImageResolution().x(), 160);
+        const int h = std::min(pipeline_->getImageResolution().y(), 120);
+        const float scaling_factor = static_cast<float>(w) / pipeline_->getImageResolution().x();
+        const SensorImpl sensor(sensor_, scaling_factor);
         const Eigen::Matrix4f T_MB = T_MW_ * pipeline_->T_WC() * T_CB_;
         const Eigen::VectorXf weights =
             (supereight_config_.utility_weights / supereight_config_.utility_weights.sum());
@@ -1246,16 +1248,12 @@ void SupereightNode::saveGainRenders(const std::string& suffix) const
 
         se::Image<float> entropy(w, h);
         se::Image<Eigen::Vector3f> entropy_hits_M(w, h);
-        se::raycast_entropy(entropy,
-                            entropy_hits_M,
-                            *(pipeline_->getMap()),
-                            sensor_,
-                            T_MB,
-                            supereight_config_.T_BC);
+        se::raycast_entropy(
+            entropy, entropy_hits_M, *(pipeline_->getMap()), sensor, T_MB, supereight_config_.T_BC);
         const se::Image<float> obj_dist = se::object_dist_gain(
-            entropy_hits_M, pipeline_->getObjectMaps(), sensor_, T_MB, supereight_config_.T_BC);
+            entropy_hits_M, pipeline_->getObjectMaps(), sensor, T_MB, supereight_config_.T_BC);
         const se::Image<float> bg_dist = se::bg_dist_gain(
-            entropy_hits_M, *(pipeline_->getMap()), sensor_, T_MB, supereight_config_.T_BC);
+            entropy_hits_M, *(pipeline_->getMap()), sensor, T_MB, supereight_config_.T_BC);
         const se::Image<float> gain =
             se::CandidateView::computeGainImage({entropy, obj_dist, bg_dist}, weights);
 
