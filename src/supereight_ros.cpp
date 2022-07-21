@@ -695,6 +695,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         "Tracking",
         std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
+    if (node_config_.dataset == Dataset::Real) {
+        saveGainRenders("pre_");
+    }
+
     // Integration
     // Integrate only if tracking was successful or it is one of the first 4
     // frames.
@@ -734,6 +738,10 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         integrated = false;
         stats_.sample("fusion", "Integration", 0.0);
         stats_.sample("fusion", "Object integration", 0.0);
+    }
+
+    if (node_config_.dataset == Dataset::Real) {
+        saveGainRenders("post_");
     }
 
     // Rendering
