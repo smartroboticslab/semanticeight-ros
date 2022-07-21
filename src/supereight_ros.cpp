@@ -300,7 +300,6 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     }
     if (node_config_.dataset == Dataset::Real) {
         se::semantic_classes.setEnabled("backpack");
-        se::semantic_classes.setEnabled("book");
         se::semantic_classes.setEnabled("cup");
         se::semantic_classes.setEnabled("keyboard");
     }
