@@ -628,25 +628,23 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         std::cout << "PRESS ENTER TO BEGIN" << std::endl;
         std::cin.get();
     }
-    frame_++;
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
-    stats_.newFrame("fusion");
     std::chrono::time_point<std::chrono::steady_clock> start_time;
     std::chrono::time_point<std::chrono::steady_clock> fusion_start_time =
         std::chrono::steady_clock::now();
+    frame_++;
+    stats_.newFrame("fusion");
     const int frame = frame_;
 
     ROS_INFO("-----------------------------------------");
     ROS_INFO("Frame %d", frame);
 
-    // Convert the depth and RGB images into a format that supereight likes.
+    // Preprocessing
+    start_time = std::chrono::steady_clock::now();
     to_supereight_depth(depth_image, sensor_.far_plane, input_depth_.get());
     if (node_config_.enable_rgb) {
         to_supereight_RGB(color_image, input_rgba_.get());
     }
-
-    // Preprocessing
-    start_time = std::chrono::steady_clock::now();
     pipeline_->preprocessDepth(
         input_depth_.get(), node_config_.input_res, supereight_config_.bilateral_filter);
     if (node_config_.enable_rgb) {
@@ -752,7 +750,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         const sensor_msgs::Image depth_render_msg =
             RGBA_to_msg(depth_render_.get(), image_res_, depth_image->header);
         depth_render_pub_.publish(depth_render_msg);
-
         // RGB
         if (node_config_.enable_rgb) {
             pipeline_->renderRGBA(rgba_render_.get(), image_res_);
@@ -760,7 +757,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                 RGBA_to_msg(rgba_render_.get(), image_res_, depth_image->header);
             rgba_render_pub_.publish(rgba_render_msg);
         }
-
         // Track
         if (node_config_.enable_tracking) {
             pipeline_->renderTrack(track_render_.get(), image_res_);
@@ -768,47 +764,38 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                 RGBA_to_msg(track_render_.get(), image_res_, depth_image->header);
             track_render_pub_.publish(track_render_msg);
         }
-
         // Volume
         if (frame % supereight_config_.rendering_rate == 0) {
             (void) pipeline_->raycastObjectsAndBg(sensor_, frame);
-
             pipeline_->renderObjects(
                 volume_render_.get(), image_res_, sensor_, RenderMode::InstanceID, false);
             volume_render_pub_.publish(
                 RGBA_to_msg(volume_render_.get(), image_res_, depth_image->header));
-
             //pipeline_->renderObjects(
             //    volume_render_color_.get(), image_res_, sensor_, RenderMode::Color, false);
             pipeline_->renderVolume(volume_render_color_.get(), image_res_, sensor_, true);
             volume_render_color_pub_.publish(
                 RGBA_to_msg(volume_render_color_.get(), image_res_, depth_image->header));
-
             pipeline_->renderObjects(
                 volume_render_scale_.get(), image_res_, sensor_, RenderMode::Scale, false);
             volume_render_scale_pub_.publish(
                 RGBA_to_msg(volume_render_scale_.get(), image_res_, depth_image->header));
-
             pipeline_->renderObjects(
                 volume_render_min_scale_.get(), image_res_, sensor_, RenderMode::MinScale, false);
             volume_render_min_scale_pub_.publish(
                 RGBA_to_msg(volume_render_min_scale_.get(), image_res_, depth_image->header));
-
             if (node_config_.enable_objects) {
                 pipeline_->renderObjectClasses(class_render_.get(), image_res_);
                 class_render_pub_.publish(
                     RGBA_to_msg(class_render_.get(), image_res_, depth_image->header));
-
                 pipeline_->renderObjectInstances(instance_render_.get(), image_res_);
                 instance_render_pub_.publish(
                     RGBA_to_msg(instance_render_.get(), image_res_, depth_image->header));
             }
-
             pipeline_->renderRaycast(raycast_render_.get(), image_res_);
             raycast_render_pub_.publish(
                 RGBA_to_msg(raycast_render_.get(), image_res_, depth_image->header));
         }
-
         if (node_config_.visualize_360_raycasting) {
             // Entropy
             se::Image<uint32_t> entropy_render(1, 1);
@@ -882,6 +869,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     stats_.sample("fusion", "q_WB w", se_q_WB.w());
     stats_.sample("fusion", "Number of objects", pipeline_->getObjectMaps().size());
 
+    start_time = std::chrono::steady_clock::now();
     if (supereight_config_.rendering_rate > 0
         && (frame + 1) % supereight_config_.rendering_rate == 0
         && supereight_config_.output_render_file != "") {
@@ -952,10 +940,19 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         //               << std::setfill('0') << frame;
         //planner_->getPoseMaskHistory().writeMasks(history_dir_ss.str());
     }
+    stats_.sample(
+        "fusion",
+        "Saving Renders",
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
+    start_time = std::chrono::steady_clock::now();
     if (supereight_config_.meshing_rate > 0 && (frame + 1) % supereight_config_.meshing_rate == 0) {
         SupereightNode::saveMap();
     }
+    stats_.sample(
+        "fusion",
+        "Meshing",
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
     stats_.sample(
         "fusion",

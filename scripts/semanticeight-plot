@@ -161,8 +161,8 @@ frame_time() {
 	get_average_data $fusion_files > "$average_fusion_file"
 	# Get the indices of the required columns.
 	frame_idx=$(get_column_index "$average_fusion_file" 'Frame')
-	pre_idx=$(get_column_index "$average_fusion_file" 'Preprocessing')
-	viz_idx=$(get_column_index "$average_fusion_file" 'Visualization')
+	start_idx=$(get_column_index "$average_fusion_file" 'Preprocessing')
+	end_idx=$(get_column_index "$average_fusion_file" 'Meshing')
 	fusion_idx=$(get_column_index "$average_fusion_file" 'Total')
 	# Plot the data.
 	gnuplot -p -e "
@@ -176,8 +176,8 @@ frame_time() {
 	set xrange [$xmin:$xmax];
 	set yrange [$ymin:$ymax];
 	fusion_files = \"$fusion_files\";
-	plot '$average_fusion_file' using (\$$frame_idx+1):(\$$fusion_idx) title 'Total',\
-		for [i=$viz_idx:$pre_idx:-1] '$average_fusion_file' using (\$$frame_idx+1):(sum [col=$pre_idx:i] column(col)) title columnheader(i) with filledcurves x1;
+	plot for [i=$end_idx:$start_idx:-1] '$average_fusion_file' using (\$$frame_idx+1):(sum [col=$start_idx:i] column(col)) title columnheader(i) with filledcurves x1,\
+		'$average_fusion_file' using (\$$frame_idx+1):(\$$fusion_idx) title 'Total';
 	"
 	# Remove temporary file.
 	rm -f "$average_fusion_file"
