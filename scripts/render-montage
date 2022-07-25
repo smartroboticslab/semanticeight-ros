@@ -19,6 +19,7 @@ generate_run_montages() {
 		printf 'Generating render montage...\n'
 		"$(script_dir)"/../semanticeight/se_tools/semanticeight_render_montage.sh "$render_dir"
 		"$(script_dir)"/../semanticeight/se_tools/semanticeight_gain_render_montage.sh "$render_dir"
+		mv "$render_dir" "$render_dir".bak
 	else
 		printf 'Skipping render montage, %s is not a directory\n' "$render_dir"
 	fi
@@ -27,6 +28,7 @@ generate_run_montages() {
 	then
 		printf 'Generating planning montage...\n'
 		"$(script_dir)"/../semanticeight/se_tools/semanticeight_planning_montage.sh "$planning_dir"
+		mv "$planning_dir" "$planning_dir".bak
 	else
 		printf 'Skipping planning montage, %s is not a directory\n' "$planning_dir"
 	fi
