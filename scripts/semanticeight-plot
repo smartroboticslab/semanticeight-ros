@@ -91,6 +91,7 @@ volume() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel 'Volume (m³)';
 	set key right bottom;
@@ -128,6 +129,7 @@ volume_frame() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Frame';
 	set ylabel 'Volume (m³)';
 	set key right bottom;
@@ -165,6 +167,7 @@ frame_time() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Frame';
 	set ylabel 'Frame time (s)';
 	set key left top;
@@ -197,6 +200,7 @@ planning_time() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Planning iteration';
 	set ylabel 'Planning time (s)';
 	set grid;
@@ -234,6 +238,7 @@ frame_planning_time() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel 'Frame time (s)';
 	set key right top;
@@ -272,6 +277,7 @@ utility() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Planning iteration';
 	set ylabel 'Utility (1/s)';
 	set grid;
@@ -310,6 +316,7 @@ gain() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Planning iteration';
 	set ylabel 'Gain';
 	set grid;
@@ -344,6 +351,7 @@ dominant_gain() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Planning iteration';
 	set ylabel 'Dominant gain';
 	set grid;
@@ -377,6 +385,7 @@ objects() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel '(%)';
 	set key right bottom;
@@ -412,6 +421,7 @@ objects_acc() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel 'Accuracy (m)';
 	set key right bottom;
@@ -443,6 +453,7 @@ objects_dist() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel 'Mean observed distance (m)';
 	set key right bottom;
@@ -475,6 +486,7 @@ bg() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel '(%)';
 	set key right bottom;
@@ -508,6 +520,7 @@ bg_acc() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel 'Accuracy (m)';
 	set key right bottom;
@@ -539,6 +552,7 @@ bg_dist() {
 	# Plot the data.
 	gnuplot -p -e "
 	$save_command
+	set datafile separator \"\t\";
 	set xlabel 'Time (s)';
 	set ylabel 'Mean observed distance (m)';
 	set key right bottom;
