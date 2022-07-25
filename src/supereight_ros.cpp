@@ -722,13 +722,12 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                 "Object integration",
                 std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time)
                     .count());
-        }
 
-        if (!out_of_order_fusion) {
-            const std::lock_guard<std::mutex> map_lock(pose_mutex_);
-            planner_->setT_WB(se_T_WB, pipeline_->getDepth());
-            if (planner_->inGoalCandidateThreshold(se_T_WB)) {
-                fused_at_goal_ = true;
+            planner_->recordT_WB(se_T_WB, pipeline_->getDepth());
+            if (!out_of_order_fusion) {
+                if (planner_->inGoalCandidateThreshold(se_T_WB)) {
+                    fused_at_goal_ = true;
+                }
             }
         }
     }
