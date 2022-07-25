@@ -1072,6 +1072,13 @@ void SupereightNode::plan()
                     const auto start_time = std::chrono::steady_clock::now();
                     planner_->setPlanningT_WB(transform_to_eigen(pose_buffer_.back().transform)
                                               * T_CB_);
+                    if (node_config_.dataset == Dataset::Real) {
+                        const Eigen::Vector3f centre_M =
+                            (T_MW_ * planner_->getPlanningT_WB()).topRightCorner<3, 1>();
+                        const float radius_M =
+                            supereight_config_.robot_radius + supereight_config_.safety_radius;
+                        pipeline_->freeSphere(centre_M, radius_M);
+                    }
                     path_WB = planner_->computeNextPath_WB(pipeline_->getFrontiers(),
                                                            pipeline_->getObjectMaps());
                     const auto end_time = std::chrono::steady_clock::now();
