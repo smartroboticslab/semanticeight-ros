@@ -21,5 +21,10 @@
     <remap from="/camera/rgb_image"   to="/D455/rgb0/image"/>
     <remap from="/pose"               to="/vicon/s550_jetson/s550_jetson"/>
   </node>
+
+  <node pkg="rosbag"
+	name="record"
+	type="record"
+	args="--all --exclude '/(.*)(theora|compressed|compressedDepth|throttle)'"/>
 </launch>
 
