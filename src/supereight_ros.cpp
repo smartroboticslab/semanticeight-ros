@@ -406,6 +406,8 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     }
 
     stats_ = Stats(supereight_config_.log_path);
+    non_essential_ = !(node_config_.dataset == Dataset::Real
+                       && node_config_.control_interface == ControlInterface::SRL);
 
     // Start the matching thread.
     matching_thread_ = std::thread(std::bind(&SupereightNode::matchAndFuse, this));
@@ -693,7 +695,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         "Tracking",
         std::chrono::duration<double>(std::chrono::steady_clock::now() - start_time).count());
 
-    if (node_config_.dataset == Dataset::Real) {
+    if (node_config_.dataset == Dataset::Real && non_essential_) {
         saveGainRenders("pre_");
     }
 
@@ -737,7 +739,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         stats_.sample("fusion", "Object integration", 0.0);
     }
 
-    if (node_config_.dataset == Dataset::Real) {
+    if (node_config_.dataset == Dataset::Real && non_essential_) {
         saveGainRenders("post_");
     }
 
@@ -757,7 +759,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             rgba_render_pub_.publish(rgba_render_msg);
         }
         // Track
-        if (node_config_.enable_tracking) {
+        if (node_config_.enable_tracking && non_essential_) {
             pipeline_->renderTrack(track_render_.get(), image_res_);
             const sensor_msgs::Image track_render_msg =
                 RGBA_to_msg(track_render_.get(), image_res_, depth_image->header);
@@ -772,28 +774,33 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                 RGBA_to_msg(volume_render_.get(), image_res_, depth_image->header));
             //pipeline_->renderObjects(
             //    volume_render_color_.get(), image_res_, sensor_, RenderMode::Color, false);
-            pipeline_->renderVolume(volume_render_color_.get(), image_res_, sensor_, true);
-            volume_render_color_pub_.publish(
-                RGBA_to_msg(volume_render_color_.get(), image_res_, depth_image->header));
-            pipeline_->renderObjects(
-                volume_render_scale_.get(), image_res_, sensor_, RenderMode::Scale, false);
-            volume_render_scale_pub_.publish(
-                RGBA_to_msg(volume_render_scale_.get(), image_res_, depth_image->header));
-            pipeline_->renderObjects(
-                volume_render_min_scale_.get(), image_res_, sensor_, RenderMode::MinScale, false);
-            volume_render_min_scale_pub_.publish(
-                RGBA_to_msg(volume_render_min_scale_.get(), image_res_, depth_image->header));
-            if (node_config_.enable_objects) {
-                pipeline_->renderObjectClasses(class_render_.get(), image_res_);
-                class_render_pub_.publish(
-                    RGBA_to_msg(class_render_.get(), image_res_, depth_image->header));
-                pipeline_->renderObjectInstances(instance_render_.get(), image_res_);
-                instance_render_pub_.publish(
-                    RGBA_to_msg(instance_render_.get(), image_res_, depth_image->header));
+            if (non_essential_) {
+                pipeline_->renderVolume(volume_render_color_.get(), image_res_, sensor_, true);
+                volume_render_color_pub_.publish(
+                    RGBA_to_msg(volume_render_color_.get(), image_res_, depth_image->header));
+                pipeline_->renderObjects(
+                    volume_render_scale_.get(), image_res_, sensor_, RenderMode::Scale, false);
+                volume_render_scale_pub_.publish(
+                    RGBA_to_msg(volume_render_scale_.get(), image_res_, depth_image->header));
+                pipeline_->renderObjects(volume_render_min_scale_.get(),
+                                         image_res_,
+                                         sensor_,
+                                         RenderMode::MinScale,
+                                         false);
+                volume_render_min_scale_pub_.publish(
+                    RGBA_to_msg(volume_render_min_scale_.get(), image_res_, depth_image->header));
+                if (node_config_.enable_objects) {
+                    pipeline_->renderObjectClasses(class_render_.get(), image_res_);
+                    class_render_pub_.publish(
+                        RGBA_to_msg(class_render_.get(), image_res_, depth_image->header));
+                    pipeline_->renderObjectInstances(instance_render_.get(), image_res_);
+                    instance_render_pub_.publish(
+                        RGBA_to_msg(instance_render_.get(), image_res_, depth_image->header));
+                }
+                pipeline_->renderRaycast(raycast_render_.get(), image_res_);
+                raycast_render_pub_.publish(
+                    RGBA_to_msg(raycast_render_.get(), image_res_, depth_image->header));
             }
-            pipeline_->renderRaycast(raycast_render_.get(), image_res_);
-            raycast_render_pub_.publish(
-                RGBA_to_msg(raycast_render_.get(), image_res_, depth_image->header));
         }
         if (node_config_.visualize_360_raycasting) {
             // Entropy
@@ -885,10 +892,12 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
         pipeline_->renderInputSegmentation(segmentation_render.get(),
                                            pipeline_->getImageResolution());
         std::unique_ptr<uint32_t[]> volume_aabb_render(new uint32_t[w * h]);
-        pipeline_->renderObjects(volume_aabb_render.get(),
-                                 pipeline_->getImageResolution(),
-                                 sensor_,
-                                 RenderMode::InstanceID);
+        if (non_essential_) {
+            pipeline_->renderObjects(volume_aabb_render.get(),
+                                     pipeline_->getImageResolution(),
+                                     sensor_,
+                                     RenderMode::InstanceID);
+        }
 
         lodepng_encode32_file(
             (prefix + "rgba_" + suffix).c_str(), (unsigned char*) rgba_render_.get(), w, h);
@@ -898,46 +907,52 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
             (prefix + "segm_" + suffix).c_str(), (unsigned char*) segmentation_render.get(), w, h);
         lodepng_encode32_file(
             (prefix + "volume_" + suffix).c_str(), (unsigned char*) volume_render_.get(), w, h);
-        lodepng_encode32_file((prefix + "volume_color_" + suffix).c_str(),
-                              (unsigned char*) volume_render_color_.get(),
-                              w,
-                              h);
-        lodepng_encode32_file((prefix + "volume_scale_" + suffix).c_str(),
-                              (unsigned char*) volume_render_scale_.get(),
-                              w,
-                              h);
-        lodepng_encode32_file((prefix + "volume_min_scale_" + suffix).c_str(),
-                              (unsigned char*) volume_render_min_scale_.get(),
-                              w,
-                              h);
-        lodepng_encode32_file((prefix + "volume_aabb_" + suffix).c_str(),
-                              (unsigned char*) volume_aabb_render.get(),
-                              w,
-                              h);
-        lodepng_encode32_file(
-            (prefix + "raycast_" + suffix).c_str(), (unsigned char*) raycast_render_.get(), w, h);
-
-        //for (const auto& o : pipeline_->getObjectMaps()) {
-        //    std::stringstream filename_ss;
-        //    filename_ss << prefix << "aabb_mask_" << std::setw(5) << std::setfill('0') << frame
-        //                << "_" << std::setw(3) << std::setfill('0') << o->instance_id << ".png";
-        //    cv::imwrite(filename_ss.str(),
-        //                o->bounding_volume_M_.raycastingMask(
-        //                    pipeline_->getImageResolution(), pipeline_->T_MC(), sensor_));
-        //}
-
-        if (node_config_.enable_objects) {
-            lodepng_encode32_file((prefix + "instance_" + suffix).c_str(),
-                                  (unsigned char*) instance_render_.get(),
+        if (non_essential_) {
+            lodepng_encode32_file((prefix + "volume_color_" + suffix).c_str(),
+                                  (unsigned char*) volume_render_color_.get(),
                                   w,
                                   h);
-            lodepng_encode32_file(
-                (prefix + "class_" + suffix).c_str(), (unsigned char*) class_render_.get(), w, h);
+            lodepng_encode32_file((prefix + "volume_scale_" + suffix).c_str(),
+                                  (unsigned char*) volume_render_scale_.get(),
+                                  w,
+                                  h);
+            lodepng_encode32_file((prefix + "volume_min_scale_" + suffix).c_str(),
+                                  (unsigned char*) volume_render_min_scale_.get(),
+                                  w,
+                                  h);
+            lodepng_encode32_file((prefix + "volume_aabb_" + suffix).c_str(),
+                                  (unsigned char*) volume_aabb_render.get(),
+                                  w,
+                                  h);
+            lodepng_encode32_file((prefix + "raycast_" + suffix).c_str(),
+                                  (unsigned char*) raycast_render_.get(),
+                                  w,
+                                  h);
+
+            //for (const auto& o : pipeline_->getObjectMaps()) {
+            //    std::stringstream filename_ss;
+            //    filename_ss << prefix << "aabb_mask_" << std::setw(5) << std::setfill('0') << frame
+            //                << "_" << std::setw(3) << std::setfill('0') << o->instance_id << ".png";
+            //    cv::imwrite(filename_ss.str(),
+            //                o->bounding_volume_M_.raycastingMask(
+            //                    pipeline_->getImageResolution(), pipeline_->T_MC(), sensor_));
+            //}
+
+            if (node_config_.enable_objects) {
+                lodepng_encode32_file((prefix + "instance_" + suffix).c_str(),
+                                      (unsigned char*) instance_render_.get(),
+                                      w,
+                                      h);
+                lodepng_encode32_file((prefix + "class_" + suffix).c_str(),
+                                      (unsigned char*) class_render_.get(),
+                                      w,
+                                      h);
+            }
+            //std::stringstream history_dir_ss;
+            //history_dir_ss << supereight_config_.output_render_file << "/history_" << std::setw(5)
+            //               << std::setfill('0') << frame;
+            //planner_->getPoseMaskHistory().writeMasks(history_dir_ss.str());
         }
-        //std::stringstream history_dir_ss;
-        //history_dir_ss << supereight_config_.output_render_file << "/history_" << std::setw(5)
-        //               << std::setfill('0') << frame;
-        //planner_->getPoseMaskHistory().writeMasks(history_dir_ss.str());
     }
     stats_.sample(
         "fusion",

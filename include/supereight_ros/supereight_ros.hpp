@@ -376,6 +376,8 @@ class SupereightNode {
 
     // Statistics
     Stats stats_;
+
+    bool non_essential_;
 };
 
 } // namespace se
