@@ -41,7 +41,7 @@
   </node>
 
   <!-- Disable image transport plugins -->
-  <group ns="rs/rgb0/image" >
+  <group ns="/D455/rgb0/image" >
     <rosparam param="disable_pub_plugins">
       - "image_transport/compressed"
       - "image_transport/compressedDepth"
@@ -49,7 +49,7 @@
     </rosparam>
   </group>
 
-  <group ns="rs/ir0/image" >
+  <group ns="/D455/ir0/image" >
     <rosparam param="disable_pub_plugins">
       - "image_transport/compressed"
       - "image_transport/compressedDepth"
@@ -57,7 +57,7 @@
     </rosparam>
   </group>
 
-  <group ns="rs/ir1/image" >
+  <group ns="/D455/ir1/image" >
     <rosparam param="disable_pub_plugins">
       - "image_transport/compressed"
       - "image_transport/compressedDepth"
@@ -65,11 +65,16 @@
     </rosparam>
   </group>
 
-  <group ns="rs/depth0/image" >
+  <group ns="/D455/depth0/image" >
     <rosparam param="disable_pub_plugins">
       - "image_transport/compressed"
       - "image_transport/compressedDepth"
       - "image_transport/theora"
     </rosparam>
   </group>
+
+  <node pkg="rqt_image_view"
+	type="rqt_image_view"
+	name="image_view"
+	args="/D455/rgb0/image"/>
 </launch>
