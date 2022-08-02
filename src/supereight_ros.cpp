@@ -409,6 +409,12 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
     non_essential_ = !(node_config_.dataset == Dataset::Real
                        && node_config_.control_interface == ControlInterface::SRL);
 
+    if (node_config_.dataset == Dataset::Real
+        && node_config_.control_interface == ControlInterface::SRL && frame_ == -1) {
+        std::cout << "PRESS ENTER TO BEGIN" << std::endl;
+        std::cin.get();
+    }
+
     // Start the matching thread.
     matching_thread_ = std::thread(std::bind(&SupereightNode::matchAndFuse, this));
 
@@ -625,11 +631,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                           const ros::Time& depth_timestamp,
                           const bool out_of_order_fusion)
 {
-    if (node_config_.dataset == Dataset::Real
-        && node_config_.control_interface == ControlInterface::SRL && frame_ == -1) {
-        std::cout << "PRESS ENTER TO BEGIN" << std::endl;
-        std::cin.get();
-    }
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     std::chrono::time_point<std::chrono::steady_clock> start_time;
     std::chrono::time_point<std::chrono::steady_clock> fusion_start_time =
