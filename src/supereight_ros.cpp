@@ -706,8 +706,6 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
     bool integrated = false;
     if ((tracked && (frame % supereight_config_.integration_rate == 0)) || frame <= 3) {
         {
-            const std::lock_guard<std::mutex> map_lock(map_mutex_);
-
             start_time = std::chrono::steady_clock::now();
             integrated = pipeline_->integrate(sensor_, frame);
             stats_.sample(
@@ -1007,7 +1005,6 @@ void SupereightNode::plan()
     // Free the initial position to allow planning.
     ROS_DEBUG_NAMED("planning", "Planning: freeing the initial pose");
     {
-        const std::lock_guard<std::mutex> map_lock(map_mutex_);
         pipeline_->freeInitialPosition(
             sensor_,
             ((node_config_.dataset == Dataset::Gazebo || node_config_.dataset == Dataset::Real)
@@ -1077,7 +1074,6 @@ void SupereightNode::plan()
                 stats_.newFrame("planning");
                 se::Path path_WB;
                 {
-                    const std::lock_guard<std::mutex> map_lock(map_mutex_);
                     const auto start_time = std::chrono::steady_clock::now();
                     planner_->setPlanningT_WB(transform_to_eigen(pose_buffer_.back().transform)
                                               * T_CB_);
