@@ -353,7 +353,6 @@ class SupereightNode {
     std::mutex matching_mutex_;
     std::mutex fusion_mutex_;
     std::mutex map_mutex_;
-    std::mutex pose_mutex_;
     std::mutex network_mutex_;
 
     // Threads

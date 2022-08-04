@@ -627,7 +627,6 @@ void SupereightNode::visualizePoseHistory()
     marker.frame_locked = true;
     // Add all visited points
     {
-        const std::lock_guard<std::mutex> pose_lock(pose_mutex_);
         const auto& T_WB_history = planner_->getT_WBHistory();
         marker.points.resize(T_WB_history.size());
         for (size_t i = 0; i < T_WB_history.size(); ++i) {

@@ -1000,7 +1000,6 @@ void SupereightNode::plan()
     // Wait for the first pose
     while (true) {
         std::this_thread::sleep_for(std::chrono::duration<double>(0.01));
-        const std::lock_guard<std::mutex> pose_lock(pose_mutex_);
         if (!planner_->getT_WBHistory().empty()) {
             break;
         }
@@ -1065,7 +1064,6 @@ void SupereightNode::plan()
         }
         else {
             // We are not using the SRL controller
-            const std::lock_guard<std::mutex> pose_lock(pose_mutex_);
             goal_reached = planner_->goalReached();
         }
         ROS_DEBUG_NAMED("goal", "Goal reached: %s", goal_reached ? "YES" : "NO");
@@ -1080,7 +1078,6 @@ void SupereightNode::plan()
                 se::Path path_WB;
                 {
                     const std::lock_guard<std::mutex> map_lock(map_mutex_);
-                    const std::lock_guard<std::mutex> pose_lock(pose_mutex_);
                     const auto start_time = std::chrono::steady_clock::now();
                     planner_->setPlanningT_WB(transform_to_eigen(pose_buffer_.back().transform)
                                               * T_CB_);
