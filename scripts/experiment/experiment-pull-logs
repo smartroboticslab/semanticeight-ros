@@ -1,8 +1,0 @@
-#!/bin/sh
-set -eu
-
-dest_dir="$HOME/xavier_logs"
-mkdir -p "$dest_dir"
-rsync --archive --compress --partial --progress --stats --human-readable \
-	xavier:/home/srl/experiment_* "$dest_dir"/
-
