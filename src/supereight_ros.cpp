@@ -1097,9 +1097,7 @@ void SupereightNode::plan()
                     if (node_config_.dataset == Dataset::Real) {
                         const Eigen::Vector3f centre_M =
                             (T_MW_ * planner_->getPlanningT_WB()).topRightCorner<3, 1>();
-                        const float radius_M =
-                            supereight_config_.robot_radius + supereight_config_.safety_radius;
-                        pipeline_->freeSphere(centre_M, radius_M);
+                        pipeline_->freeSphere(centre_M, supereight_config_.robot_radius);
                     }
                     path_WB = planner_->computeNextPath_WB(pipeline_->getFrontiers(),
                                                            pipeline_->getObjectMaps());

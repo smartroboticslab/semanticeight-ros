@@ -307,8 +307,7 @@ void SupereightNode::visualizeFrontiers()
 void SupereightNode::visualizeCandidates(float opacity)
 {
     hideCandidates();
-    const float diameter =
-        2.0f * (supereight_config_.robot_radius + supereight_config_.safety_radius);
+    const float diameter = 2.0f * supereight_config_.robot_radius;
     // Initialize the message header.
     std_msgs::Header header;
     header.stamp = ros::Time::now();
@@ -582,8 +581,7 @@ void SupereightNode::hideGoal()
 
 void SupereightNode::visualizeMAV()
 {
-    const float diameter =
-        2.0f * (supereight_config_.robot_radius + supereight_config_.safety_radius);
+    const float diameter = 2.0f * supereight_config_.robot_radius;
     // Initialize the message header
     std_msgs::Header header;
     header.stamp = ros::Time::now();

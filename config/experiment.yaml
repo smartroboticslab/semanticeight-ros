@@ -82,7 +82,6 @@ supereight:
     linear_velocity:           0.4
     angular_velocity:          0.5
     robot_radius:              0.4
-    safety_radius:             0.0
     min_control_point_radius:  0.1
     skeleton_sample_precision: 0.05
     solving_time:              0.01
