@@ -9,5 +9,5 @@
   <!-- <env name="ROS_MASTER_URI" value="http://192.168.1.204:11311/"/> --> <!-- MAV on Ethernet -->
 
   <node pkg="rviz" type="rviz" name="rviz" required="true"
-        args="-d $(find supereight_ros)/config/experiment.rviz"/>
+        args="--display-config $(find supereight_ros)/config/experiment.rviz --disable-anti-aliasing --splash-screen .nonexistent"/>
 </launch>

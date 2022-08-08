@@ -6,9 +6,9 @@
   <arg name="config" default="$(find supereight_ros)/config/simulation.rviz"/>
 
   <node pkg="rviz"
-        name="rviz"
         type="rviz"
-        args="-d $(arg config)"
+        name="rviz"
+        args="--display-config $(arg config) --disable-anti-aliasing --splash-screen .nonexistent"
         launch-prefix="bash -c 'sleep 2; $0 $@'"/>
 </launch>
 
