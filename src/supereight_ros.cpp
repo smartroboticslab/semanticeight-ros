@@ -629,7 +629,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                           const sensor_msgs::ImageConstPtr& color_image,
                           const se::SegmentationResult& segmentation,
                           const ros::Time& depth_timestamp,
-                          const bool out_of_order_fusion)
+                          const bool /* out_of_order_fusion */)
 {
     const std::lock_guard<std::mutex> fusion_lock(fusion_mutex_);
     std::chrono::time_point<std::chrono::steady_clock> start_time;
@@ -725,29 +725,27 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
                     .count());
 
             planner_->recordT_WB(se_T_WB, pipeline_->getDepth());
-            if (!out_of_order_fusion) {
-                if (planner_->inGoalCandidateThreshold(se_T_WB)) {
-                    fused_at_goal_ = true;
-                }
-                else {
-                    const auto e = planner_->goalCandidateError(se_T_WB);
-                    ROS_DEBUG_NAMED("planning",
-                                    "Goal position error: %.3f %.3f %.3f (%.3f %.3f %.3f)",
-                                    e.pos.x(),
-                                    e.pos.y(),
-                                    e.pos.z(),
-                                    supereight_config_.goal_xy_threshold,
-                                    supereight_config_.goal_xy_threshold,
-                                    supereight_config_.goal_z_threshold);
-                    ROS_DEBUG_NAMED("planning",
-                                    "Goal orientation error: %.1f %.1f %.1f (%.1f %.1f %.1f)",
-                                    se::math::rad_to_deg(e.roll),
-                                    se::math::rad_to_deg(e.pitch),
-                                    se::math::rad_to_deg(e.yaw),
-                                    supereight_config_.goal_roll_pitch_threshold,
-                                    supereight_config_.goal_roll_pitch_threshold,
-                                    supereight_config_.goal_yaw_threshold);
-                }
+            if (planner_->inGoalCandidateThreshold(se_T_WB)) {
+                fused_at_goal_ = true;
+            }
+            else {
+                const auto e = planner_->goalCandidateError(se_T_WB);
+                ROS_DEBUG_NAMED("planning",
+                                "Goal position error: %.3f %.3f %.3f (%.3f %.3f %.3f)",
+                                e.pos.x(),
+                                e.pos.y(),
+                                e.pos.z(),
+                                supereight_config_.goal_xy_threshold,
+                                supereight_config_.goal_xy_threshold,
+                                supereight_config_.goal_z_threshold);
+                ROS_DEBUG_NAMED("planning",
+                                "Goal orientation error: %.1f %.1f %.1f (%.1f %.1f %.1f)",
+                                se::math::rad_to_deg(e.roll),
+                                se::math::rad_to_deg(e.pitch),
+                                se::math::rad_to_deg(e.yaw),
+                                supereight_config_.goal_roll_pitch_threshold,
+                                supereight_config_.goal_roll_pitch_threshold,
+                                supereight_config_.goal_yaw_threshold);
             }
         }
     }
