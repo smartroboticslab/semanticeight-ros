@@ -106,8 +106,7 @@ supereight:
     raycast_height:            10
     linear_velocity:           1.5
     angular_velocity:          0.75
-    robot_radius:              0.025
-    min_control_point_radius:  0.1
+    robot_radius:              0.125
     skeleton_sample_precision: 0.05
     solving_time:              0.1
 

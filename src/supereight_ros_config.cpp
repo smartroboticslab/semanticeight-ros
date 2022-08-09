@@ -291,7 +291,6 @@ Configuration read_supereight_config(const ros::NodeHandle& nh)
     nh.getParam("supereight/exploration/angular_velocity", config.angular_velocity);
     nh.getParam("supereight/exploration/delta_t", config.delta_t);
     nh.getParam("supereight/exploration/robot_radius", config.robot_radius);
-    nh.getParam("supereight/exploration/min_control_point_radius", config.min_control_point_radius);
     nh.getParam("supereight/exploration/skeleton_sample_precision",
                 config.skeleton_sample_precision);
     nh.getParam("supereight/exploration/solving_time", config.solving_time);
