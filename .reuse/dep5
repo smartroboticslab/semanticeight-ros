@@ -1,0 +1,18 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: semanticeight-ros
+
+Files: README.md
+Copyright: 2019-2020 Smart Robotics Lab, Imperial College London
+Copyright: 2019 Anna Dai
+Copyright: 2019-2020 Sotiris Papatheodorou
+License: BSD-3-Clause
+
+Files: SETUP.md USAGE.md
+Copyright: 2020 Smart Robotics Lab, Imperial College London
+Copyright: 2020 Sotiris Papatheodorou
+License: BSD-3-Clause
+
+Files: misc/rviz_supereight_ros.jpeg
+Copyright: 2020 Smart Robotics Lab, Imperial College London
+Copyright: 2020 Sotiris Papatheodorou
+License: CC0-1.0
