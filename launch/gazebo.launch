@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2020-2022 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2020-2022 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<launch>
+  <!-- The name of the world file to load. -->
+  <arg name="world" default="apartment"/>
+  <!-- Launch rviz. -->
+  <arg name="rviz" default="false"/>
+  <!-- Perform non-semantically-guided exploration as in ICRA 2020. -->
+  <arg name="classic" default="false"/>
+
+  <!-- Initial Waypoint sent to the autopilot. -->
+  <arg name="waypoint_x" value="0.0"  if="$(eval world in ['apartment', 'maze'])"/>
+  <arg name="waypoint_y" value="-4.0" if="$(eval world in ['apartment', 'maze'])"/>
+  <arg name="waypoint_z" value="1.5"  if="$(eval world in ['apartment', 'maze'])"/>
+  <arg name="waypoint_x" value="-2.0" if="$(eval world == 'powerplant')"/>
+  <arg name="waypoint_y" value="0.0"  if="$(eval world == 'powerplant')"/>
+  <arg name="waypoint_z" value="2.0"  if="$(eval world == 'powerplant')"/>
+
+  <arg name="mav_name" value="firefly"/>
+
+  <!-- Set the ROS log level in rosconsole.conf -->
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models"/>
+    <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find rotors_gazebo)/resource"/>
+    <arg name="world_name" value="$(find supereight_ros)/worlds/$(arg world).world"/>
+    <arg name="gui" value="false"/>
+    <arg name="paused" value="false"/>
+  </include>
+
+  <include file="$(find rotors_gazebo)/launch/spawn_mav.launch">
+    <arg name="mav_name" value="$(arg mav_name)"/>
+    <arg name="model" value="$(find rotors_description)/urdf/mav_with_vi_sensor.gazebo"/>
+    <arg name="x" value="$(arg waypoint_x)"/>
+    <arg name="y" value="$(arg waypoint_y)"/>
+    <arg name="z" value="0.1"/>
+  </include>
+
+  <node pkg="supereight_ros"
+        type="supereight_ros"
+        name="semanticeight"
+        output="screen"
+        required="true"
+        launch-prefix="">
+    <param name="wp_x" type="double" value="$(arg waypoint_x)"/>
+    <param name="wp_y" type="double" value="$(arg waypoint_y)"/>
+    <param name="wp_z" type="double" value="$(arg waypoint_z)"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/gazebo.yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/gazebo/$(arg world).yaml"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/classic.yaml" if="$(arg classic)"/>
+    <remap from="/camera/depth_image" to="/$(arg mav_name)/vi_sensor/camera_depth/depth/disparity"/>
+    <remap from="/camera/rgb_image"   to="/$(arg mav_name)/vi_sensor/camera_depth/camera/image_raw"/>
+    <remap from="/pose"               to="/$(arg mav_name)/ground_truth/transform"/>
+  </node>
+
+  <group>
+    <param name="wp_x" type="double" value="$(arg waypoint_x)"/>
+    <param name="wp_y" type="double" value="$(arg waypoint_y)"/>
+    <param name="wp_z" type="double" value="$(arg waypoint_z)"/>
+    <remap from="/autopilot/trajectory" to="/supereight/path"/>
+    <include file="$(find mpc)/launch/firefly_rotors.launch"/>
+  </group>
+
+  <include file="$(find supereight_ros)/launch/rviz.launch" if="$(arg rviz)"/>
+</launch>

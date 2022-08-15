@@ -3,16 +3,13 @@
 # SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou
 # SPDX-License-Identifier: CC0-1.0
 
-# Supereight ROS node settings
 supereight_ros:
   visualization_max_z: 25.00
   max_exploration_time: 1000
 
-# Supereight settings
 supereight:
   general:
     sequence_name:              "gazebo_powerplant"
-
   map:
     size:                       512
     dim:                        51.2
@@ -21,15 +18,9 @@ supereight:
     sampling_min_W:             [-16.5, -15.5,  0.7]
     sampling_max_W:             [ 16.5,  15.5, 25.0]
     frontier_cluster_min_ratio: 0.015625
-
   sensor:
     near_plane:                 0.02
     far_plane:                  7.0
-
   exploration:
     delta_t:                    0.20
     linear_velocity:            2.5
-
-# WARNING: Any voxel parameters added in this file will be ignored. Change the
-# defaults if you need different values.
-
