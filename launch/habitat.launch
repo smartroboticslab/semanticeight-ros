@@ -3,16 +3,17 @@
 <!-- SPDX-FileCopyrightText: 2020-2022 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
-  <!-- Sequence-specific config file -->
+  <!-- Sequence-specific config file. -->
   <arg name="config" default="$(find supereight_ros)/config/habitat.yaml"/>
-  <!-- Launch rviz -->
+  <!-- Launch rviz. -->
   <arg name="rviz" default="false"/>
-  <!-- Enable teleoperation of the MAV instead of using the autopilot -->
+  <!-- Enable teleoperation of the MAV instead of using the autopilot. -->
   <arg name="teleop" default="false"/>
-  <!-- Initial Waypoint sent to the autopilot -->
-  <arg name="waypoint_x" default="0.0"/>
-  <arg name="waypoint_y" default="0.0"/>
-  <arg name="waypoint_z" default="0.0"/>
+
+  <!-- Initial Waypoint sent to the autopilot. -->
+  <arg name="waypoint_x" value="0.0"/>
+  <arg name="waypoint_y" value="0.0"/>
+  <arg name="waypoint_z" value="0.0"/>
 
   <!-- Set the ROS log level in rosconsole.conf -->
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
@@ -58,7 +59,5 @@
     <include file="$(find mpc)/launch/firefly_habitat.launch"/>
   </group>
 
-  <group if="$(arg rviz)">
-    <include file="$(find supereight_ros)/launch/rviz.launch"/>
-  </group>
+  <include file="$(find supereight_ros)/launch/rviz.launch" if="$(arg rviz)"/>
 </launch>
