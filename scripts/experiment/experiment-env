@@ -1,0 +1,19 @@
+#!/bin/bash
+if [ "$#" -eq 0 ]
+then
+	printf 'Usage: %s COMMAND [ARGUMENT] ...\n' "${0##*/}"
+	exit 2
+fi
+
+source "$(find /opt/ros/ -type f -name setup.bash)"
+
+pc_ip=$(ip -4 -oneline -brief address show | awk '/^(wlp|wlan).*UP/ { sub("/.*$", "", $3); print $3 }')
+export ROS_IP="$pc_ip"
+printf 'ROS_IP=%s\n' "$ROS_IP"
+
+mav_uri='http://192.168.1.120:11311/' # MAV on WiFi
+#mav_uri='http://192.168.1.204:11311/' # MAV on Ethernet
+export ROS_MASTER_URI="$mav_uri"
+printf 'ROS_MASTER_URI=%s\n' "$ROS_MASTER_URI"
+
+"$@"
