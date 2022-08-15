@@ -7,6 +7,8 @@
   <arg name="config" default="$(find supereight_ros)/config/habitat.yaml"/>
   <!-- Launch rviz. -->
   <arg name="rviz" default="false"/>
+  <!-- Perform non-semantically-guided exploration as in ICRA 2020. -->
+  <arg name="classic" default="false"/>
   <!-- Enable teleoperation of the MAV instead of using the autopilot. -->
   <arg name="teleop" default="false"/>
 
@@ -44,6 +46,7 @@
     <param name="wp_z" type="double" value="$(arg waypoint_z)" unless="$(arg teleop)"/>
     <rosparam command="load" file="$(find supereight_ros)/config/habitat.yaml"/>
     <rosparam command="load" file="$(arg config)"/>
+    <rosparam command="load" file="$(find supereight_ros)/config/classic.yaml" if="$(arg classic)"/>
     <remap from="/camera/depth_image" to="/habitat/depth/image_raw"/>
     <remap from="/camera/rgb_image"   to="/habitat/rgb/image_raw"/>
     <remap from="/camera/class"       to="/habitat/semantic_class/image_raw"/>

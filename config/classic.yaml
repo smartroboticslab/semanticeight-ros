@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+
+supereight:
+  exploration:
+    frontier_sampling_probability: 1.0
+    utility_weights:        [1.0, 0.0, 0.0]

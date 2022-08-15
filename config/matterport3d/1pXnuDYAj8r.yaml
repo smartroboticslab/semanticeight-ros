@@ -1,27 +1,19 @@
-# SPDX-FileCopyrightText: 2020-2022 Smart Robotics Lab, Imperial College London
-# SPDX-FileCopyrightText: 2020-2022 Sotiris Papatheodorou
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
 # SPDX-License-Identifier: CC0-1.0
 
-# Supereight ROS node settings
 supereight_ros:
   visualization_max_z: 3.5
   max_exploration_time: 2700
   dataset: "Matterport3D"
 
-# Habitat-ROS node settings
 habitat:
   scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/1pXnuDYAj8r/1pXnuDYAj8r.glb"
   initial_T_HB: [11.50, -1.80, 1.0]
 
-# Supereight settings
 supereight:
   general:
     sequence_name:              "matterport3d_1pXnuDYAj8r"
-
   map:
     size:                       2048
     dim:                        81.92
-
-# WARNING: Any voxel parameters added in this file will be ignored. Change the
-# defaults if you need different values.
-
