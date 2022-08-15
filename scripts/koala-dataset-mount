@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+local_dir="$HOME/Documents/Datasets"
+if mount | grep -q "$local_dir"
+then
+	printf 'Unmounting...'
+	umount "$local_dir"
+	printf 'DONE\n'
+else
+	printf 'Mounting...'
+	sshfs -C -o ro -o nonempty "${1:-koala-local}":/data/Datasets "$local_dir"
+	printf 'DONE\n'
+fi
