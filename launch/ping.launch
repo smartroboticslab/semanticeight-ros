@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<launch>
+  <!-- The IP address to ping. Defaults to the Vicon computer. -->
+  <arg name="ip" default="192.168.1.164"/>
+
+  <node pkg="rosping"
+        type="rosping"
+        name="ping"
+        args="$(arg ip)"/>
+</launch>

@@ -10,6 +10,7 @@
   <include file="$(find vicon_bridge)/launch/vicon.launch">
     <arg name="datastream_hostport" value="192.168.1.164:801"/>
   </include>
+  <include file="$(find supereight_ros)/launch/ping.launch"></include>
 
   <node pkg="supereight_ros"
         type="supereight_ros"
