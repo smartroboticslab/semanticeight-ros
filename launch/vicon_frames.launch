@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou -->
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<launch>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="d455_ros_T_BC"
+        args="0.0404913 0.0339505 -0.00136162 0.5084 -0.5056 0.4955 -0.4903 vicon/d455_ros/d455_ros d455_ros_C"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="s550_jetson_T_BC"
+        args="0.11351218167336133 -0.041798073727854247 -0.054863140414358053 -0.5555 0.6477 -0.401 0.3334 vicon/s550_jetson/s550_jetson s550_jetson_C"/>
+
+  <include file="$(find vicon_bridge)/launch/vicon.launch">
+    <arg name="datastream_hostport" value="192.168.1.164:801"/>
+  </include>
+
+  <arg name="config" value="$(find supereight_ros)/config/vicon_frames.rviz"/>
+  <node pkg="rviz" type="rviz" name="rviz" required="true"
+        args="--display-config $(arg config) --disable-anti-aliasing --splash-screen .nonexistent"/>
+</launch>
