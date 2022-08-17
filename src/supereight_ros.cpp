@@ -1088,11 +1088,16 @@ void SupereightNode::plan()
             visualizeGoal(0.25f);
             if (planner_->needsNewGoal()) {
                 stats_.newFrame("planning");
+
+                Eigen::Matrix4f planning_T_WC;
+                {
+                    const std::lock_guard<std::mutex> pose_lock(pose_buffer_mutex_);
+                    planning_T_WC = transform_to_eigen(pose_buffer_.back().transform);
+                }
                 se::Path path_WB;
                 {
                     const auto start_time = std::chrono::steady_clock::now();
-                    const Eigen::Matrix4f planning_T_WB =
-                        transform_to_eigen(pose_buffer_.back().transform) * T_CB_;
+                    const Eigen::Matrix4f planning_T_WB = planning_T_WC * T_CB_;
                     if (node_config_.dataset == Dataset::Real) {
                         const Eigen::Vector3f centre_M =
                             (T_MW_ * planning_T_WB).topRightCorner<3, 1>();
