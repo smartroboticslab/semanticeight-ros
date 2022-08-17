@@ -643,7 +643,7 @@ void SupereightNode::fuse(const Eigen::Matrix4f& T_WC,
 
     // Preprocessing
     start_time = std::chrono::steady_clock::now();
-    to_supereight_depth(depth_image, sensor_.far_plane, input_depth_.get());
+    to_supereight_depth(depth_image, sensor_.far_plane, input_depth_.get(), node_config_.dataset);
     if (node_config_.enable_rgb) {
         to_supereight_RGB(color_image, input_rgba_.get());
     }

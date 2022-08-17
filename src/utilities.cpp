@@ -53,36 +53,33 @@ std::string ros_log_dir()
 
 void to_supereight_depth(const sensor_msgs::ImageConstPtr& input_depth,
                          const float far_plane,
-                         float* output_depth)
+                         float* output_depth,
+                         const Dataset dataset)
 {
-    // Values equal to the camera far plane should be ignored because Gazebo
-    // camera plugins return the value of the far plane for rays that don't hit
-    // anything.
-
-    // The input depth is in float meters
     if (input_depth->encoding == "32FC1" && !input_depth->is_bigendian) {
+        // Depth values in meters stored in little-endian float.
         const float* d = reinterpret_cast<const float*>(input_depth->data.data());
         memcpy(output_depth, d, sizeof(float) * input_depth->width * input_depth->height);
-
-        // The depth is in uint16_t millimeters
     }
     else if (((input_depth->encoding == "16UC1") || (input_depth->encoding == "mono16"))
              && !input_depth->is_bigendian) {
+        // Depth values in millimeters stored in little-endian uint16_t.
         const uint16_t* d = reinterpret_cast<const uint16_t*>(input_depth->data.data());
 #pragma omp parallel for
         for (size_t i = 0; i < input_depth->width * input_depth->height; ++i) {
             const float depth_m = d[i] / 1000.0f;
-            if (depth_m >= far_plane) {
+            if (dataset == Dataset::Gazebo && depth_m >= far_plane) {
+                // Values equal to the camera far plane should be ignored because Gazebo camera
+                // plugins return the value of the far plane for rays that don't hit anything.
                 output_depth[i] = 0.0f;
             }
             else {
                 output_depth[i] = depth_m;
             }
         }
-
-        // Invalid format.
     }
     else {
+        // Invalid depth format.
         ROS_FATAL("Invalid input depth format %s, expected little endian mono16, 16UC1 or 32FC1",
                   input_depth->encoding.c_str());
         abort();
