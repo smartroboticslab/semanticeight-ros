@@ -1094,22 +1094,18 @@ void SupereightNode::plan()
                     const std::lock_guard<std::mutex> pose_lock(pose_buffer_mutex_);
                     planning_T_WC = transform_to_eigen(pose_buffer_.back().transform);
                 }
-                se::Path path_WB;
-                {
-                    const auto start_time = std::chrono::steady_clock::now();
-                    const Eigen::Matrix4f planning_T_WB = planning_T_WC * T_CB_;
-                    if (node_config_.dataset == Dataset::Real) {
-                        const Eigen::Vector3f centre_M =
-                            (T_MW_ * planning_T_WB).topRightCorner<3, 1>();
-                        pipeline_->freeSphere(centre_M, supereight_config_.robot_radius);
-                    }
-                    path_WB = planner_->computeNextPath_WB(
-                        pipeline_->getFrontiers(), pipeline_->getObjectMaps(), planning_T_WB);
-                    const auto end_time = std::chrono::steady_clock::now();
-                    stats_.sample("planning",
-                                  "Planning time",
-                                  std::chrono::duration<double>(end_time - start_time).count());
+                const auto start_time = std::chrono::steady_clock::now();
+                const Eigen::Matrix4f planning_T_WB = planning_T_WC * T_CB_;
+                if (node_config_.dataset == Dataset::Real) {
+                    const Eigen::Vector3f centre_M = (T_MW_ * planning_T_WB).topRightCorner<3, 1>();
+                    pipeline_->freeSphere(centre_M, supereight_config_.robot_radius);
                 }
+                const se::Path path_WB = planner_->computeNextPath_WB(
+                    pipeline_->getFrontiers(), pipeline_->getObjectMaps(), planning_T_WB);
+                const auto end_time = std::chrono::steady_clock::now();
+                stats_.sample("planning",
+                              "Planning time",
+                              std::chrono::duration<double>(end_time - start_time).count());
                 // Save and print statistics.
                 stats_.sampleTimeNow("planning", "Timestamp");
                 stats_.sample("planning", "Planning iteration", num_planning_iterations_);
