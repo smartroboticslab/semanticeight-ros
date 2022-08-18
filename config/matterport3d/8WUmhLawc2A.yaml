@@ -7,13 +7,13 @@ supereight_ros:
   dataset: "Matterport3D"
 
 habitat:
-  scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/2n8kARJN3HM/2n8kARJN3HM.glb"
+  scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/8WUmhLawc2A/8WUmhLawc2A.glb"
   initial_T_HB: [0.0, 0.0, 1.4]
 
 supereight:
   general:
-    sequence_name:              "matterport3d_2n8kARJN3HM"
+    sequence_name:              "matterport3d_8WUmhLawc2A"
   map:
     size:                       1024
     dim:                        40.96
-    t_MW_factor:                [0.292633973993361, 0.7096376498229802, 0.4882484698900953]
+    t_MW_factor:                [0.6999031519517303, 0.4060026602819562, 0.4562604336460936]

@@ -1,15 +1,14 @@
 # SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
-# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
 # SPDX-License-Identifier: CC0-1.0
 
 supereight_ros:
   visualization_max_z: 3.5
-  max_exploration_time: 2700
+  max_exploration_time: 2700 # 45 minutes
   dataset: "Matterport3D"
 
 habitat:
   scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/2azQ1b91cZZ/2azQ1b91cZZ.glb"
-  initial_T_HB: [15.00, -5.30, 1.00]
+  initial_T_HB: [0.0, 0.0, 1.4]
 
 supereight:
   general:
@@ -17,3 +16,4 @@ supereight:
   map:
     size:                       2048
     dim:                        81.92
+    t_MW_factor:                [0.3654646158684045, 0.5121847202535719, 0.4519743800192373]
