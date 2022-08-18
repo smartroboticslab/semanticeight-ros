@@ -1,20 +1,19 @@
 <?xml version="1.0"?>
-<!-- SPDX-FileCopyrightText: 2020 Smart Robotics Lab, Imperial College London -->
-<!-- SPDX-FileCopyrightText: 2020 Sotiris Papatheodorou -->
+<!-- SPDX-FileCopyrightText: 2020-2022 Smart Robotics Lab, Imperial College London -->
+<!-- SPDX-FileCopyrightText: 2020-2022 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
   <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
 
-  <include file="$(find supereight_ros)/launch/realsense_D455.launch"></include>
+  <include file="$(find supereight_ros)/launch/realsense_D455.launch"/>
   <include file="$(find vicon_bridge)/launch/vicon.launch">
     <arg name="datastream_hostport" value="192.168.1.164:801"/>
   </include>
   <include file="$(find supereight_ros)/launch/ping.launch"></include>
 
   <node pkg="supereight_ros"
-        name="semanticeight"
         type="supereight_ros"
-        clear_params="true"
+        name="semanticeight"
         output="screen"
         required="true"
         launch-prefix="">
@@ -29,4 +28,3 @@
     <arg name="config" value="$(find supereight_ros)/config/experiment_handheld_pc.rviz"/>
   </include>
 </launch>
-

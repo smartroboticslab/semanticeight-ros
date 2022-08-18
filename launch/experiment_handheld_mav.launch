@@ -15,7 +15,6 @@
   <node pkg="supereight_ros"
         type="supereight_ros"
         name="semanticeight"
-        clear_params="true"
         output="screen"
         required="true"
         launch-prefix="">
