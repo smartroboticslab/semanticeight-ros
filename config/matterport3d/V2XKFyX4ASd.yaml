@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-License-Identifier: CC0-1.0
+
+supereight_ros:
+  visualization_max_z: 3.5
+  max_exploration_time: 2700 # 45 minutes
+  dataset: "Matterport3D"
+
+habitat:
+  scene_file: "~/Documents/Datasets/Matterport3D/v1/tasks/mp3d_habitat/mp3d/V2XKFyX4ASd/V2XKFyX4ASd.glb"
+  initial_T_HB: [0.0, 0.0, 1.4]
+
+supereight:
+  general:
+    sequence_name:              "matterport3d_V2XKFyX4ASd"
+  map:
+    size:                       512
+    dim:                        20.48
+    t_MW_factor:                [0.275428487919271, 0.36437311163172126, 0.3316848068498075]
