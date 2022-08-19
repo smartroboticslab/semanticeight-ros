@@ -1098,7 +1098,9 @@ void SupereightNode::plan()
                 const Eigen::Matrix4f planning_T_WB = planning_T_WC * T_CB_;
                 if (node_config_.dataset == Dataset::Real) {
                     const Eigen::Vector3f centre_M = (T_MW_ * planning_T_WB).topRightCorner<3, 1>();
-                    pipeline_->freeSphere(centre_M, supereight_config_.robot_radius);
+                    // It's risky to increase the MAV radius like this but it didn't cause any
+                    // crashes, yet.
+                    pipeline_->freeSphere(centre_M, supereight_config_.robot_radius + 0.1f);
                 }
                 const se::Path path_WB = planner_->computeNextPath_WB(
                     pipeline_->getFrontiers(), pipeline_->getObjectMaps(), planning_T_WB);
