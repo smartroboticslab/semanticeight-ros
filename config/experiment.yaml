@@ -46,7 +46,7 @@ supereight:
     pyramid:                    [10, 5, 4]
 
   map:
-    size:                       128
+    size:                       256
     dim:                        10.24
     t_MW_factor:                [0.501, 0.501, 0.501]
     aabb_min_W:                 [-5.0, -5.0, -1.0]
@@ -69,13 +69,13 @@ supereight:
                                  0, 0, 1, 0,
                                  0, 0, 0, 1]
     near_plane:                 0.4
-    far_plane:                  4.0
+    far_plane:                  4.4
 
   exploration:
     enable_exploration:        true
     num_candidates:            20
     frontier_sampling_probability: 0.5
-    utility_weights:           [0.001, 0.998, 0.001]
+    utility_weights:           [0.34, 0.33, 0.33]
     use_pose_history:          true
     raycast_width:             36
     raycast_height:            10
@@ -83,7 +83,7 @@ supereight:
     angular_velocity:          0.5
     robot_radius:              0.45
     skeleton_sample_precision: 0.05
-    solving_time:              0.01
+    solving_time:              0.1
     # The thresholds used for the controller are hardcoded in the
     # initialWaypointMsg in publish_full_state_trajectory()
     goal_xy_threshold:         0.20
