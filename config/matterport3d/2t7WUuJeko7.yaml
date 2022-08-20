@@ -3,7 +3,7 @@
 
 supereight_ros:
   visualization_max_z: 3.5
-  max_exploration_time: 1800
+  max_exploration_time: 2700 # 45 minutes
   dataset: "Matterport3D"
 
 habitat:
