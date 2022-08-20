@@ -6,7 +6,7 @@
 # Supereight ROS node settings
 supereight_ros:
   enable_tracking: false
-  enable_rendering: true
+  enable_rendering: false
   enable_rgb: true
   enable_objects: true
   pose_topic_type: "geometry_msgs::PoseStamped"
@@ -15,7 +15,7 @@ supereight_ros:
   rgb_buffer_size: 10
   max_timestamp_diff: 0.02
   center_at_first_position: false
-  visualization_rate: 4
+  visualization_rate: 0
   visualization_max_z: 3.5
   visualize_360_raycasting: false
   max_exploration_time: .NaN
@@ -64,7 +64,7 @@ supereight:
     # Rates
     tracking_rate:              1
     integration_rate:           1
-    rendering_rate:             1
+    rendering_rate:             0
     meshing_rate:               50
     fps:                        0.0
     # Other
