@@ -310,7 +310,7 @@ SupereightNode::SupereightNode(const ros::NodeHandle& nh, const ros::NodeHandle&
         se::semantic_classes.setResAll(0.02f);
     }
     else {
-        se::semantic_classes.setResAll(0.01f);
+        se::semantic_classes.setResAll(0.02f);
     }
 
     if (node_config_.run_segmentation) {
