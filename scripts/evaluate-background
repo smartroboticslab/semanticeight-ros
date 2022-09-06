@@ -43,7 +43,7 @@ evaluate_bg_mesh() {
 	if [ -x "$exe" ]
 	then
 		printf 'Evaluating BG mesh %s\n' "$1"
-		"$exe" --heatmap-dir "$mesh_dir/heatmaps" --tsv "$mesh_dir/bg_evaluation.tsv" "$1" "$gt_mesh"
+		"$exe" --tsv "$mesh_dir/bg_evaluation.tsv" "$1" "$gt_mesh"
 	else
 		printf 'Skipping BG mesh evaluation, %s is not an executable\n' "$exe"
 	fi
