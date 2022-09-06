@@ -20,8 +20,11 @@ generate_object_stats() {
 	do
 		frame=$(filename_to_frame "$tsv")
 		printf '%s\t' "$frame"
-		# https://git.sr.ht/~sotirisp/dots/blob/master/.local/bin/tsvavg
-		tsvavg "$tsv" | tail -n 1 | cut -f 4,5,7,8 | tr -d '\n'
+		# https://git.sr.ht/~sotirisp/dots/blob/home/.local/bin/patsas/tsvavg
+		# https://git.sr.ht/~sotirisp/tsvutils
+		tsvavg "$tsv" |
+			tsvcut '^Accuracy' '^Completeness' '^Mean observed dist' '^Desired observed dist' |
+			tail -n 1 | tr -d '\n'
 		log="${tsv%.tsv}.log"
 		printf '\t%s\n' "$(objects_found "$log" | objects_found_to_pc)"
 	done

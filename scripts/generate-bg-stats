@@ -20,7 +20,8 @@ generate_bg_stats() {
 	do
 		frame=$(filename_to_frame "$tsv")
 		printf '%s\t' "$frame"
-		tail -n 1 "$tsv" | cut -f 4,5,7,8
+		tsvcut '^Accuracy' '^Completeness' '^Mean observed dist' '^Desired observed dist' < "$tsv" |
+			tail -n 1
 	done
 }
 
