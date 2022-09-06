@@ -29,6 +29,7 @@ do
 	"$(script_dir)"/add-time-to-stats "$1/logs/stats_bg.tsv" || true
 	"$(script_dir)"/generate-plots "$1"/plots "$1"/logs || true
 	"$(script_dir)"/generate-overview "$1"/ > "$1"/overview.txt || true
+	"$(script_dir)"/compress-meshes "$1" || true
 	i=$((i + 1))
 	shift
 done
