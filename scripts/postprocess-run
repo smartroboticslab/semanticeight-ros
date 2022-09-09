@@ -29,7 +29,7 @@ do
 	"$(script_dir)"/evaluate-objects "$1"/meshes_* || true
 	"$(script_dir)"/generate-object-stats "$1" > "$1"/logs/stats_objects.tsv || true
 	"$(script_dir)"/add-time-to-stats "$1/logs/stats_objects.tsv" || true
-	find_bg_meshes "$1" | parallel "$(script_dir)"/evaluate-background {} || true
+	find_bg_meshes "$1" | parallel -j 4 "$(script_dir)"/evaluate-background {} || true
 	"$(script_dir)"/generate-bg-stats "$1" > "$1"/logs/stats_bg.tsv || true
 	"$(script_dir)"/add-time-to-stats "$1/logs/stats_bg.tsv" || true
 	"$(script_dir)"/generate-plots "$1"/plots "$1"/logs || true
