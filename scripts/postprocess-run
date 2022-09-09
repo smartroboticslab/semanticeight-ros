@@ -23,6 +23,7 @@ n="$#"
 while [ "$#" -gt 0 ]
 do
 	printf 'Processing run %d/%d %s\n' "$i" "$n" "$1"
+	"$(script_dir)"/decompress-meshes "$1" || true
 	"$(script_dir)"/render-montage "$1" || true
 	#"$(script_dir)"/postprocess-objects "$1"/meshes* || true # TODO removes information needed for evaluate-objects, change evaluate-objects dir after this is fixed
 	"$(script_dir)"/evaluate-objects "$1"/meshes_* || true
