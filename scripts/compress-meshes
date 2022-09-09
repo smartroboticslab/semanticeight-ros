@@ -12,12 +12,12 @@ fi
 
 while [ "$#" -gt 0 ]
 do
-	find "$1" -type d -name 'meshes_*' | sort -r | tail -n +2 | while IFS= read -r d
+	printf 'Compressing meshes in %s\n' "$1"
+	find "$1" -type d -name 'meshes_*' | sort -r | tail -n +2 | while IFS= read -r dir
 	do
-		archive=${d%%/}.tar.gz
-		printf 'Compressing %s\n' "$d"
-		printf '         to %s\n' "$archive"
-		tar -cC "$d" . | pigz > "$archive" && rm -rf "$d"
-	done
+		archive=${dir%%/}.tar.gz
+		printf 'tar -czf %s -C %s . && rm -rf %s\n' \
+			"$archive" "$dir" "$dir"
+	done | parallel
 	shift
 done

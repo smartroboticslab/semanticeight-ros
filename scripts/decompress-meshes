@@ -12,14 +12,12 @@ fi
 
 while [ "$#" -gt 0 ]
 do
+	printf 'Decompressing meshes in %s\n' "$1"
 	find "$1" -type f -name 'meshes_*.tar.gz' | while IFS= read -r archive
 	do
-		d=${archive%.tar.gz}
-		printf 'Decompressing %s\n' "$archive"
-		printf '           to %s\n' "$d"
-		mkdir -p "$d"
-		unpigz < "$archive" | tar -xC "$d"
-		rm -rf "$archive"
-	done
+		dir=${archive%.tar.gz}
+		printf 'mkdir -p %s && tar -xzf %s -C %s && rm -f %s\n' \
+			"$dir" "$archive" "$dir" "$archive"
+	done | parallel
 	shift
 done
