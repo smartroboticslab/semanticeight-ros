@@ -1,0 +1,25 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2022 Smart Robotics Lab, Imperial College London
+# SPDX-FileCopyrightText: 2022 Sotiris Papatheodorou
+# SPDX-License-Identifier: CC0-1.0
+set -eu
+
+if [ "$#" -eq 0 ]
+then
+	printf 'Usage: %s RUNDIR ...\n' "${0##*/}"
+	exit 2
+fi
+
+while [ "$#" -gt 0 ]
+do
+	find "$1" -type f -name 'meshes_*.tar.gz' | while IFS= read -r archive
+	do
+		d=${archive%.tar.gz}
+		printf 'Decompressing %s\n' "$archive"
+		printf '           to %s\n' "$d"
+		mkdir -p "$d"
+		unpigz < "$archive" | tar -xC "$d"
+		rm -rf "$archive"
+	done
+	shift
+done
