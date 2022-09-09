@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+sequence_name() {
+	sed -nE 's/^Sequence name:[[:space:]]+(.*)$/\1/p' "$1"
+}
+
+exploration_type() {
+	if grep -qE '^Utility weights:[[:space:]]+\[1, 0, 0\]$' "$1"
+	then
+		printf 'classic\n'
+	else
+		printf 'semantic\n'
+	fi
+}
+
+
+
+if [ "$#" -lt 2 ]
+then
+	printf 'Usage: %s OUTDIR INDIR ...\n' "${0##*/}" >&2
+	exit 2
+fi
+
+output_dir="$1"
+shift
+
+find "$@" -type f -name 'log' | while IFS= read -r log
+do
+	run_dir=${log%/*}
+	run_id=${run_dir##*/}
+	name=$(sequence_name "$log")
+	type=$(exploration_type "$log")
+	dir="$output_dir/$type/$name/$run_id"
+	mkdir -p "$dir"
+	cp "$run_dir/logs/"stats_*.tsv "$dir"
+done
