@@ -1,0 +1,52 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]
+then
+	printf 'Usage: %s FILE [SEQUENCE]\n' "${0##*/}" >&2
+	exit 2
+fi
+
+sequence_id() {
+	printf '%s\n' "$1" | sed -e 's|^.*matterport3d_||' -e 's|/.*$||'
+}
+
+sequence_volume() {
+	awk 'BEGIN { FS = "\t" }
+	$1 == "'"$1"'" { print $2 }
+	' ~/src/dataset-tools/Matterport3D/mp3d_convex_hull_volume.tsv
+}
+
+normalize() {
+	awk 'BEGIN { FS = "\t"; OFS = "\t"; vol = '"$(sequence_volume "$1")"' }
+	NR == 1 {
+		for (i = 1; i <= NF; i++) {
+			if ($i ~ / volume$/) {
+				vol_idx[vol_num_idx++] = i
+			}
+		}
+		print
+	}
+	NR > 1 {
+		for (i = 0; i < vol_num_idx; i++) {
+			$vol_idx[i] /= vol
+			$vol_idx[i] *= 100
+		}
+		print
+	}
+	' "$2"
+}
+
+if [ "$#" -eq 1 ]
+then
+	id=$(sequence_id "$1")
+	if [ -n "$id" ]
+	then
+		set -- "$1" "$id"
+	else
+		printf '%s error: unable to determine sequence ID\n' "${0##*/}" >&2
+		exit 1
+	fi
+fi
+
+normalize "$2" "$1" > "${1%.tsv}_normalized.tsv"
