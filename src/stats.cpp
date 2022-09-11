@@ -61,9 +61,11 @@ static const std::map<std::string, std::vector<std::string>> section_stat_names 
 
 
 template<typename T>
-int append_tsv_line(const std::string& filename, const std::vector<T>& line_data)
+int write_tsv_line(const std::string& filename,
+                   const std::vector<T>& line_data,
+                   const std::ios::openmode mode = std::ios::app)
 {
-    std::ofstream f(filename, std::ios::app);
+    std::ofstream f(filename, mode);
     if (f.good()) {
         f << std::setprecision(6) << std::fixed;
         for (size_t i = 0; i < line_data.size(); i++) {
@@ -96,7 +98,7 @@ Stats::Stats(const std::string& stat_dir) : Stats()
             const std::string& section = e.first;
             const std::vector<std::string>& stat_names = e.second;
             filenames_[section] = stat_dir + "/stats_" + section + ".tsv";
-            if (append_tsv_line(filenames_.at(section), stat_names)) {
+            if (write_tsv_line(filenames_.at(section), stat_names), std::ios::trunc) {
                 ROS_WARN_ONCE("Can't write %s statistics to \"%s\"",
                               section.c_str(),
                               filenames_.at(section).c_str());
@@ -180,7 +182,7 @@ void Stats::writeFrame(const std::string& section) const
                        stat_names.end(),
                        stat_values.begin(),
                        [&](const std::string& s) -> double { return frame_stats.at(s); });
-        append_tsv_line(filenames_.at(section), stat_values);
+        write_tsv_line(filenames_.at(section), stat_values);
     }
     catch (const std::out_of_range& e) {
         throw std::out_of_range("invalid stat section \"" + section + "\"");
