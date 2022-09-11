@@ -1,27 +1,26 @@
 #!/bin/sh
 set -eu
 
-usage() {
-	printf 'Usage: %s TSV...\n' "${0##*/}"
-}
-
 # Add the time to the supplied TSV stats by reading it from the fusion stats.
 add_time_to_tsv() {
 	# https://git.sr.ht/~sotirisp/tsvutils
 	# Do nothing if the Time column already exists.
-	if [ -n "$(tsvcut '^Time \(s\)$' < "$1")" ]
+	if grep -q '^Time \(s\)	' "$1"
 	then
 		return
 	fi
-	fusion="$(dirname "$1")/stats_fusion.tsv"
+	fusion="${1%/*}/stats_fusion.tsv"
 	{
-	printf 'Time (s)\t'
-	head -n 1 "$1"
-	tsvcut 'Frame' < "$1" | tail -n +2 | while IFS= read -r frame
-	do
-		tsvcut 'Frame' 'Timestamp' < "$fusion" | tail -n +2 | grep '^'"$frame"'\.' | cut -f 2 | sed 's/$/\t/' | tr -d '\n'
-		tail -n +2 "$1" | grep '^'"$frame"'	'
-	done
+		printf 'Time (s)\t'
+		head -n 1 "$1"
+		tsvcut '^Frame$' < "$1" | tail -n +2 | while IFS= read -r frame
+		do
+			tsvcut '^Frame$' '^Timestamp$' < "$fusion" |
+				tail -n +2 | grep '^'"$frame"'\.000000' |
+				tail -n 1 | cut -f 2 | tr -d '\n'
+			printf '\t'
+			tail -n +2 "$1" | grep '^'"$frame"'	'
+		done
 	} > "$1".tmp
 	mv "$1".tmp "$1"
 }
@@ -30,7 +29,7 @@ add_time_to_tsv() {
 
 if [ "$#" -eq 0 ]
 then
-	usage
+	printf 'Usage: %s TSV...\n' "${0##*/}" >&2
 	exit 2
 fi
 
