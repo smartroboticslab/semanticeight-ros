@@ -23,6 +23,7 @@ normalize() {
 		for (i = 1; i <= NF; i++) {
 			if ($i ~ / volume$/) {
 				vol_idx[vol_num_idx++] = i
+				$i = $i" (%)"
 			}
 		}
 		print
