@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+import argparse
+import csv
+import matplotlib.pyplot as plt
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Plot the percentage of objects found over time.")
+    parser.add_argument("old", metavar="OLDDIR",
+        help="the directory containing the TSV files for the old method")
+    parser.add_argument("new", metavar="NEWDIR",
+        help="the directory containing the TSV files for the new method")
+    parser.add_argument("-o", "--plotdir", metavar="DIR",
+        help="the directory where the plots will be saved")
+    args = parser.parse_args()
+    if not args.plotdir:
+        args.plotdir = args.new
+    return args
+
+
+class Data:
+    def __init__(self, filename: str):
+        self.filename = filename
+        self.t = []
+        self.mean = []
+        self.stdev = []
+        with open(filename) as f:
+            r = csv.reader(f, dialect=csv.excel_tab)
+            header = next(r)
+            self.t_name = header[0]
+            self.mean_name = header[1]
+            self.stdev_name = header[2]
+            for line in r:
+                self.t.append(float(line[0]))
+                self.mean.append(float(line[1]))
+                self.stdev.append(float(line[2]))
+        self.low_stdev = [m - s for m, s in zip(self.mean, self.stdev)]
+        self.high_stdev = [m + s for m, s in zip(self.mean, self.stdev)]
+
+    def plot(self, label: str, ax=None):
+        if ax:
+            fig = ax.figure
+        else:
+            fig, ax = plt.subplots()
+        ax.set_xlabel(self.t_name)
+        ax.set_ylabel(self.mean_name)
+        ax.plot(self.t, self.mean, label=label)
+        ax.fill_between(self.t, self.low_stdev, self.high_stdev, alpha=0.5)
+        ax.set_xlim(min(self.t), max(self.t))
+        if self.mean_name.endswith("(%)"):
+            ax.set_ylim(0, 100)
+        else:
+            ax.set_ylim(bottom=0)
+        return fig, ax
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    filenames = ["bg_accuracy", "bg_completeness", "bg_dist",
+            "object_accuracy", "object_completeness", "object_dist",
+            "objects_found", "volume"]
+    for filename in filenames:
+        data_old = Data(f"{args.old}/{filename}.tsv")
+        data_new = Data(f"{args.new}/{filename}.tsv")
+
+        fig, ax = plt.subplots()
+        data_old.plot("Classic", ax)
+        data_new.plot("Semantic", ax)
+        ax.grid()
+        ax.legend(loc="lower right")
+        plt.savefig(f"{args.plotdir}/{filename}.pdf")
