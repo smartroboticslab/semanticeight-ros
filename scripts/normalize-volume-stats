@@ -31,6 +31,9 @@ normalize() {
 		for (i = 0; i < vol_num_idx; i++) {
 			$vol_idx[i] /= vol
 			$vol_idx[i] *= 100
+			# Clamp values to 100 because the computed volumes do
+			# not take the convex hull into account.
+			if ($vol_idx[i] > 100) $vol_idx[i] = 100
 		}
 		print
 	}
