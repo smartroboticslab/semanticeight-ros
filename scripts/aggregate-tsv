@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+import argparse
+import os.path
+import statistics
+import sys
+
+import numpy as np
+
+from typing import List
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Compute mean and standard deviation from multiple TSV files")
+    parser.add_argument("xname", metavar="XNAME",
+        help="the name of the column to use for the x-axis data")
+    parser.add_argument("yname", metavar="YNAME",
+        help="the name of the column to use for the y-axis data")
+    parser.add_argument("files", metavar="FILE", nargs="+",
+        help="a file to aggregate")
+    args = parser.parse_args()
+    args.names = [args.xname, args.yname]
+    return args
+
+
+def printerr(*args, **kwargs) -> None:
+    """Print to stderr prefixed with the program name."""
+    error_prefix = os.path.basename(sys.argv[0]) + " error:"
+    print(error_prefix, *args, file=sys.stderr, **kwargs)
+
+
+class XYData:
+    def __init__(self, filename: str, xname: str, yname: str):
+        self.filename = filename
+        self.x_name = xname
+        self.y_name = yname
+        self.x_data = []
+        self.y_data = []
+        with open(filename) as f:
+            header = f.readline().rstrip("\n").split("\t")
+            try:
+                x_idx = header.index(self.x_name)
+            except ValueError:
+                printerr(f"'{self.x_name}' not in header of {filename}")
+                return
+            try:
+                y_idx = header.index(self.y_name)
+            except ValueError:
+                printerr(f"'{self.y_name}' not in header of {filename}")
+                return
+            for l, line in enumerate(f):
+                line = line.rstrip("\n").split("\t")
+                try:
+                    x = float(line[x_idx])
+                except IndexError:
+                    printerr(f"wrong number of columns in line {l + 2} of {filename}")
+                    return
+                except ValueError:
+                    continue
+                try:
+                    y = float(line[y_idx])
+                except IndexError:
+                    printerr(f"wrong number of columns in line {l + 2} of {filename}")
+                    return
+                except ValueError:
+                    continue
+                self.x_data.append(x)
+                self.y_data.append(y)
+
+    def pad_in_time(self, t: List[float]) -> None:
+        if self.x_data[0] != t[0]:
+            self.x_data.insert(0, t[0])
+            self.y_data.insert(0, self.y_data[0])
+        if self.x_data[-1] != t[-1]:
+            self.x_data.append(t[-1])
+            self.y_data.append(self.y_data[-1])
+
+    def interpolate(self, t: List[float]) -> None:
+        self.y_data = list(np.interp(t, self.x_data, self.y_data))
+
+
+def time_vector(data: List[XYData]) -> List[float]:
+    t = []
+    for d in data:
+        t += d.x_data
+    t.sort()
+    return t
+
+
+def stat(data: List[XYData], func) -> List[float]:
+    y_data = [d.y_data for d in data]
+    return list(map(func, zip(*y_data)))
+
+
+
+if __name__ == "__main__":
+    try:
+        args = parse_args()
+        data = [XYData(file, args.xname, args.yname) for file in args.files]
+        data = [d for d in data if len(d.x_data) > 0 and len(d.y_data) > 0]
+        t = time_vector(data)
+        for d in data:
+            d.pad_in_time(t)
+            d.interpolate(t)
+        y_mean = stat(data, statistics.mean)
+        y_stdev = stat(data, statistics.stdev)
+
+        print("\t".join([args.xname, args.yname, args.yname + " stdev"]))
+        for i in range(len(t)):
+            d = [t[i], y_mean[i], y_stdev[i]]
+            print("\t".join([str(x) for x in d]))
+
+    except KeyboardInterrupt:
+        pass
