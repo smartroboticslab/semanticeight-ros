@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]
+then
+	printf 'Usage: %s DIR\n' "${0##*/}" >&2
+	exit 2
+fi
+
+aggregate_tsv=${0%/*}/aggregate-tsv
+
+bg_files=$(find "$1" -type f -name 'stats_bg.tsv')
+# shellcheck disable=SC2086
+$aggregate_tsv 'Time (s)' 'Accuracy (m)' $bg_files > "$1"/bg_accuracy.tsv
+# shellcheck disable=SC2086
+$aggregate_tsv 'Time (s)' 'Completeness (%)' $bg_files > "$1"/bg_completeness.tsv
+# shellcheck disable=SC2086
+$aggregate_tsv 'Time (s)' 'Desired observed dist (%)' $bg_files > "$1"/bg_dist.tsv
+
+object_files=$(find "$1" -type f -name 'stats_objects.tsv')
+# shellcheck disable=SC2086
+$aggregate_tsv 'Time (s)' 'Accuracy (m)' $object_files > "$1"/object_accuracy.tsv
+# shellcheck disable=SC2086
+$aggregate_tsv 'Time (s)' 'Completeness (%)' $object_files > "$1"/object_completeness.tsv
+# shellcheck disable=SC2086
+$aggregate_tsv 'Time (s)' 'Desired observed dist (%)' $object_files > "$1"/object_dist.tsv
+# shellcheck disable=SC2086
+$aggregate_tsv 'Time (s)' 'Objects found (%)' $object_files > "$1"/objects_found.tsv
+
+fusion_files=$(find "$1" -type f -name 'stats_fusion_normalized.tsv')
+# shellcheck disable=SC2086
+$aggregate_tsv 'Timestamp' 'Explored volume (%)' $fusion_files > "$1"/volume.tsv
