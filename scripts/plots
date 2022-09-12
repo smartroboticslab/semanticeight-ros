@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]
+then
+	printf 'Usage: %s DIR\n' "${0##*/}" >& 2
+	exit 2
+fi
+
+script_dir=${0%/*}
+find "$1" -type f -name stats_fusion.tsv -exec "$script_dir"/normalize-volume-stats {} \;
+"$script_dir"/aggregate-logs "$1"/classic
+"$script_dir"/aggregate-logs "$1"/semantic
+"$script_dir"/paper-plots -o "$1" "$1"/classic "$1"/semantic
