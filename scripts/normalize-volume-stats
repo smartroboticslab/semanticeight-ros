@@ -14,11 +14,17 @@ sequence_id() {
 sequence_volume() {
 	awk 'BEGIN { FS = "\t" }
 	$1 == "'"$1"'" { print $2 }
-	' ~/src/dataset-tools/Matterport3D/mp3d_convex_hull_volume.tsv
+	' "$2"
 }
 
 normalize() {
-	awk 'BEGIN { FS = "\t"; OFS = "\t"; vol = '"$(sequence_volume "$1")"' }
+	volume=$(sequence_volume "$1" ~/src/dataset-tools/Matterport3D/mp3d_volume.tsv)
+	if [ -z "$volume" ]
+	then
+		printf 'Warning: using inaccurate volume for sequence %s\n' "$1" >&2
+		volume=$(sequence_volume "$1" ~/src/dataset-tools/Matterport3D/mp3d_convex_hull_volume.tsv)
+	fi
+	awk 'BEGIN { FS = "\t"; OFS = "\t"; vol = '"$volume"' }
 	NR == 1 {
 		for (i = 1; i <= NF; i++) {
 			if ($i ~ / volume$/) {
