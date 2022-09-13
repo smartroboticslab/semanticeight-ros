@@ -103,11 +103,21 @@ if __name__ == "__main__":
             d.pad_in_time(t)
             d.interpolate(t)
         y_mean = stat(data, statistics.mean)
+        y_median = stat(data, statistics.median)
         y_stdev = stat(data, statistics.stdev)
+        p_func = lambda x: statistics.quantiles(x, n=10)
+        p = stat(data, p_func)
+        y_p10 = [x[0] for x in p]
+        y_p90 = [x[-1] for x in p]
 
-        print("\t".join([args.xname, args.yname, args.yname + " stdev"]))
+        print("\t".join([args.xname,
+            args.yname + " median",
+            args.yname + " 10th",
+            args.yname + " 90th",
+            args.yname + " mean",
+            args.yname + " stdev"]))
         for i in range(len(t)):
-            d = [t[i], y_mean[i], y_stdev[i]]
+            d = [t[i], y_median[i], y_p10[i], y_p90[i], y_mean[i], y_stdev[i]]
             print("\t".join([str(x) for x in d]))
 
     except KeyboardInterrupt:

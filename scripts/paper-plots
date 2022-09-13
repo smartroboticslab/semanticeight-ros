@@ -23,18 +23,25 @@ class Data:
     def __init__(self, filename: str):
         self.filename = filename
         self.t = []
+        self.median = []
+        self.p10 = []
+        self.p90 = []
         self.mean = []
         self.stdev = []
         with open(filename) as f:
             r = csv.reader(f, dialect=csv.excel_tab)
             header = next(r)
             self.t_name = header[0]
-            self.mean_name = header[1]
-            self.stdev_name = header[2]
+            self.name = header[1]
+            if self.name.endswith(" median"):
+                self.name = self.name[0:-len(" median")]
             for line in r:
                 self.t.append(float(line[0]))
-                self.mean.append(float(line[1]))
-                self.stdev.append(float(line[2]))
+                self.median.append(float(line[1]))
+                self.p10.append(float(line[2]))
+                self.p90.append(float(line[3]))
+                self.mean.append(float(line[4]))
+                self.stdev.append(float(line[5]))
         self.low_stdev = [m - s for m, s in zip(self.mean, self.stdev)]
         self.high_stdev = [m + s for m, s in zip(self.mean, self.stdev)]
 
@@ -44,11 +51,13 @@ class Data:
         else:
             fig, ax = plt.subplots()
         ax.set_xlabel(self.t_name)
-        ax.set_ylabel(self.mean_name)
-        ax.plot(self.t, self.mean, label=label)
-        ax.fill_between(self.t, self.low_stdev, self.high_stdev, alpha=0.5)
+        ax.set_ylabel(self.name)
+        #ax.plot(self.t, self.mean, label=label)
+        #ax.fill_between(self.t, self.low_stdev, self.high_stdev, alpha=0.5)
+        ax.plot(self.t, self.median, label=label)
+        ax.fill_between(self.t, self.p10, self.p90, alpha=0.5)
         ax.set_xlim(min(self.t), max(self.t))
-        if self.mean_name.endswith("(%)"):
+        if self.name.endswith("(%)"):
             ax.set_ylim(0, 100)
         else:
             ax.set_ylim(bottom=0)
