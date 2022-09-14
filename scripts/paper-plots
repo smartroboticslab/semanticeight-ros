@@ -45,17 +45,15 @@ class Data:
         self.low_stdev = [m - s for m, s in zip(self.mean, self.stdev)]
         self.high_stdev = [m + s for m, s in zip(self.mean, self.stdev)]
 
-    def plot(self, label: str, ax=None):
+    def plot(self, label: str, color, linestyle: str="-", ax=None):
         if ax:
             fig = ax.figure
         else:
             fig, ax = plt.subplots()
         ax.set_xlabel(self.t_name)
         ax.set_ylabel(self.name)
-        #ax.plot(self.t, self.mean, label=label)
-        #ax.fill_between(self.t, self.low_stdev, self.high_stdev, alpha=0.5)
-        ax.plot(self.t, self.median, label=label)
-        ax.fill_between(self.t, self.p10, self.p90, alpha=0.5)
+        ax.plot(self.t, self.median, color=color, linestyle=linestyle, label=label)
+        ax.fill_between(self.t, self.p10, self.p90, color=color, alpha=0.3, linewidth=0)
         ax.set_xlim(min(self.t), max(self.t))
         if self.name.endswith("(%)"):
             ax.set_ylim(0, 100)
@@ -73,9 +71,11 @@ if __name__ == "__main__":
         data_old = Data(f"{args.old}/{filename}.tsv")
         data_new = Data(f"{args.new}/{filename}.tsv")
 
+        plt.rcParams["font.family"] = "Liberation Serif" # Closest to Times New Roman on Linux
+        plt.rcParams["font.size"] = 24
         fig, ax = plt.subplots()
-        data_old.plot("Classic", ax)
-        data_new.plot("Semantic", ax)
+        data_old.plot("Classic", "#0000FF", "--", ax)
+        data_new.plot("Semantic", "#00FF00", "-", ax)
         ax.grid()
         ax.legend(loc="lower right")
-        plt.savefig(f"{args.plotdir}/{filename}.pdf")
+        plt.savefig(f"{args.plotdir}/{filename}.pdf", bbox_inches="tight", pad_inches=0.01)
