@@ -55,10 +55,12 @@ class Data:
         ax.plot(self.t, self.median, color=color, linestyle=linestyle, label=label)
         ax.fill_between(self.t, self.p10, self.p90, color=color, alpha=0.3, linewidth=0)
         ax.set_xlim(min(self.t), max(self.t))
-        if self.name.endswith("(%)"):
+        if self.name.endswith("(%)") or self.name.endswith("(\\%)"):
             ax.set_ylim(0, 100)
+            ax.set_aspect(16.5)
         else:
-            ax.set_ylim(bottom=0)
+            ax.set_ylim(0, 0.020)
+            ax.set_aspect(86200)
         return fig, ax
 
 
@@ -71,7 +73,12 @@ if __name__ == "__main__":
         data_old = Data(f"{args.old}/{filename}.tsv")
         data_new = Data(f"{args.new}/{filename}.tsv")
 
-        plt.rcParams["font.family"] = "Liberation Serif" # Closest to Times New Roman on Linux
+        plt.rcParams.update({
+            "text.usetex": True,
+            "font.family": "serif",
+            "font.serif": ["Liberation Serif"],
+        })
+        plt.rcParams["font.size"] = 24
         plt.rcParams["font.size"] = 24
         fig, ax = plt.subplots()
         data_old.plot("Classic", "#0000FF", "--", ax)
