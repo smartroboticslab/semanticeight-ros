@@ -32,22 +32,20 @@ find_package(Boost REQUIRED)
 # Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
-  roscpp
-  roslib
   eigen_conversions
   geometry_msgs
   image_geometry
-  message_filters
-  message_generation
+  mav_interface_msgs
+  mav_msgs
+  roscpp
+  roslib
   sensor_msgs
   std_msgs
   tf2
   tf2_geometry_msgs
   tf2_ros
-  visualization_msgs
   tf_conversions
-  mav_msgs
-  mav_interface_msgs
+  visualization_msgs
 )
 
 if (WITH_OPENMP)
@@ -104,12 +102,21 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${catkin_LIBRARIES}
   CATKIN_DEPENDS
-  roscpp
-  message_runtime
+  cv_bridge
   eigen_conversions
   geometry_msgs
+  image_geometry
+  mav_interface_msgs
+  mav_msgs
+  message_runtime
+  roscpp
   sensor_msgs
   std_msgs
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
+  tf_conversions
+  visualization_msgs
 )
 
 # ------------------------------------------------------------------------------
