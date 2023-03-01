@@ -84,8 +84,14 @@ add_subdirectory(semanticeight)
 
 # Compile libmaskrcnn-trt
 if (WITH_MASKRCNN)
-  add_compile_options(-Wno-deprecated-declarations)
-  add_subdirectory(libmaskrcnn-trt)
+  find_package(CUDA)
+  if (CUDA_FOUND)
+      add_compile_options(-Wno-deprecated-declarations)
+      add_subdirectory(libmaskrcnn-trt)
+  else ()
+      set(WITH_MASKRCNN OFF)
+      message(WARNING "CUDA not found, not building with Mask R-CNN support")
+  endif ()
 endif ()
 
 # ------------------------------------------------------------------------------
