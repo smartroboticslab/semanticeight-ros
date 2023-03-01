@@ -15,7 +15,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <map>
 #include <mav_interface_msgs/AutopilotStatusService.h>
-#include <mav_interface_msgs/conversions.h>
+#include <mav_interface_msgs/conversions.hpp>
 #include <memory>
 #include <mutex>
 #include <nav_msgs/Path.h>
