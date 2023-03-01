@@ -4,7 +4,7 @@
 <!-- SPDX-FileCopyrightText: 2019-2020 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: BSD-3-Clause -->
 <package format="2">
-  <name>supereight_ros</name>
+  <name>semanticeight_ros</name>
   <version>0.0.0</version>
   <description>ROS wrapper for supereight</description>
   <maintainer email="s.papatheodorou18@imperial.ac.uk">Sotiris Papatheodorou</maintainer>

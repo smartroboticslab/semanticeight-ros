@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-remote="sotiris@192.168.1.183:/home/sotiris/Documents/ros/semanticeight_ws/src/semantic-exploration/supereight_ros"
+remote="sotiris@192.168.1.183:~/ros/exploration_2023_ws/src/semantic-exploration-icra-2023"
 local=$(git rev-parse --show-toplevel)
 
 clone() (

@@ -1,5 +1,5 @@
 #!/bin/sh
 set -eu
 
-kill -s INT "$(ps -e | grep 'supereight_ros' | awk '{ print $1 }')"
+kill -s INT "$(ps -e | grep 'semanticeight_ros' | awk '{ print $1 }')"
 

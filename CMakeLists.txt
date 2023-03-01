@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.10)
 
-project(supereight_ros VERSION 0.1.0 LANGUAGES C CXX)
+project(semanticeight_ros VERSION 0.1.0 LANGUAGES C CXX)
 
 # ------------------------------------------------------------------------------
 # Compilation options
@@ -141,7 +141,7 @@ endif ()
 set(SUPEREIGHT_LIB "SE::DenseSLAM${SENSOR_IMPL}")
 
 
-add_executable(supereight_ros
+add_executable(semanticeight_ros
   "src/control_interface.cpp"
   "src/dataset.cpp"
   "src/stats.cpp"
@@ -153,7 +153,7 @@ add_executable(supereight_ros
 )
 
 
-target_link_libraries(supereight_ros
+target_link_libraries(semanticeight_ros
   ${SUPEREIGHT_LIB}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -161,22 +161,22 @@ target_link_libraries(supereight_ros
   stdc++fs
 )
 if (WITH_MASKRCNN)
-  target_link_libraries(supereight_ros maskrcnn-trt)
-  target_compile_definitions(supereight_ros PUBLIC SE_WITH_MASKRCNN)
+  target_link_libraries(semanticeight_ros maskrcnn-trt)
+  target_compile_definitions(semanticeight_ros PUBLIC SE_WITH_MASKRCNN)
 endif ()
 
 # ------------------------------------------------------------------------------
 # TEST
 # ------------------------------------------------------------------------------
-catkin_add_gtest(supereight_ros-unittests
+catkin_add_gtest(semanticeight_ros-unittests
   src/utilities.cpp
   test/utilities_unittest.cpp
 )
-target_include_directories(supereight_ros-unittests
+target_include_directories(semanticeight_ros-unittests
   PUBLIC
     include
 )
-target_link_libraries(supereight_ros-unittests
+target_link_libraries(semanticeight_ros-unittests
   ${catkin_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}

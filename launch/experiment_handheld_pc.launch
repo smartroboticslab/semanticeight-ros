@@ -3,28 +3,28 @@
 <!-- SPDX-FileCopyrightText: 2020-2022 Sotiris Papatheodorou -->
 <!-- SPDX-License-Identifier: CC0-1.0 -->
 <launch>
-  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find supereight_ros)/config/rosconsole.conf"/>
+  <env name="ROSCONSOLE_CONFIG_FILE" value="$(find semanticeight_ros)/config/rosconsole.conf"/>
 
-  <include file="$(find supereight_ros)/launch/realsense_D455.launch"/>
+  <include file="$(find semanticeight_ros)/launch/realsense_D455.launch"/>
   <include file="$(find vicon_bridge)/launch/vicon.launch">
     <arg name="datastream_hostport" value="192.168.1.164:801"/>
   </include>
-  <include file="$(find supereight_ros)/launch/ping.launch"></include>
+  <include file="$(find semanticeight_ros)/launch/ping.launch"></include>
 
-  <node pkg="supereight_ros"
-        type="supereight_ros"
+  <node pkg="semanticeight_ros"
+        type="semanticeight_ros"
         name="semanticeight"
         output="screen"
         required="true"
         launch-prefix="">
-    <rosparam command="load" file="$(find supereight_ros)/config/experiment.yaml"/>
-    <rosparam command="load" file="$(find supereight_ros)/config/experiment_handheld_pc.yaml"/>
+    <rosparam command="load" file="$(find semanticeight_ros)/config/experiment.yaml"/>
+    <rosparam command="load" file="$(find semanticeight_ros)/config/experiment_handheld_pc.yaml"/>
     <remap from="/camera/depth_image" to="/D455/depth0/image"/>
     <remap from="/camera/rgb_image"   to="/D455/rgb0/image"/>
     <remap from="/pose"               to="/vicon/d455_ros/d455_ros"/>
   </node>
 
-  <include file="$(find supereight_ros)/launch/rviz.launch">
-    <arg name="config" value="$(find supereight_ros)/config/experiment_handheld_pc.rviz"/>
+  <include file="$(find semanticeight_ros)/launch/rviz.launch">
+    <arg name="config" value="$(find semanticeight_ros)/config/experiment_handheld_pc.rviz"/>
   </include>
 </launch>

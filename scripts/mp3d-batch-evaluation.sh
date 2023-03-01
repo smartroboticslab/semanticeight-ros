@@ -8,5 +8,5 @@ find ~/Documents/Datasets/gt_meshes/ -type d -name 'matterport3d_*' |
 	do
 		sequence=${sequence##*_}
 		"$script_dir"/repeat-roslaunch "$n" habitat.launch \
-			'config:=$(find supereight_ros)/config/matterport3d/'"${sequence}.yaml"
+			'config:=$(find semanticeight_ros)/config/matterport3d/'"${sequence}.yaml"
 	done
