@@ -7,3 +7,6 @@
 [submodule "libmaskrcnn-trt"]
 	path = libmaskrcnn-trt
 	url = ../libmaskrcnn-trt.git
+[submodule "mesh-diff-tool"]
+	path = mesh-diff-tool
+	url = ../mesh-diff-tool.git

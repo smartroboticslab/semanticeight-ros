@@ -92,6 +92,9 @@ if (WITH_MASKRCNN)
   endif ()
 endif ()
 
+# Compile mesh-diff-tool
+add_subdirectory(mesh-diff-tool "${CMAKE_CURRENT_SOURCE_DIR}/mesh-diff-tool/build")
+
 # ------------------------------------------------------------------------------
 # Catkin
 # ------------------------------------------------------------------------------

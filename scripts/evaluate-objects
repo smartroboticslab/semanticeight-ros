@@ -43,7 +43,7 @@ evaluate_object_meshes() {
 		printf 'Skipping mesh evaluation, %s is not a directory\n' "$gt_mesh_dir"
 		return
 	fi
-	exe="$(script_dir)"/../../mesh_diff_tool/build/compareMultiple
+	exe="$(script_dir)"/../mesh-diff-tool/build/compareMultiple
 	if [ -x "$exe" ]
 	then
 		printf 'Evaluating meshes in %s\n' "$mesh_dir"

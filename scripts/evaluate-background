@@ -39,7 +39,7 @@ evaluate_bg_mesh() {
 		printf 'Skipping BG mesh evaluation, %s is not a file\n' "$gt_mesh"
 		return
 	fi
-	exe="$(script_dir)"/../../mesh_diff_tool/build/compare-single
+	exe="$(script_dir)"/../mesh-diff-tool/build/compare-single
 	if [ -x "$exe" ]
 	then
 		printf 'Evaluating BG mesh %s\n' "$1"
