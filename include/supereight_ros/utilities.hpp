@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <mav_interface_msgs/conversions.hpp>
+#include <mav_interface_msgs/conversions.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
